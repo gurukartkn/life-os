@@ -1,0 +1,179 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Life OS domain/status hues — see docs/05-design-system.md */
+  --color-surface-050: var(--surface-050);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-teal: var(--teal);
+  --color-teal-soft: var(--teal-soft);
+  --color-teal-ink: var(--teal-ink);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-ink: var(--blue-ink);
+  --color-pink: var(--pink);
+  --color-pink-soft: var(--pink-soft);
+  --color-pink-ink: var(--pink-ink);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
+  --radius-4xl: 16px;
+  --radius-full: 999px;
+
+  --shadow-float: var(--shadow-float);
+}
+
+:root {
+  /* Life OS design tokens (docs/05-design-system.md) — light theme only */
+  --surface-050: #f9fbfc;
+  --surface-100: #ffffff;
+  --surface-200: #f4f5f7;
+  --border-strong: #e0e0e0;
+  --ink: #141414;
+  --ink-muted: #6b6b6b;
+  --ink-faint: #9a9a9a;
+  --accent-hover: #5b3ee0;
+  --accent-text: #5b3ee0;
+  --accent-soft: #eee9fe;
+  --accent-ink: #ffffff;
+  --teal: #3fa491;
+  --teal-soft: #e1f5f1;
+  --teal-ink: #1f6a5c;
+  --blue: #4b9eea;
+  --blue-soft: #e5f2fd;
+  --blue-ink: #235e8c;
+  --pink: #c81e5c;
+  --pink-soft: #fce7ef;
+  --pink-ink: #a32359;
+  --shadow-float: 0 12px 32px rgba(20, 20, 30, 0.1);
+
+  /* Shadcn variable mapping — docs/05-design-system.md "Components in this system" table */
+  --background: var(--surface-050);
+  --foreground: var(--ink);
+  --card: var(--surface-100);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-100);
+  --popover-foreground: var(--ink);
+  --primary: #6c4cf5;
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--surface-200);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-200);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--surface-200);
+  --accent-foreground: var(--ink);
+  --destructive: var(--pink);
+  --destructive-foreground: #ffffff;
+  --border: #efefef;
+  --input: var(--border-strong);
+  --ring: #6c4cf5;
+  --chart-1: var(--primary);
+  --chart-2: var(--teal);
+  --chart-3: var(--blue);
+  --chart-4: var(--pink);
+  --chart-5: var(--ink-muted);
+  --sidebar: var(--surface-050);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--accent-ink);
+  --sidebar-accent: var(--accent-soft);
+  --sidebar-accent-foreground: var(--accent-text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/*
+ * Named text styles from docs/05-design-system.md. Tailwind's utility classes
+ * (font-*, text-*, leading-*) can't express a single named size+weight+leading
+ * shorthand, so these are applied as classes, e.g. className="text-stat-xl".
+ */
+@layer components {
+  .text-stat-xl {
+    font: 700 34px/40px var(--font-sans);
+  }
+  .text-heading {
+    font: 600 16px/22px var(--font-sans);
+  }
+  .text-page-title {
+    font: 600 22px/28px var(--font-sans);
+  }
+  .text-body {
+    font: 400 14px/20px var(--font-sans);
+  }
+  .text-body-sm {
+    font: 400 13px/18px var(--font-sans);
+  }
+  .text-label {
+    font: 500 12px/16px var(--font-sans);
+  }
+  .text-caption {
+    font: 400 12px/16px var(--font-sans);
+  }
+  .text-button-text {
+    font: 500 14px/20px var(--font-sans);
+  }
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+}
