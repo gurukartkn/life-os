@@ -1,0 +1,106 @@
+# Life OS — Design System (Phase 4)
+
+Source: https://claude.ai/artifact/WAeA9ggJeLJTahFE9yB1no
+
+A personal system for the things a notebook used to hold — todos, workouts, routines, and eventually goals, projects, and the rest of a life tracked in one interlinked place. It replaces Obsidian (too much time spent customizing, not enough using it) and Notion (data entry and display never quite fit).
+
+## Point of view
+
+**A clean analytics dashboard, not a document.** This direction was built directly from a reference screenshot: a light, white-card SaaS dashboard with a single deep-violet brand accent and a small, consistent set of supporting hues used for data and status. Life OS borrows that structure — flush white cards on a barely-tinted page, one confident accent color, generous whitespace, numbers given real visual weight — rather than a moody or "personal journal" aesthetic. The three domains (Todo, Fitness, Routines) should read like different views inside one product, the way a CRM's pipeline and revenue views share one visual language.
+
+**Structure from contrast, not shadow.** Cards are pure white sitting on a barely-off-white page — the separation comes from that value step and a near-invisible border, not a drop shadow. `shadow-float` is reserved for things that actually float above the page (a modal, a dropdown, a dragged row).
+
+**One accent, three supporting hues, no more.** Four identity colors across every chart, gauge, and status pill: violet, teal, blue, and pink. Violet (`accent`) is the primary action color and the Todo domain's identity; teal, blue, and pink are reused consistently as both domain accents (Fitness = teal, Routines = blue) and status semantics (teal = done, blue = in progress/upcoming, pink = needs attention/overdue). Don't introduce a fifth hue for a new feature — extend meaning from these four instead.
+
+Light theme only for now — no dark theme was invented since the reference had none.
+
+## Voice & content
+
+Life OS is a tool one person uses privately, many times a day. The voice is **plain, direct, and unhurried** — closer to a well-made dashboard than a lifestyle app. No exclamation marks, no cheerleading about streaks or productivity, no filler above content that could just start.
+
+- Name things the way the person using it would say them, not the way the schema names them: "Workout," not "Fitness session record."
+- Buttons say exactly what happens: "Add todo," "Log set," "Delete workout" — never "Submit" or "Confirm."
+- Empty states state what's true and offer one action, nothing more: "Nothing on the list today." / "Add todo" — not "Looks like you're all caught up! 🎉 Why not add something new?"
+- Errors say what's wrong and how to fix it, plainly: "Enter a valid date," not "Oops, something went wrong."
+- Numbers carry their own weight (`stat-xl`) — don't wrap them in congratulatory copy. Let "12-day streak" sit on its own line instead of "You're on an amazing 12-day streak!"
+
+## Design tokens (CSS custom properties)
+
+```css
+:root, [data-theme="light"] {
+  --surface-050: #f9fbfc; /* Page and sidebar background. */
+  --surface-100: #ffffff; /* Card, sheet, and modal background — sits as a flush white plane on surface-050. */
+  --surface-200: #f4f5f7; /* Hover/pressed state for a card or row; progress-bar and gauge tracks. */
+  --border: #efefef; /* Default card and divider border. */
+  --border-strong: #e0e0e0; /* Input borders, table rules, anything needing a touch more definition. */
+  --ink: #141414; /* Headlines and large numbers. */
+  --ink-muted: #6b6b6b; /* Secondary text — labels, helper copy, table metadata. */
+  --ink-faint: #9a9a9a; /* Placeholder text, disabled labels, least-important metadata. */
+  --accent: #6c4cf5; /* Primary action fill (buttons, active nav item, checked state) and the Todo domain's identity color. ~4.4:1 with accent-ink — fine for medium/bold 14px+ labels, avoid for small regular-weight text. */
+  --accent-hover: #5b3ee0; /* Hover/active state for an accent fill. */
+  --accent-text: #5b3ee0; /* Accent used AS text — links, the active tab label, icon-only controls. Meets 4.5:1 on surface-050/100. */
+  --accent-soft: #eee9fe; /* Light tint background for a purple status pill or the active sidebar item. */
+  --accent-ink: #ffffff; /* Text/icons on an accent fill. */
+  --teal: #3fa491; /* Fitness domain identity color; success/complete state. */
+  --teal-soft: #e1f5f1; /* Light tint background for a teal/success status pill. */
+  --teal-ink: #1f6a5c; /* Teal-family text — status labels on teal-soft, or directly on surface-050/100. */
+  --blue: #4b9eea; /* Routines domain identity color; in-progress/upcoming state. */
+  --blue-soft: #e5f2fd; /* Light tint background for a blue/info status pill. */
+  --blue-ink: #235e8c; /* Blue-family text — status labels on blue-soft, or directly on surface-050/100. */
+  --pink: #c81e5c; /* Attention/overdue state. Deepened from the sampled magenta (~#e02c72) specifically for use as a solid button fill with white text. */
+  --pink-soft: #fce7ef; /* Light tint background for a pink/attention status pill — true-sampled tint, used in badges and data-viz. */
+  --pink-ink: #a32359; /* Pink-family text — status labels on pink-soft, or directly on surface-050/100. */
+  --ring: #6c4cf5; /* Keyboard focus ring on any interactive control, 2px offset. */
+  --shadow-float: 0 12px 32px rgba(20,20,30,0.10); /* Dropdown menus, popovers, modals, a dragged row. */
+}
+:root {
+  --space-1: 4px;  /* Icon-to-label gaps, tight inline spacing. */
+  --space-2: 8px;  /* Gap between a label and its input, chip padding. */
+  --space-3: 12px; /* Compact control padding (checkbox row, status pill). */
+  --space-4: 16px; /* Default card padding, gap between form fields. */
+  --space-6: 24px; /* Gap between cards, section padding. */
+  --space-8: 32px; /* Gap between page sections. */
+  --space-12: 48px; /* Page top margin, empty-state vertical padding. */
+  --radius-sm: 8px;   /* Status pills, small chips, checkboxes. */
+  --radius-md: 10px;  /* Buttons, inputs, table rows. */
+  --radius-lg: 16px;  /* Cards, sheets, modals — the dominant card radius. Every card uses the same radius; don't mix radii on peer elements. */
+  --radius-full: 999px; /* Pills, avatars, progress-bar and gauge tracks. */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --text-stat-xl: 700 34px/40px var(--font-sans);    /* The big number on a stat card (revenue, streak count, workouts logged). */
+  --text-heading: 600 16px/22px var(--font-sans);    /* Card and section titles. */
+  --text-page-title: 600 22px/28px var(--font-sans); /* Page-level title (Today, Fitness, Routines). */
+  --text-body: 400 14px/20px var(--font-sans);       /* Default UI and content text. */
+  --text-body-sm: 400 13px/18px var(--font-sans);    /* Table cells, dense list rows, secondary card copy. */
+  --text-label: 500 12px/16px var(--font-sans);      /* Form labels, field names, column headers. */
+  --text-caption: 400 12px/16px var(--font-sans);    /* Timestamps, helper text, status-pill labels. */
+  --text-button-text: 500 14px/20px var(--font-sans); /* Button and tab labels. */
+}
+```
+
+Typography: single font family, **Inter**, no secondary display face — identity comes from color and the weight given to numbers, not typographic contrast.
+
+## Iconography
+
+No icon set shipped with the design system itself — the reference uses simple 24px stroke icons (sidebar nav, search, theme toggle, percentage-delta arrows). **Lucide** (`lucide-react`) is the pick since it ships natively with Shadcn.
+
+- **Size** — 20px inline with `body`/`button-text`, 16px inline with `body-sm`/`caption`, 24px standalone (an empty-state icon, a sidebar item).
+- **Stroke** — 1.5–1.75px. Don't mix filled and stroke icons in the same view.
+- **Color** — `ink-muted` by default (matching secondary text), `accent`/`teal`/`blue`/`pink` only when carrying status or sitting inside that hue's Tag pill, `ink` only when it's the primary glyph in an otherwise-empty state. Never a fifth color.
+
+## Components in this system
+
+Button, Input, Checkbox, Tag (status pill), Card, Tabs, Progress bar, and Empty state — the pieces Todo, Fitness, and Routines are built from. These were designed as static visual references (color, type, spacing, states); wiring them to Shadcn/Next.js is Implementation Plan work. Token names map directly onto Shadcn's CSS variable convention:
+
+| Design token | Shadcn variable |
+|---|---|
+| `surface-050` | `background` |
+| `ink` | `foreground` |
+| `accent` | `primary` |
+| `border` | `border` |
+| `ring` | `ring` |
+
+## Adaptations from the reference (worth knowing)
+
+- The reference's CTA button and chart colors sit close to but not always above 4.5:1 contrast (`accent` on white is ~4.4:1) — kept as sampled for medium/bold labels; don't use for small body text.
+- `pink` was deepened one step from the sampled magenta specifically for use as a solid button fill with white text (a destructive action); the lighter, true-sampled tint lives in `pink-soft`.
+- The reference's four-stage deal pipeline (Negotiating → Drafting → Activated → Pending Approval) was translated into three status semantics — teal (done), blue (in progress/upcoming), pink (overdue/attention) — reusing the same hues and soft-pill visual pattern.
