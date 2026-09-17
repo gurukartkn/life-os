@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck, Dumbbell, ListChecks, LogOut } from "lucide-react";
-import { cn } from "cn";
 import { logout } from "@/actions/auth";
 
 const NAV_ITEMS = [
@@ -11,6 +10,10 @@ const NAV_ITEMS = [
   { href: "/fitness", label: "Fitness", icon: Dumbbell },
   { href: "/routines", label: "Routines", icon: ListChecks },
 ];
+
+const NAV_LINK_BASE = "text-body flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors";
+const NAV_LINK_INACTIVE = `${NAV_LINK_BASE} text-ink-muted hover:bg-surface-200 hover:text-ink`;
+const NAV_LINK_ACTIVE = `${NAV_LINK_BASE} bg-accent-soft text-accent-text hover:bg-accent-soft hover:text-accent-text`;
 
 export function Sidebar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
@@ -25,10 +28,7 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
             <Link
               key={href}
               href={href}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-2.5 py-2 text-body text-ink-muted transition-colors hover:bg-surface-200 hover:text-ink",
-                isActive && "bg-accent-soft text-accent-text hover:bg-accent-soft hover:text-accent-text"
-              )}
+              className={isActive ? NAV_LINK_ACTIVE : NAV_LINK_INACTIVE}
             >
               <Icon className="size-5" />
               {label}
