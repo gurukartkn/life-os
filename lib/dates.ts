@@ -1,4 +1,4 @@
-import { format, isPast, isToday, isTomorrow, parseISO } from "date-fns";
+import { format, formatDistanceToNow, isPast, isToday, isTomorrow, parseISO } from "date-fns";
 
 // Todos store due_date as a plain "YYYY-MM-DD" date column, parsed as local midnight.
 export function todayIso(): string {
@@ -15,4 +15,8 @@ export function formatDueDate(dueDate: string): string {
   if (isToday(date)) return "Today";
   if (isTomorrow(date)) return "Tomorrow";
   return format(date, "MMM d");
+}
+
+export function formatRelative(dateStr: string): string {
+  return formatDistanceToNow(parseISO(dateStr), { addSuffix: true });
 }

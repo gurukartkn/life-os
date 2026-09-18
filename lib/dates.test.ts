@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatDueDate, isOverdue, todayIso } from "./dates";
+import { formatDueDate, formatRelative, isOverdue, todayIso } from "./dates";
 
 describe("dates", () => {
   beforeEach(() => {
@@ -42,6 +42,16 @@ describe("dates", () => {
 
     it("is true for a past date", () => {
       expect(isOverdue("2026-09-16")).toBe(true);
+    });
+  });
+
+  describe("formatRelative", () => {
+    it("returns a relative time string with a suffix", () => {
+      expect(formatRelative("2026-09-14")).toBe("3 days ago");
+    });
+
+    it("returns 'about 1 month ago' for a month-old date", () => {
+      expect(formatRelative("2026-08-17")).toBe("about 1 month ago");
     });
   });
 });
