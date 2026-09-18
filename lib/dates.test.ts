@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatDueDate, formatRelative, isOverdue, todayIso } from "./dates";
+import { formatDueDate, formatRelative, isOverdue, periodStartFor, todayIso } from "./dates";
 
 describe("dates", () => {
   beforeEach(() => {
@@ -42,6 +42,16 @@ describe("dates", () => {
 
     it("is true for a past date", () => {
       expect(isOverdue("2026-09-16")).toBe(true);
+    });
+  });
+
+  describe("periodStartFor", () => {
+    it("returns today for a daily cadence", () => {
+      expect(periodStartFor("daily")).toBe("2026-09-17");
+    });
+
+    it("returns that week's Monday for a weekly cadence", () => {
+      expect(periodStartFor("weekly")).toBe("2026-09-14");
     });
   });
 
