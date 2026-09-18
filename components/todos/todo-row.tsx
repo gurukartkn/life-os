@@ -63,7 +63,7 @@ export function TodoRow({ todo }: { todo: Tables<"todos"> }) {
         onClick={handleDelete}
         disabled={isPending}
         aria-label="Delete todo"
-        className="text-ink-faint transition-colors hover:text-pink-ink disabled:pointer-events-none disabled:opacity-50"
+        className="rounded-sm text-ink-faint outline-none transition-colors hover:text-pink-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
       >
         <Trash2 className="size-4" />
       </button>

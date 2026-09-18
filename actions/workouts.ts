@@ -8,6 +8,7 @@ import {
   workoutDeleteSchema,
   type CreateWorkoutInput,
 } from "@/lib/validations/fitness";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createWorkout(input: CreateWorkoutInput): Promise<ActionResult> {
@@ -33,7 +34,7 @@ export async function createWorkout(input: CreateWorkoutInput): Promise<ActionRe
     .single();
 
   if (workoutError || !workout) {
-    console.error("createWorkout failed:", workoutError);
+    logError("createWorkout", workoutError);
     return { success: false, error: "Couldn't create the workout. Try again." };
   }
 
@@ -49,7 +50,7 @@ export async function createWorkout(input: CreateWorkoutInput): Promise<ActionRe
   );
 
   if (exercisesError) {
-    console.error("createWorkout (exercises) failed:", exercisesError);
+    logError("createWorkout (exercises)", exercisesError);
     await supabase.from("workouts").delete().eq("id", workout.id);
     return { success: false, error: "Couldn't add exercises to the workout. Try again." };
   }
@@ -69,7 +70,7 @@ export async function deleteWorkout(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("workouts").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("deleteWorkout failed:", error);
+    logError("deleteWorkout", error);
     return { success: false, error: "Couldn't delete the workout. Try again." };
   }
 

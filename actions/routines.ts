@@ -12,6 +12,7 @@ import {
   type CreateRoutineInput,
   type RoutineItemInsertInput,
 } from "@/lib/validations/routines";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createRoutine(input: CreateRoutineInput): Promise<ActionResult> {
@@ -37,7 +38,7 @@ export async function createRoutine(input: CreateRoutineInput): Promise<ActionRe
     .single();
 
   if (routineError || !routine) {
-    console.error("createRoutine failed:", routineError);
+    logError("createRoutine", routineError);
     return { success: false, error: "Couldn't create the routine. Try again." };
   }
 
@@ -51,7 +52,7 @@ export async function createRoutine(input: CreateRoutineInput): Promise<ActionRe
   );
 
   if (itemsError) {
-    console.error("createRoutine (items) failed:", itemsError);
+    logError("createRoutine (items)", itemsError);
     await supabase.from("routines").delete().eq("id", routine.id);
     return { success: false, error: "Couldn't add items to the routine. Try again." };
   }
@@ -71,7 +72,7 @@ export async function deleteRoutine(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("routines").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("deleteRoutine failed:", error);
+    logError("deleteRoutine", error);
     return { success: false, error: "Couldn't delete the routine. Try again." };
   }
 
@@ -108,7 +109,7 @@ export async function addRoutineItem(input: RoutineItemInsertInput): Promise<Act
   });
 
   if (error) {
-    console.error("addRoutineItem failed:", error);
+    logError("addRoutineItem", error);
     return { success: false, error: "Couldn't add the item. Try again." };
   }
 
@@ -131,7 +132,7 @@ export async function archiveRoutineItem(id: string, routineId: string): Promise
     .eq("id", parsed.data.id);
 
   if (error) {
-    console.error("archiveRoutineItem failed:", error);
+    logError("archiveRoutineItem", error);
     return { success: false, error: "Couldn't remove the item. Try again." };
   }
 
@@ -177,7 +178,7 @@ export async function toggleRoutineItem(
     );
 
     if (error) {
-      console.error("toggleRoutineItem (check) failed:", error);
+      logError("toggleRoutineItem (check)", error);
       return { success: false, error: "Couldn't update the item. Try again." };
     }
   } else {
@@ -188,7 +189,7 @@ export async function toggleRoutineItem(
       .eq("period_start", parsed.data.period_start);
 
     if (error) {
-      console.error("toggleRoutineItem (uncheck) failed:", error);
+      logError("toggleRoutineItem (uncheck)", error);
       return { success: false, error: "Couldn't update the item. Try again." };
     }
   }

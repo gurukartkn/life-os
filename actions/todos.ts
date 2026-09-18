@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { todoInsertSchema, todoToggleSchema, todoDeleteSchema } from "@/lib/validations/todos";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createTodo(
@@ -36,7 +37,7 @@ export async function createTodo(
   });
 
   if (error) {
-    console.error("createTodo failed:", error);
+    logError("createTodo", error);
     return { success: false, error: "Couldn't add the todo. Try again." };
   }
 
@@ -61,7 +62,7 @@ export async function toggleTodo(id: string, isCompleted: boolean): Promise<Acti
     .eq("id", parsed.data.id);
 
   if (error) {
-    console.error("toggleTodo failed:", error);
+    logError("toggleTodo", error);
     return { success: false, error: "Couldn't update the todo. Try again." };
   }
 
@@ -80,7 +81,7 @@ export async function deleteTodo(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("todos").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("deleteTodo failed:", error);
+    logError("deleteTodo", error);
     return { success: false, error: "Couldn't delete the todo. Try again." };
   }
 

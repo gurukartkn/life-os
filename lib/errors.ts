@@ -1,5 +1,12 @@
 import type { AuthError } from "@supabase/supabase-js";
 
+// Console-only server-side logging (docs/04-backend-architecture.md §7) — the
+// one place every Server Action and Server Component funnels unexpected
+// errors through, so the format stays consistent without a hosted service.
+export function logError(context: string, error: unknown): void {
+  console.error(`${context} failed:`, error);
+}
+
 // Maps Supabase/Postgres errors to short, plain user-facing messages
 // (docs/04-backend-architecture.md §7) — raw provider error text never reaches the UI.
 export function mapAuthError(error: AuthError): string {

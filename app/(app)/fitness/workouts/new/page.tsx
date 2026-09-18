@@ -1,5 +1,6 @@
 import { CreateWorkoutForm } from "@/components/fitness/create-workout-form";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 
 export default async function NewWorkoutPage() {
   const supabase = await createClient();
@@ -9,7 +10,7 @@ export default async function NewWorkoutPage() {
     .eq("is_active", true)
     .order("name", { ascending: true });
 
-  if (error) console.error("Failed to load exercises:", error);
+  if (error) logError("Load exercises", error);
 
   return (
     <div className="flex max-w-xl flex-col gap-6">

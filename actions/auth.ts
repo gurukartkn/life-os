@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loginSchema, signupSchema } from "@/lib/validations/auth";
-import { mapAuthError } from "@/lib/errors";
+import { logError, mapAuthError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function login(
@@ -23,7 +23,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
-    console.error("login failed:", error);
+    logError("login", error);
     return { success: false, error: mapAuthError(error) };
   }
 
@@ -47,7 +47,7 @@ export async function signup(
   const { data, error } = await supabase.auth.signUp(parsed.data);
 
   if (error) {
-    console.error("signup failed:", error);
+    logError("signup", error);
     return { success: false, error: mapAuthError(error) };
   }
 

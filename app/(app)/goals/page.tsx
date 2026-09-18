@@ -3,6 +3,7 @@ import { AddGoalForm } from "@/components/goals/add-goal-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 import { formatDueDate } from "@/lib/dates";
 
 export default async function GoalsPage() {
@@ -13,7 +14,7 @@ export default async function GoalsPage() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load goals:", error);
+    logError("Load goals", error);
   }
 
   const goals = data ?? [];
