@@ -9,6 +9,7 @@ import {
   type LinkRoutineToGoalInput,
   type LinkWorkoutLogToGoalInput,
 } from "@/lib/validations/links";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function linkWorkoutLogToGoal(
@@ -41,7 +42,7 @@ export async function linkWorkoutLogToGoal(
   );
 
   if (error) {
-    console.error("linkWorkoutLogToGoal failed:", error);
+    logError("linkWorkoutLogToGoal", error);
     return { success: false, error: "Couldn't link to the goal. Try again." };
   }
 
@@ -60,7 +61,7 @@ export async function unlinkGoal(id: string, workoutLogId: string): Promise<Acti
   const { error } = await supabase.from("links").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("unlinkGoal failed:", error);
+    logError("unlinkGoal", error);
     return { success: false, error: "Couldn't remove the link. Try again." };
   }
 
@@ -96,7 +97,7 @@ export async function linkRoutineToGoal(input: LinkRoutineToGoalInput): Promise<
   );
 
   if (error) {
-    console.error("linkRoutineToGoal failed:", error);
+    logError("linkRoutineToGoal", error);
     return { success: false, error: "Couldn't link to the goal. Try again." };
   }
 
@@ -115,7 +116,7 @@ export async function unlinkRoutineGoal(id: string, routineId: string): Promise<
   const { error } = await supabase.from("links").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("unlinkRoutineGoal failed:", error);
+    logError("unlinkRoutineGoal", error);
     return { success: false, error: "Couldn't remove the link. Try again." };
   }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { goalInsertSchema } from "@/lib/validations/goals";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createGoal(
@@ -35,7 +36,7 @@ export async function createGoal(
   });
 
   if (error) {
-    console.error("createGoal failed:", error);
+    logError("createGoal", error);
     return { success: false, error: "Couldn't add the goal. Try again." };
   }
 

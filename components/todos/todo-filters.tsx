@@ -6,7 +6,8 @@ const FILTERS = [
   { value: "completed", label: "Completed" },
 ] as const;
 
-const BASE_CLASS = "text-button-text rounded-md px-2.5 py-1.5 transition-colors";
+const BASE_CLASS =
+  "text-button-text rounded-md px-2.5 py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 const INACTIVE_CLASS = `${BASE_CLASS} text-ink-muted hover:bg-surface-200 hover:text-ink`;
 const ACTIVE_CLASS = `${BASE_CLASS} bg-accent-soft text-accent-text hover:bg-accent-soft hover:text-accent-text`;
 

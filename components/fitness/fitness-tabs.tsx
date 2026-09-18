@@ -18,7 +18,7 @@ export function FitnessTabs({ active }: { active: "workouts" | "exercises" }) {
             role="tab"
             aria-selected={isActive}
             className={cn(
-              "text-button-text -mb-px border-b-2 pb-2.5 transition-colors",
+              "text-button-text -mb-px border-b-2 pb-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
               isActive
                 ? "border-teal text-ink"
                 : "border-transparent text-ink-faint hover:text-ink-muted"

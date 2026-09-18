@@ -46,12 +46,12 @@ export function WorkoutLogSession({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="text-caption text-ink-faint">Logging workout</span>
           <h1 className="text-page-title text-ink">{workoutName}</h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col items-end gap-1.5">
             <span className="text-body-sm text-ink-faint">
               {doneCount} of {totalCount} exercise{totalCount === 1 ? "" : "s"} done
@@ -65,7 +65,7 @@ export function WorkoutLogSession({
           </div>
           <Link
             href="/fitness"
-            className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white transition-colors hover:bg-teal/90"
+            className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white outline-none transition-colors hover:bg-teal/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           >
             Finish workout
           </Link>

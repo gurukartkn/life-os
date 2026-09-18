@@ -10,6 +10,7 @@ import {
   type SetLogSaveInput,
 } from "@/lib/validations/fitness";
 import { todayIso } from "@/lib/dates";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function startWorkoutLog(formData: FormData) {
@@ -41,7 +42,7 @@ export async function startWorkoutLog(formData: FormData) {
     .single();
 
   if (error || !data) {
-    console.error("startWorkoutLog failed:", error);
+    logError("startWorkoutLog", error);
     redirect("/fitness");
   }
 
@@ -75,7 +76,7 @@ export async function saveSetLog(input: SetLogSaveInput): Promise<ActionResult> 
     .maybeSingle();
 
   if (findError) {
-    console.error("saveSetLog lookup failed:", findError);
+    logError("saveSetLog lookup", findError);
     return { success: false, error: "Couldn't save the set. Try again." };
   }
 
@@ -96,7 +97,7 @@ export async function saveSetLog(input: SetLogSaveInput): Promise<ActionResult> 
       });
 
   if (error) {
-    console.error("saveSetLog failed:", error);
+    logError("saveSetLog", error);
     return { success: false, error: "Couldn't save the set. Try again." };
   }
 
@@ -115,7 +116,7 @@ export async function deleteSetLog(id: string, workoutLogId: string): Promise<Ac
   const { error } = await supabase.from("set_logs").delete().eq("id", parsed.data.id);
 
   if (error) {
-    console.error("deleteSetLog failed:", error);
+    logError("deleteSetLog", error);
     return { success: false, error: "Couldn't delete the set. Try again." };
   }
 
