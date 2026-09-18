@@ -3,6 +3,7 @@ import { ListChecks, Plus } from "lucide-react";
 import { RoutineList, type RoutineCardData } from "@/components/routines/routine-list";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 import { periodStartFor } from "@/lib/dates";
 
 export default async function RoutinesPage() {
@@ -13,7 +14,7 @@ export default async function RoutinesPage() {
     .select("id, title, cadence, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) console.error("Failed to load routines:", error);
+  if (error) logError("Load routines", error);
 
   const routines = routinesData ?? [];
   const routineIds = routines.map((routine) => routine.id);
@@ -59,11 +60,11 @@ export default async function RoutinesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title text-ink">Routines</h1>
         <Link
           href="/routines/new"
-          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-blue px-4.5 text-white transition-colors hover:bg-blue/90"
+          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-blue px-4.5 text-white outline-none transition-colors hover:bg-blue/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         >
           <Plus className="size-4" />
           New routine

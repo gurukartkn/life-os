@@ -5,6 +5,7 @@ import { TodoList } from "@/components/todos/todo-list";
 import { TodoStats } from "@/components/todos/todo-stats";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 import { todayIso } from "@/lib/dates";
 import type { Tables } from "@/lib/types/database";
 
@@ -37,7 +38,7 @@ export default async function TodayPage({
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load todos:", error);
+    logError("Load todos", error);
   }
 
   const todos: Tables<"todos">[] = data ?? [];

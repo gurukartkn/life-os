@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { exerciseInsertSchema, exerciseArchiveSchema } from "@/lib/validations/fitness";
+import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
 function csvToArray(value: string | undefined): string[] {
@@ -46,7 +47,7 @@ export async function createExercise(
   });
 
   if (error) {
-    console.error("createExercise failed:", error);
+    logError("createExercise", error);
     return { success: false, error: "Couldn't add the exercise. Try again." };
   }
 
@@ -68,7 +69,7 @@ export async function archiveExercise(id: string): Promise<ActionResult> {
     .eq("id", parsed.data.id);
 
   if (error) {
-    console.error("archiveExercise failed:", error);
+    logError("archiveExercise", error);
     return { success: false, error: "Couldn't archive the exercise. Try again." };
   }
 

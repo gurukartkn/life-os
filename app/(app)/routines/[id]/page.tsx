@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 import { periodStartFor } from "@/lib/dates";
 import { RoutineChecklist, type RoutineItemData } from "@/components/routines/routine-checklist";
 import { AddRoutineItemForm } from "@/components/routines/add-routine-item-form";
@@ -22,7 +23,7 @@ export default async function RoutineDetailPage({ params }: { params: Promise<{ 
     .eq("id", id)
     .maybeSingle();
 
-  if (routineError) console.error("Failed to load routine:", routineError);
+  if (routineError) logError("Load routine", routineError);
   if (!routine) notFound();
 
   const periodStart = periodStartFor(routine.cadence);
@@ -34,7 +35,7 @@ export default async function RoutineDetailPage({ params }: { params: Promise<{ 
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
-  if (itemsError) console.error("Failed to load routine items:", itemsError);
+  if (itemsError) logError("Load routine items", itemsError);
   const items = itemsData ?? [];
   const itemIds = items.map((item) => item.id);
 

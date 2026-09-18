@@ -7,6 +7,7 @@ import { ExerciseList } from "@/components/fitness/exercise-list";
 import { AddExerciseForm } from "@/components/fitness/add-exercise-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
+import { logError } from "@/lib/errors";
 import type { Tables } from "@/lib/types/database";
 
 type FitnessTab = "workouts" | "exercises";
@@ -50,7 +51,7 @@ export default async function FitnessPage({
       )
       .order("created_at", { ascending: false });
 
-    if (error) console.error("Failed to load workouts:", error);
+    if (error) logError("Load workouts", error);
 
     workouts = ((data ?? []) as unknown as WorkoutWithRelations[]).map((workout) => {
       const muscleGroups = Array.from(
@@ -76,7 +77,7 @@ export default async function FitnessPage({
       .order("created_at", { ascending: false })
       .limit(5);
 
-    if (logsError) console.error("Failed to load recent logs:", logsError);
+    if (logsError) logError("Load recent logs", logsError);
 
     recentLogs = ((logsData ?? []) as unknown as RecentLogRow[]).map((log) => ({
       id: log.id,
@@ -90,17 +91,17 @@ export default async function FitnessPage({
       .order("is_active", { ascending: false })
       .order("name", { ascending: true });
 
-    if (error) console.error("Failed to load exercises:", error);
+    if (error) logError("Load exercises", error);
     exercises = data ?? [];
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title text-ink">Fitness</h1>
         <Link
           href="/fitness/workouts/new"
-          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white transition-colors hover:bg-teal/90"
+          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white outline-none transition-colors hover:bg-teal/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         >
           <Plus className="size-4" />
           New workout

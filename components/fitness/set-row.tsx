@@ -112,7 +112,7 @@ export function SetRow({
         disabled={isPending}
         aria-label={`Save set ${set.setNumber}`}
         className={cn(
-          "flex size-6 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-50",
+          "flex size-6 items-center justify-center rounded-full border outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
           set.id
             ? "border-teal bg-teal text-white"
             : "border-border-strong text-ink-faint hover:border-teal hover:text-teal-ink"
@@ -126,7 +126,7 @@ export function SetRow({
           onClick={handleDelete}
           disabled={isPending}
           aria-label={`Delete set ${set.setNumber}`}
-          className="text-ink-faint transition-colors hover:text-pink-ink disabled:pointer-events-none disabled:opacity-50"
+          className="rounded-sm text-ink-faint outline-none transition-colors hover:text-pink-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
         >
           <Trash2 className="size-3.5" />
         </button>

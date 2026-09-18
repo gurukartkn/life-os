@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { logError as logLoadError } from "@/lib/errors";
 import { WorkoutLogSession } from "@/components/fitness/workout-log-session";
 import { LinkGoalForm } from "@/components/fitness/link-goal-form";
 import type { SetData } from "@/components/fitness/set-row";
@@ -39,7 +40,7 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
     .eq("id", id)
     .maybeSingle();
 
-  if (logError) console.error("Failed to load workout log:", logError);
+  if (logError) logLoadError("Load workout log", logError);
   const log = logData as unknown as WorkoutLogRow | null;
   if (!log) notFound();
 
@@ -53,7 +54,7 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
         .order("sort_order", { ascending: true })
     : { data: [] as WorkoutExerciseRow[], error: null };
 
-  if (exercisesError) console.error("Failed to load workout exercises:", exercisesError);
+  if (exercisesError) logLoadError("Load workout exercises", exercisesError);
   const workoutExercises = (workoutExercisesData ?? []) as unknown as WorkoutExerciseRow[];
 
   const { data: setLogsData, error: setLogsError } = await supabase
@@ -61,7 +62,7 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
     .select("id, exercise_id, set_number, weight, reps, duration_seconds")
     .eq("workout_log_id", id);
 
-  if (setLogsError) console.error("Failed to load set logs:", setLogsError);
+  if (setLogsError) logLoadError("Load set logs", setLogsError);
   const setLogs = (setLogsData ?? []) as SetLogRow[];
 
   const { data: goalsData } = await supabase
