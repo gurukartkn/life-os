@@ -17,6 +17,9 @@ export function sentryOptions() {
   return {
     dsn,
     enabled: Boolean(dsn) && process.env.NODE_ENV === "production",
+    // Optional label (e.g. "local-verification") to tell test events from real ones;
+    // unset means the SDK's default, which is "production" for a production build.
+    environment: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || undefined,
     sendDefaultPii: false,
     maxBreadcrumbs: 0,
     beforeBreadcrumb: () => null,

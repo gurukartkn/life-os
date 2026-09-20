@@ -25,6 +25,14 @@ describe("sentryOptions", () => {
     expect(sentryOptions().enabled).toBe(true);
   });
 
+  it("uses the optional environment label, and leaves the SDK default when it is unset", () => {
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_ENVIRONMENT", "local-verification");
+    expect(sentryOptions().environment).toBe("local-verification");
+
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_ENVIRONMENT", "");
+    expect(sentryOptions().environment).toBeUndefined();
+  });
+
   it("keeps identity, breadcrumbs, tracing and replay out (ADR-008 limits 3, 6, 7)", () => {
     const options = sentryOptions() as Record<string, unknown>;
 

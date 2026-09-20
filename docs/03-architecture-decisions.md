@@ -164,6 +164,8 @@ These limits satisfy the v1 PRD rule that financial and fitness data are not sen
 
 **Also sent, by the SDK's release-health feature:** aggregated server request counts (started, exited, errored, crashed) tagged with the release and environment, and a session record per server process with the release, environment and "Node.js/23". These carry no user identifier or content. The browser session integration is removed.
 
+**Sentry-side setting required for limit 3.** The SDK sends no IP address, but Sentry derives a coarse location (`user.geo`, city and country) from the IP of the connection that delivers an event, unless "Prevent Storing of IP Addresses" is on. A test event against the real project showed exactly that (2026-09-20). The setting must therefore be enabled at both organization and project level (Settings → Security & Privacy), together with "Data Scrubber" and "Use Default Scrubbers". It cannot be set from code, so it is a deploy checklist item: after enabling it, send one test event and confirm the issue shows no `user.geo`.
+
 **How it was verified:** a production build pointed at a local stand-in for Sentry's ingest endpoint, with a Server Component error, a `logError` call carrying a Postgres-shaped error, and a browser click error, each containing a fake task title, email, workout values and an amount. None of that text, and no cookie, header, token or IP, appeared in what was sent; the Postgres error arrived as `sentryTest failed (23505)`. The same fixtures live in `lib/sentry/*.test.ts`.
 
 **Alternatives considered:** Vercel runtime logs alone (no grouping or alerting); self-hosted GlitchTip (operating a service for a single-user app).
