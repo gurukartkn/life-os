@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArchiveRoutineItemButton } from "@/components/routines/archive-routine-item-button";
 import { toggleRoutineItem } from "@/actions/routines";

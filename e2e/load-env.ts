@@ -5,6 +5,14 @@ import path from "node:path";
 // NODE_ENV === "test" (mirroring CRA), and Playwright sets NODE_ENV=test —
 // so it can never see our Supabase/e2e credentials. This is a minimal,
 // NODE_ENV-agnostic stand-in used only for the e2e suite.
+// A second dev test account that is kept empty, for tests about the no-data state
+// (e.g. Export data is hidden). Derived from E2E_EMAIL by plus-addressing so no
+// extra env var is needed; the dev project has email confirmations off.
+export function emptyAccountEmail(): string {
+  const [local, domain] = (process.env.E2E_EMAIL ?? "").split("@");
+  return `${local}+empty@${domain}`;
+}
+
 export function loadEnvLocal(): void {
   const envPath = path.join(process.cwd(), ".env.local");
   if (!fs.existsSync(envPath)) return;

@@ -116,7 +116,7 @@ export function CreateWorkoutForm({ exercises }: { exercises: Tables<"exercises"
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" tone="teal" disabled={isPending}>
           {isPending ? "Creating…" : "Create workout"}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/fitness")}>

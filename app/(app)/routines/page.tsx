@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ListChecks, Plus } from "lucide-react";
 import { RoutineList, type RoutineCardData } from "@/components/routines/routine-list";
+import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
@@ -62,11 +63,8 @@ export default async function RoutinesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title text-ink">Routines</h1>
-        <Link
-          href="/routines/new"
-          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-blue px-4.5 text-white outline-none transition-colors hover:bg-blue/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-        >
-          <Plus className="size-4" />
+        <Link href="/routines/new" className={buttonVariants({ tone: "blue" })}>
+          <Plus />
           New routine
         </Link>
       </div>

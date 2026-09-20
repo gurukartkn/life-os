@@ -75,7 +75,7 @@ export function AddExerciseForm() {
           className="w-52"
           {...form.register("equipment")}
         />
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" tone="teal" disabled={isPending}>
           <Plus />
           {isPending ? "Adding…" : "Add exercise"}
         </Button>

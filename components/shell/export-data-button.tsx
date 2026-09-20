@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { Download } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { exportUserData } from "@/actions/export";
+import { SIDEBAR_ITEM_BASE, SIDEBAR_LABEL } from "@/components/shell/sidebar-styles";
 
 function downloadJson(data: unknown): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -37,12 +39,20 @@ export function ExportDataButton() {
         onClick={handleExport}
         disabled={isPending}
         aria-label="Export data"
-        className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-body text-ink-muted outline-none transition-colors hover:bg-surface-200 hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
+        title="Export data"
+        className={cn(
+          SIDEBAR_ITEM_BASE,
+          "w-full text-ink-muted hover:bg-surface-200 hover:text-ink disabled:pointer-events-none disabled:opacity-50"
+        )}
       >
         <Download className="size-5 shrink-0" />
-        <span className="hidden md:inline">{isPending ? "Exporting…" : "Export data"}</span>
+        <span className={SIDEBAR_LABEL}>{isPending ? "Exporting…" : "Export data"}</span>
       </button>
-      {error && <span className="hidden px-2.5 text-caption text-pink-ink md:block">{error}</span>}
+      {error && (
+        <span className="hidden px-2.5 text-caption text-pink-ink md:block md:sidebar-collapsed:hidden">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

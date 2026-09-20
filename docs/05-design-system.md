@@ -119,6 +119,8 @@ The design token `--accent` is the brand violet (`#6c4cf5` fill). Shadcn also ha
 - `--accent`, `--accent-hover`, `--accent-text`, `--accent-soft`, `--accent-ink` keep the design-system meaning (violet family).
 - Shadcn's neutral highlight (menu/list hover) uses `--surface-200` directly (`bg-surface-200`); the Shadcn `--accent` / `--accent-foreground` variables are not used by any Life OS component.
 
+A related fix: the class-merge helper `cn` (`lib/utils.ts`) is configured to know the named text styles (`text-body`, `text-button-text`, …) are font sizes. Before, it read them as text colours and dropped them whenever a colour class such as `text-ink-muted` sat beside them, so some labels rendered in the browser default font.
+
 ## B. Input
 
 One style for every text-like control (text, email, password, date-picker trigger, number):
@@ -138,9 +140,9 @@ One style for every text-like control (text, email, password, date-picker trigge
 
 Default size is 38px tall, `--radius-md`, `text-button-text`. Small is 32px. Icon buttons are 38px square.
 
-Variants: `primary` (filled), `secondary`, `outline`, `ghost`, `destructive` (`--pink` fill, white text), `link`.
+Variants: `primary` (filled), `soft` (tinted background with the tone's ink colour, for a secondary action inside a card such as "Start workout" or "View checklist"), `secondary`, `outline`, `ghost`, `destructive` (`--pink` fill, white text), `link`.
 
-`primary` takes a `tone` that carries the domain identity: `violet` (Todo, default), `teal` (Fitness), `blue` (Routines). Every "add / new" action in every domain uses `primary` at the default size, so shape, height, radius and type are identical across screens — only the tone differs. The same styles apply when a Button renders as a link (for example "New workout", "New routine"). Hand-rolled button class strings are not used.
+`primary` and `soft` take a `tone` that carries the domain identity: `violet` (Todo, default), `teal` (Fitness), `blue` (Routines). Every "add / new" action in every domain uses `primary` at the default size, so shape, height, radius and type are identical across screens — only the tone differs. The same styles apply when a Button renders as a link (for example "New workout", "New routine"). Hand-rolled button class strings are not used.
 
 ## D. Date picker
 

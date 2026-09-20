@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Perf harness scripts (plain Node, never bundled into the app).
+    "scripts/perf/**",
   ]),
 ]);
 

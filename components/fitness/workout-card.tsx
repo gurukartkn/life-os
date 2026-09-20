@@ -1,4 +1,5 @@
 import { Clock3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { DeleteWorkoutButton } from "@/components/fitness/delete-workout-button";
 import { startWorkoutLog } from "@/actions/workout-logs";
@@ -41,12 +42,9 @@ export function WorkoutCard({
       </span>
       <form action={startWorkoutLog}>
         <input type="hidden" name="workout_id" value={id} />
-        <button
-          type="submit"
-          className="text-button-text flex h-[38px] w-full items-center justify-center gap-1.5 rounded-md bg-teal-soft text-teal-ink outline-none transition-colors hover:bg-teal-soft/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-        >
+        <Button type="submit" variant="soft" tone="teal" className="w-full">
           Start workout
-        </button>
+        </Button>
       </form>
     </div>
   );

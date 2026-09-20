@@ -5,6 +5,7 @@ import { WorkoutList, type WorkoutCardData } from "@/components/fitness/workout-
 import { RecentLogs, type RecentLogData } from "@/components/fitness/recent-logs";
 import { ExerciseList } from "@/components/fitness/exercise-list";
 import { AddExerciseForm } from "@/components/fitness/add-exercise-form";
+import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
@@ -99,11 +100,8 @@ export default async function FitnessPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title text-ink">Fitness</h1>
-        <Link
-          href="/fitness/workouts/new"
-          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white outline-none transition-colors hover:bg-teal/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-        >
-          <Plus className="size-4" />
+        <Link href="/fitness/workouts/new" className={buttonVariants({ tone: "teal" })}>
+          <Plus />
           New workout
         </Link>
       </div>

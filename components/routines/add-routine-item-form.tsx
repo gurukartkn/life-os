@@ -33,7 +33,7 @@ export function AddRoutineItemForm({ routineId }: { routineId: string }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-1.5" noValidate>
       <div className="flex items-start gap-2">
         <Input aria-label="Item title" placeholder="Add an item…" {...form.register("title")} />
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" tone="blue" disabled={isPending}>
           <Plus />
           {isPending ? "Adding…" : "Add item"}
         </Button>

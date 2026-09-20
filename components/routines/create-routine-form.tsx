@@ -93,7 +93,7 @@ export function CreateRoutineForm() {
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" tone="blue" disabled={isPending}>
           {isPending ? "Creating…" : "Create routine"}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/routines")}>
