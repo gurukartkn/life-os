@@ -1,34 +1,12 @@
-import { CalendarCheck } from "lucide-react";
 import { AddTodoForm } from "@/components/todos/add-todo-form";
-import { TodoFilters } from "@/components/todos/todo-filters";
-import { TodoList } from "@/components/todos/todo-list";
 import { TodoStats } from "@/components/todos/todo-stats";
-import { EmptyState } from "@/components/ui/empty-state";
+import { TodoView } from "@/components/todos/todo-view";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
 import { todayIso } from "@/lib/dates";
 import type { Tables } from "@/lib/types/database";
 
-type StatusFilter = "all" | "active" | "completed";
-
-function parseStatusFilter(status: string | undefined): StatusFilter {
-  return status === "active" || status === "completed" ? status : "all";
-}
-
-function emptyStateTitle(filter: StatusFilter): string {
-  if (filter === "active") return "Nothing left to do.";
-  if (filter === "completed") return "Nothing completed yet.";
-  return "Nothing on the list today.";
-}
-
-export default async function TodayPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
-  const { status } = await searchParams;
-  const filter = parseStatusFilter(status);
-
+export default async function TodayPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("todos")
@@ -49,23 +27,12 @@ export default async function TodayPage({
   ).length;
   const completedCount = todos.filter((t) => t.is_completed).length;
 
-  const visibleTodos = todos.filter((t) => {
-    if (filter === "active") return !t.is_completed;
-    if (filter === "completed") return t.is_completed;
-    return true;
-  });
-
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-page-title text-ink">Today</h1>
       <TodoStats dueToday={dueTodayCount} overdue={overdueCount} completed={completedCount} />
       <AddTodoForm />
-      <TodoFilters active={filter} />
-      {visibleTodos.length === 0 ? (
-        <EmptyState icon={CalendarCheck} title={emptyStateTitle(filter)} />
-      ) : (
-        <TodoList todos={visibleTodos} />
-      )}
+      <TodoView todos={todos} />
     </div>
   );
 }
