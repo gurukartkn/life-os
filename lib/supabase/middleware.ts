@@ -27,20 +27,26 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() verifies the session's JWT locally against the project's cached
+  // signing keys instead of asking Supabase Auth over the network on every
+  // request (getUser() cost one round trip before anything could render).
+  // An expired access token is still refreshed here, which is what keeps the
+  // cookie current. Trade-off: a session revoked elsewhere is honoured until
+  // its access token expires (≤ 1 hour); Server Actions that write still call
+  // getUser(), and RLS is the real boundary either way (ADR-002).
+  const { data } = await supabase.auth.getClaims();
+  const isSignedIn = Boolean(data?.claims);
 
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
 
-  if (!user && !isAuthRoute) {
+  if (!isSignedIn && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (isSignedIn && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/todos";
     return NextResponse.redirect(url);

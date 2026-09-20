@@ -5,21 +5,22 @@ import { AppShell } from "@/components/shell/app-shell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  // Independent, so they run together: the auth check, and whether Export data
+  // Independent, so they run together: the session check, and whether Export data
   // has anything to export (the sidebar hides it for an empty account).
-  const [
-    {
-      data: { user },
-    },
-    hasExportableData,
-  ] = await Promise.all([supabase.auth.getUser(), userHasData(supabase)]);
+  // getClaims() verifies the session JWT locally (no Auth round trip); the proxy
+  // has already refreshed an expired token, and RLS scopes every query regardless.
+  const [{ data: authData }, hasExportableData] = await Promise.all([
+    supabase.auth.getClaims(),
+    userHasData(supabase),
+  ]);
 
-  if (!user) {
+  const claims = authData?.claims;
+  if (!claims) {
     redirect("/login");
   }
 
   return (
-    <AppShell userEmail={user.email ?? ""} hasExportableData={hasExportableData}>
+    <AppShell userEmail={claims.email ?? ""} hasExportableData={hasExportableData}>
       {children}
     </AppShell>
   );
