@@ -38,8 +38,9 @@ const buttonVariants = cva(
     },
     compoundVariants: [
       { variant: "primary", tone: "violet", class: "bg-accent hover:bg-accent-hover" },
-      { variant: "primary", tone: "teal", class: "bg-teal hover:bg-teal/90" },
-      { variant: "primary", tone: "blue", class: "bg-blue hover:bg-blue/90" },
+      // The -fill tokens are the identity colours darkened to carry white text at AA (v2 Amendment §H).
+      { variant: "primary", tone: "teal", class: "bg-teal-fill hover:bg-teal-fill-hover" },
+      { variant: "primary", tone: "blue", class: "bg-blue-fill hover:bg-blue-fill-hover" },
       { variant: "soft", tone: "violet", class: "bg-accent-soft text-accent-text hover:bg-accent-soft/80" },
       { variant: "soft", tone: "teal", class: "bg-teal-soft text-teal-ink hover:bg-teal-soft/80" },
       { variant: "soft", tone: "blue", class: "bg-blue-soft text-blue-ink hover:bg-blue-soft/80" },

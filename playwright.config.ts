@@ -31,5 +31,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    // `next dev` appends a generated "agent rules" block to CLAUDE.md whenever it detects an AI
+    // coding agent from these variables. Blanking them for the test server keeps the file clean.
+    env: { AI_AGENT: "", CLAUDECODE: "", CLAUDE_CODE: "", CLAUDE_CODE_IS_COWORK: "" },
   },
 });

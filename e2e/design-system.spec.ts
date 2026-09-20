@@ -81,8 +81,8 @@ test("add-todo, New workout and New routine buttons share one shape (tone differ
   expect(addTodo.height).toBe("38px");
   expect(addTodo.radius).toBe("10px");
 
-  // Domain identity: violet (Todo), teal (Fitness), blue (Routines).
+  // Domain identity: violet (Todo), teal (Fitness), blue (Routines) — the -fill variants of teal and blue.
   expect(addTodo.background).toBe("rgb(108, 76, 245)");
-  expect(newWorkout.background).toBe("rgb(63, 164, 145)");
-  expect(newRoutine.background).toBe("rgb(75, 158, 234)");
+  expect(newWorkout.background).toBe("rgb(49, 129, 114)");
+  expect(newRoutine.background).toBe("rgb(57, 121, 179)");
 });

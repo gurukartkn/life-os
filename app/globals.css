@@ -61,9 +61,13 @@
   --color-teal: var(--teal);
   --color-teal-soft: var(--teal-soft);
   --color-teal-ink: var(--teal-ink);
+  --color-teal-fill: var(--teal-fill);
+  --color-teal-fill-hover: var(--teal-fill-hover);
   --color-blue: var(--blue);
   --color-blue-soft: var(--blue-soft);
   --color-blue-ink: var(--blue-ink);
+  --color-blue-fill: var(--blue-fill);
+  --color-blue-fill-hover: var(--blue-fill-hover);
   --color-pink: var(--pink);
   --color-pink-soft: var(--pink-soft);
   --color-pink-ink: var(--pink-ink);
@@ -87,8 +91,8 @@
   --surface-200: #f4f5f7;
   --border-strong: #e0e0e0;
   --ink: #141414;
-  --ink-muted: #6b6b6b;
-  --ink-faint: #9a9a9a;
+  --ink-muted: #555555;
+  --ink-faint: #6f6f6f;
   --accent-hover: #5b3ee0;
   --accent-text: #5b3ee0;
   --accent-soft: #eee9fe;
@@ -96,9 +100,14 @@
   --teal: #3fa491;
   --teal-soft: #e1f5f1;
   --teal-ink: #1f6a5c;
+  /* Solid fill behind white text (v2 Amendment §H): the identity colour itself is too light for AA. */
+  --teal-fill: #318172;
+  --teal-fill-hover: #2b7264;
   --blue: #4b9eea;
   --blue-soft: #e5f2fd;
   --blue-ink: #235e8c;
+  --blue-fill: #3979b3;
+  --blue-fill-hover: #326b9e;
   --pink: #c81e5c;
   --pink-soft: #fce7ef;
   --pink-ink: #a32359;
@@ -152,8 +161,7 @@
   --border-strong: #363944;
   --ink: #f2f2f4;
   --ink-muted: #a3a5ad;
-  --ink-faint: #7f828c;
-  --accent-hover: #7d61f7;
+  --ink-faint: #868992;
   --accent-text: #a595ff;
   --accent-soft: #241d4a;
   --teal-soft: #12312c;

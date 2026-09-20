@@ -26,6 +26,8 @@ Life OS is a tool one person uses privately, many times a day. The voice is **pl
 
 ## Design tokens (CSS custom properties)
 
+*(v2: the values of `ink-muted` and `ink-faint` below are superseded, and `teal-fill` / `blue-fill` are added. See "v2 Amendment" §H.)*
+
 ```css
 :root, [data-theme="light"] {
   --surface-050: #f9fbfc; /* Page and sidebar background. */
@@ -165,8 +167,8 @@ Set with `data-theme="dark"` on `<html>`; light stays the default token set. Acc
 [data-theme="dark"] {
   --surface-050: #0f1014;  --surface-100: #17181d;  --surface-200: #1f2127;
   --border: #26282f;       --border-strong: #363944;
-  --ink: #f2f2f4;         --ink-muted: #a3a5ad;    --ink-faint: #7f828c;
-  --accent: #6c4cf5;       --accent-hover: #7d61f7; --accent-text: #a595ff;
+  --ink: #f2f2f4;         --ink-muted: #a3a5ad;    --ink-faint: #868992;
+  --accent: #6c4cf5;       --accent-text: #a595ff;
   --accent-soft: #241d4a;  --accent-ink: #ffffff;
   --teal: #3fa491;         --teal-soft: #12312c;    --teal-ink: #6fd0bd;
   --blue: #4b9eea;         --blue-soft: #14293d;    --blue-ink: #8cc4f5;
@@ -176,8 +178,24 @@ Set with `data-theme="dark"` on `<html>`; light stays the default token set. Acc
 }
 ```
 
-Final values in the code may be nudged to meet contrast; this list is then updated.
+Dark --accent-hover is not overridden: the light value (#5b3ee0) stays, because a lighter violet on hover would drop white button text below 4.5:1. Values were nudged to meet contrast (see §H); this list is the final set.
 
 ## G. Theme switching
 
 Two themes, light and dark, with a toggle (Sun / Moon icon) in the sidebar footer. On a first visit the theme follows the operating-system preference; after that the explicit choice wins. The choice is stored in the browser only (no schema change) and applied by a small inline script before first paint so there is no flash. The theme is UI state (ADR-003), held in the Zustand UI store.
+
+
+## H. Contrast fixes (WCAG AA)
+
+Checked with axe on every screen in both themes, plus overdue and completed todos, validation errors and the open calendar (`e2e/contrast.spec.ts`). These v1 values fell short of 4.5:1 and are changed, in both themes where noted:
+
+| Token | Was | Now | Why |
+|---|---|---|---|
+| `ink-faint` (light) | `#9a9a9a` (2.7:1) | `#6f6f6f` (4.6:1 on the darkest light surface) | Captions, placeholders, inactive tab labels |
+| `ink-muted` (light) | `#6b6b6b` | `#555555` | Kept one clear step above `ink-faint` so the three text tiers stay distinct |
+| `ink-faint` (dark) | `#7f828c` (4.2:1 on a hovered row) | `#868992` | Same reason, on `surface-200` |
+| `teal-fill` (new, both themes) | white on `teal` `#3fa491` (3.0:1) | `#318172` (4.65:1), hover `#2b7264` | Solid button fill behind white text |
+| `blue-fill` (new, both themes) | white on `blue` `#4b9eea` (2.8:1) | `#3979b3` (4.6:1), hover `#326b9e` | Same |
+| `accent-hover` (dark) | `#7d61f7` (4.3:1 with white) | inherits `#5b3ee0` | Hover must not lighten the fill under white text |
+
+`teal` and `blue` keep their identity meaning for bars, dots, icons and charts (3:1 is enough there). Only solid button fills use the `-fill` tokens; button hover is a darker token, not an opacity change, because opacity lightens the fill under white text. Any future colour pair used for text must be checked against 4.5:1 (3:1 for large text and graphics) before it is added.
