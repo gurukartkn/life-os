@@ -69,6 +69,17 @@ export function makeQueryBuilder(result: SupabaseResult = { data: null, error: n
   return builder;
 }
 
+// A query that never settles. Lets a test prove that several reads were *issued*
+// together (all `from()` calls happen before any result comes back) — i.e. that a
+// page runs its independent queries in parallel rather than one after another.
+export function makePendingQueryBuilder(): QueryBuilderMock {
+  const builder = makeQueryBuilder();
+  const pending = new Promise(() => {});
+  builder.then = pending.then.bind(pending) as Promise<unknown>["then"];
+  builder.catch = pending.catch.bind(pending) as Promise<unknown>["catch"];
+  return builder;
+}
+
 export type SupabaseAuthUser = { id: string; email?: string } | null;
 
 export type SupabaseMock = {

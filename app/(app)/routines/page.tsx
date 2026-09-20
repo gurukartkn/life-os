@@ -9,52 +9,43 @@ import { periodStartFor } from "@/lib/dates";
 
 export default async function RoutinesPage() {
   const supabase = await createClient();
+  const dailyPeriod = periodStartFor("daily");
+  const weeklyPeriod = periodStartFor("weekly");
 
-  const { data: routinesData, error } = await supabase
-    .from("routines")
-    .select("id, title, cadence, created_at")
-    .order("created_at", { ascending: false });
+  // Three independent reads, issued together (one round trip of wall-clock time,
+  // not three). RLS already limits every table to this user, so items and
+  // completions need no filtering by routine id here — each routine picks out its own below.
+  const [
+    { data: routinesData, error },
+    { data: itemsData },
+    { data: completionsData },
+  ] = await Promise.all([
+    supabase
+      .from("routines")
+      .select("id, title, cadence, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("routine_items").select("id, routine_id").eq("is_active", true),
+    supabase
+      .from("routine_completions")
+      .select("routine_item_id, period_start")
+      .in("period_start", [dailyPeriod, weeklyPeriod]),
+  ]);
 
   if (error) logError("Load routines", error);
 
   const routines = routinesData ?? [];
-  const routineIds = routines.map((routine) => routine.id);
-
-  const { data: itemsData } =
-    routineIds.length > 0
-      ? await supabase
-          .from("routine_items")
-          .select("id, routine_id")
-          .eq("is_active", true)
-          .in("routine_id", routineIds)
-      : { data: [] as { id: string; routine_id: string }[] };
-
   const items = itemsData ?? [];
-  const itemIds = items.map((item) => item.id);
-  const dailyPeriod = periodStartFor("daily");
-  const weeklyPeriod = periodStartFor("weekly");
-
-  const { data: completionsData } =
-    itemIds.length > 0
-      ? await supabase
-          .from("routine_completions")
-          .select("routine_item_id, period_start")
-          .in("routine_item_id", itemIds)
-          .in("period_start", [dailyPeriod, weeklyPeriod])
-      : { data: [] as { routine_item_id: string; period_start: string }[] };
-
   const completions = completionsData ?? [];
 
   const routineCards: RoutineCardData[] = routines.map((routine) => {
     const periodStart = routine.cadence === "weekly" ? weeklyPeriod : dailyPeriod;
-    const routineItemIds = items
-      .filter((item) => item.routine_id === routine.id)
-      .map((item) => item.id);
-    const totalCount = routineItemIds.length;
+    const routineItemIds = new Set(
+      items.filter((item) => item.routine_id === routine.id).map((item) => item.id)
+    );
+    const totalCount = routineItemIds.size;
     const doneCount = completions.filter(
       (completion) =>
-        routineItemIds.includes(completion.routine_item_id) &&
-        completion.period_start === periodStart
+        routineItemIds.has(completion.routine_item_id) && completion.period_start === periodStart
     ).length;
     return { id: routine.id, title: routine.title, cadence: routine.cadence, totalCount, doneCount };
   });

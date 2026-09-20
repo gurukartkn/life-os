@@ -45,12 +45,21 @@ export default async function FitnessPage({
   let exercises: Tables<"exercises">[] = [];
 
   if (activeTab === "workouts") {
-    const { data, error } = await supabase
-      .from("workouts")
-      .select(
-        "id, name, created_at, workout_exercises(exercise_id, exercises(muscle_groups)), workout_logs(performed_on)"
-      )
-      .order("created_at", { ascending: false });
+    // The workouts and the recent logs don't depend on each other, so they are read together.
+    const [{ data, error }, { data: logsData, error: logsError }] = await Promise.all([
+      supabase
+        .from("workouts")
+        .select(
+          "id, name, created_at, workout_exercises(exercise_id, exercises(muscle_groups)), workout_logs(performed_on)"
+        )
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("workout_logs")
+        .select("id, performed_on, workouts(name)")
+        .order("performed_on", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
     if (error) logError("Load workouts", error);
 
@@ -70,13 +79,6 @@ export default async function FitnessPage({
         lastLogged,
       };
     });
-
-    const { data: logsData, error: logsError } = await supabase
-      .from("workout_logs")
-      .select("id, performed_on, workouts(name)")
-      .order("performed_on", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(5);
 
     if (logsError) logError("Load recent logs", logsError);
 
