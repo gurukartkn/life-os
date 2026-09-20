@@ -13,10 +13,35 @@ test("add a todo and mark it complete", async ({ page }) => {
   const row = page.getByText(title, { exact: true });
   await expect(row).toBeVisible();
 
-  await page.getByRole("checkbox", { name: "Mark as done" }).first().click();
+  // Its own row: other specs share this account and leave open todos on the page.
+  const todoRow = page.locator("div.rounded-md.border", { hasText: title });
+  await todoRow.getByRole("checkbox", { name: "Mark as done" }).click();
 
-  await expect(row).toHaveClass(/line-through/);
-  await expect(page.getByRole("checkbox", { name: "Mark as not done" }).first()).toBeVisible();
+  await expect(row).toHaveClass(/line-through/, { timeout: 20_000 });
+  await expect(todoRow.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible();
+});
+
+// Backlog #4 — shadcn calendar for date pickers. A past date is allowed (Stage 2
+// shows it as overdue), so pick one from the previous month.
+test("pick a due date in the calendar and see it on the task", async ({ page }) => {
+  const title = `Renew passport ${Date.now()}`;
+  const past = new Date();
+  past.setDate(1);
+  past.setMonth(past.getMonth() - 1);
+  const monthShort = past.toLocaleString("en-US", { month: "short" });
+
+  await page.goto("/todos");
+  await page.getByLabel("Todo title").fill(title);
+
+  await page.getByRole("button", { name: "Due date" }).click();
+  await page.getByRole("button", { name: /previous month/i }).click();
+  await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
+  await expect(page.getByRole("button", { name: new RegExp(`Due date, ${monthShort} 15, \\d{4}`) })).toBeVisible();
+
+  await page.getByRole("button", { name: "Add todo" }).click();
+
+  const row = page.locator("div.rounded-md.border", { hasText: title });
+  await expect(row).toContainText(`Due ${monthShort} 15`, { timeout: 20_000 });
 });
 
 // Backlog #7 — the filter tabs re-filter the list the page already has; they

@@ -1,12 +1,13 @@
 "use client";
 
 import { startTransition, useActionState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { createGoal } from "@/actions/goals";
 import { goalInsertSchema, type GoalInsertInput } from "@/lib/validations/goals";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import type { ActionResult } from "@/lib/types/action-result";
 
@@ -36,11 +37,18 @@ export function AddGoalForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-1.5" noValidate>
       <div className="flex items-start gap-2">
         <Input aria-label="Goal title" placeholder="Add a goal…" {...form.register("title")} />
-        <Input
-          aria-label="Target date"
-          type="date"
-          className="w-40"
-          {...form.register("target_date")}
+        <Controller
+          control={form.control}
+          name="target_date"
+          render={({ field }) => (
+            <DatePicker
+              label="Target date"
+              placeholder="Target date"
+              className="w-44 shrink-0"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+            />
+          )}
         />
         <Button type="submit" disabled={isPending}>
           <Plus />
