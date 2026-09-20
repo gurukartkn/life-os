@@ -162,6 +162,10 @@ Source: https://claude.ai/artifact/Q2wwsznZJLMNEqnnJzyauu
 
 These limits satisfy the v1 PRD rule that financial and fitness data are not sent to any third-party analytics tool: Sentry receives error metadata only.
 
+**Also sent, by the SDK's release-health feature:** aggregated server request counts (started, exited, errored, crashed) tagged with the release and environment, and a session record per server process with the release, environment and "Node.js/23". These carry no user identifier or content. The browser session integration is removed.
+
+**How it was verified:** a production build pointed at a local stand-in for Sentry's ingest endpoint, with a Server Component error, a `logError` call carrying a Postgres-shaped error, and a browser click error, each containing a fake task title, email, workout values and an amount. None of that text, and no cookie, header, token or IP, appeared in what was sent; the Postgres error arrived as `sentryTest failed (23505)`. The same fixtures live in `lib/sentry/*.test.ts`.
+
 **Alternatives considered:** Vercel runtime logs alone (no grouping or alerting); self-hosted GlitchTip (operating a service for a single-user app).
 
 **Consequences:** Easier — production errors are grouped, with stack traces and releases. Harder — one more vendor and environment variables (`NEXT_PUBLIC_SENTRY_DSN`, and `SENTRY_AUTH_TOKEN` at build time only for source maps), and a small client-bundle increase, which is measured in the Stage 1 performance report. Every new domain must add fixtures to the scrubber tests; Finance in particular must be covered before it ships.

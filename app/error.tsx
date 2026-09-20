@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { logError } from "@/lib/errors";
+import { logBoundaryError } from "@/lib/errors";
 
 export default function RootError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    logError("Root", error);
+    logBoundaryError("Root", error);
   }, [error]);
 
   return (
