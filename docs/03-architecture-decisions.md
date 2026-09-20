@@ -135,3 +135,42 @@ Source: https://claude.ai/artifact/Q2wwsznZJLMNEqnnJzyauu
 | 005 | Zod schemas + React Hook Form + `useActionState`, shared client/server validation |
 | 006 | No Realtime in v1 — request/refresh model |
 | 007 | Separate Supabase projects for prod/dev, migrations tracked in version control |
+
+
+---
+
+# v2 additions
+
+## ADR-008: Hosted Error Tracking with Sentry
+
+**Status:** Approved · **Date:** 2026-09-19 · **Supersedes:** the "console-only logging" clause in `docs/04-backend-architecture.md` §7 and the v1 deferral of a hosted logging service. ADR-001 to ADR-007 are unchanged.
+
+**Decision:** Report unhandled server and browser errors from **production** to **Sentry**, with stack traces. `console.error` logging stays as well. Local development, tests and preview deployments send nothing.
+
+**Why:** Errors in production are otherwise only visible in Vercel runtime logs, ungrouped and easy to miss. Server Actions never throw (`ActionResult`), so unexpected failures are caught and logged; they need to reach a place where they are grouped and seen.
+
+**Limits on what a report may contain** (enforced in code by a `beforeSend` scrubber and by SDK options; covered by unit tests):
+
+1. **Allowlist, not blocklist.** A report carries only: error type, a sanitised message, stack frames, the route path (no query string), release, environment, and runtime/browser/OS.
+2. **No user content.** Never task titles or descriptions, workout, set or exercise values, routine items, goal titles, and — from Finance onward — amounts, account labels or transaction descriptions. This holds for every field, including messages, extra data and breadcrumbs.
+3. **No user identity.** `sendDefaultPii` is off, `setUser` is never called, and no email, user id or IP address is sent. The Sentry project is also set not to store IP addresses.
+4. **No request or response bodies, cookies, headers or Server Action form data.**
+5. **Database errors are reduced to `context + code`.** A Postgres or Supabase error's `message`, `details` and `hint` can quote row values (for example `Key (title)=(…) already exists`), so they are dropped before reporting.
+6. **No automatic breadcrumbs** for console, fetch, XHR or DOM interaction: Supabase request URLs can carry filter values and DOM breadcrumbs capture button text.
+7. **Session Replay, performance tracing, profiling and local-variable capture are off.**
+8. Sentry's own server-side data scrubbing is turned on as a second layer.
+
+These limits satisfy the v1 PRD rule that financial and fitness data are not sent to any third-party analytics tool: Sentry receives error metadata only.
+
+**Alternatives considered:** Vercel runtime logs alone (no grouping or alerting); self-hosted GlitchTip (operating a service for a single-user app).
+
+**Consequences:** Easier — production errors are grouped, with stack traces and releases. Harder — one more vendor and environment variables (`NEXT_PUBLIC_SENTRY_DSN`, and `SENTRY_AUTH_TOKEN` at build time only for source maps), and a small client-bundle increase, which is measured in the Stage 1 performance report. Every new domain must add fixtures to the scrubber tests; Finance in particular must be covered before it ships.
+
+**Action items:**
+- [ ] Add `@sentry/nextjs` with the scrubber and unit tests
+- [ ] Route `logError()` and both error boundaries through Sentry
+- [ ] Set DSN and auth token in Vercel Production; confirm one test event in the Sentry UI after deploy
+
+| ADR | Decision |
+|---|---|
+| 008 | Sentry error tracking in production only, with an allowlist that keeps user content, identity and request data out of reports |
