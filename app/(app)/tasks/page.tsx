@@ -3,7 +3,7 @@ import { TaskStats } from "@/components/tasks/task-stats";
 import { TaskView } from "@/components/tasks/task-view";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
-import { todayIso } from "@/lib/dates";
+import { isOverdue, todayIso } from "@/lib/dates";
 import type { Tables } from "@/lib/types/database";
 
 export default async function TasksPage() {
@@ -23,7 +23,7 @@ export default async function TasksPage() {
   const today = todayIso();
   const dueTodayCount = tasks.filter((t) => !t.is_completed && t.due_date === today).length;
   const overdueCount = tasks.filter(
-    (t) => !t.is_completed && t.due_date !== null && t.due_date < today
+    (t) => !t.is_completed && t.due_date !== null && isOverdue(t.due_date)
   ).length;
   const completedCount = tasks.filter((t) => t.is_completed).length;
 
