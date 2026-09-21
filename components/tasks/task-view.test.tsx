@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { TodoView } from "./todo-view";
+import { TaskView } from "./task-view";
 import type { Tables } from "@/lib/types/database";
 
 let mockSearch = "";
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(mockSearch),
 }));
-vi.mock("@/actions/todos", () => ({
-  toggleTodo: vi.fn(),
-  deleteTodo: vi.fn(),
+vi.mock("@/actions/tasks", () => ({
+  toggleTask: vi.fn(),
+  deleteTask: vi.fn(),
 }));
 
-function todo(id: string, title: string, isCompleted: boolean): Tables<"todos"> {
+function task(id: string, title: string, isCompleted: boolean): Tables<"tasks"> {
   return {
     id,
     user_id: "u1",
@@ -26,15 +26,15 @@ function todo(id: string, title: string, isCompleted: boolean): Tables<"todos"> 
   };
 }
 
-const todos = [todo("1", "Open one", false), todo("2", "Done one", true), todo("3", "Open two", false)];
+const tasks = [task("1", "Open one", false), task("2", "Done one", true), task("3", "Open two", false)];
 
-describe("TodoView", () => {
+describe("TaskView", () => {
   beforeEach(() => {
     mockSearch = "";
   });
 
-  it("shows every todo with no status param", () => {
-    render(<TodoView todos={todos} />);
+  it("shows every task with no status param", () => {
+    render(<TaskView tasks={tasks} />);
 
     expect(screen.getByText("Open one")).toBeInTheDocument();
     expect(screen.getByText("Done one")).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe("TodoView", () => {
 
   it("renders deep-linked ?status=active filtered on first render", () => {
     mockSearch = "status=active";
-    render(<TodoView todos={todos} />);
+    render(<TaskView tasks={tasks} />);
 
     expect(screen.getByText("Open one")).toBeInTheDocument();
     expect(screen.queryByText("Done one")).not.toBeInTheDocument();
@@ -53,7 +53,7 @@ describe("TodoView", () => {
 
   it("renders deep-linked ?status=completed filtered on first render", () => {
     mockSearch = "status=completed";
-    render(<TodoView todos={todos} />);
+    render(<TaskView tasks={tasks} />);
 
     expect(screen.getByText("Done one")).toBeInTheDocument();
     expect(screen.queryByText("Open one")).not.toBeInTheDocument();
@@ -61,14 +61,14 @@ describe("TodoView", () => {
 
   it("treats an unknown status as all", () => {
     mockSearch = "status=bogus";
-    render(<TodoView todos={todos} />);
+    render(<TaskView tasks={tasks} />);
 
     expect(screen.getAllByRole("checkbox")).toHaveLength(3);
   });
 
   it("shows the filter-specific empty state when nothing matches", () => {
     mockSearch = "status=completed";
-    render(<TodoView todos={[todo("1", "Open one", false)]} />);
+    render(<TaskView tasks={[task("1", "Open one", false)]} />);
 
     expect(screen.getByText("Nothing completed yet.")).toBeInTheDocument();
   });

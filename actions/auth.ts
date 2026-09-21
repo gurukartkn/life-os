@@ -27,7 +27,7 @@ export async function login(
     return { success: false, error: mapAuthError(error) };
   }
 
-  redirect("/todos");
+  redirect("/tasks");
 }
 
 export async function signup(
@@ -52,7 +52,7 @@ export async function signup(
   }
 
   if (data.session) {
-    redirect("/todos");
+    redirect("/tasks");
   }
 
   return {

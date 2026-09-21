@@ -18,6 +18,6 @@ setup("authenticate empty account", async ({ page }) => {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 
-  await expect(page).toHaveURL("/todos");
+  await expect(page).toHaveURL("/tasks");
   await page.context().storageState({ path: authFile });
 });

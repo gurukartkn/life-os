@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function TodosLoading() {
+export default function TasksLoading() {
   return (
     <div className="flex flex-col gap-6">
       <Skeleton className="h-7 w-24" />

@@ -19,7 +19,7 @@ for (const file of process.argv.slice(2)) {
       console.log(`| ${k} | ${m(v.contentMs)} | ${c(v.firstDomChangeMs)} | ${c(v.browserRequests)} | ${c(v.serverAuthCalls)} | ${c(v.serverAuthMs)} | ${c(v.serverRestCalls)} | ${c(v.serverRestMs)} |`);
   }
   if (results.filters) {
-    console.log(`\n**Todo filter tabs** (rows shown: ${JSON.stringify(results.filters.expectedRows)})\n\n| Step | content ms | first DOM change ms | browser requests | server REST calls | server auth calls | long-task ms | max event ms | CLS |\n|---|---|---|---|---|---|---|---|---|`);
+    console.log(`\n**Task filter tabs** (rows shown: ${JSON.stringify(results.filters.expectedRows)})\n\n| Step | content ms | first DOM change ms | browser requests | server REST calls | server auth calls | long-task ms | max event ms | CLS |\n|---|---|---|---|---|---|---|---|---|`);
     for (const [k, v] of Object.entries(results.filters)) {
       if (k === "expectedRows") continue;
       console.log(`| ${k} | ${m(v.contentMs)} | ${c(v.firstDomChangeMs)} | ${c(v.browserRequests)} | ${c(v.serverRestCalls)} | ${c(v.serverAuthCalls)} | ${c(v.longtaskMs)} | ${c(v.eventDurationMaxMs)} | ${v.clsSum} |`);

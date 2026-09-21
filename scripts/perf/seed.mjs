@@ -1,6 +1,6 @@
 // Perf harness only. Seeds / clears data on the life-os-dev e2e account.
-//   node scripts/perf/seed.mjs small   (~12 todos, 3 workouts, 2 routines — real-usage scale)
-//   node scripts/perf/seed.mjs large   (300 todos, 30 workouts, 10 routines)
+//   node scripts/perf/seed.mjs small   (~12 tasks, 3 workouts, 2 routines — real-usage scale)
+//   node scripts/perf/seed.mjs large   (300 tasks, 30 workouts, 10 routines)
 //   node scripts/perf/seed.mjs clear
 // Uses the anon key + the e2e user's session, so RLS scopes everything to that
 // account. Refuses to run unless the URL is the dev project.
@@ -31,7 +31,7 @@ async function clear() {
   for (const table of ["workout_logs", "workouts", "routines"]) {
     await must(supabase.from(table).delete().eq("user_id", userId), `clear ${table}`);
   }
-  for (const table of ["exercises", "todos", "goals", "links"]) {
+  for (const table of ["exercises", "tasks", "goals", "links"]) {
     await must(supabase.from(table).delete().eq("user_id", userId), `clear ${table}`);
   }
 }
@@ -44,7 +44,7 @@ if (mode === "clear") {
 }
 if (mode !== "small" && mode !== "large") throw new Error("usage: seed.mjs small|large|clear");
 
-const size = mode === "large" ? { todos: 300, workouts: 30, routines: 10, items: 8 } : { todos: 12, workouts: 3, routines: 2, items: 4 };
+const size = mode === "large" ? { tasks: 300, workouts: 30, routines: 10, items: 8 } : { tasks: 12, workouts: 3, routines: 2, items: 4 };
 await clear();
 
 const today = new Date();
@@ -55,16 +55,16 @@ const iso = (offsetDays) => {
 };
 
 await must(
-  supabase.from("todos").insert(
-    Array.from({ length: size.todos }, (_, i) => ({
+  supabase.from("tasks").insert(
+    Array.from({ length: size.tasks }, (_, i) => ({
       user_id: userId,
-      title: `perf todo ${i + 1}`,
+      title: `perf task ${i + 1}`,
       due_date: i % 3 === 0 ? null : iso((i % 9) - 3),
       is_completed: i % 3 === 1, // ~1/3 completed → all / active / completed counts all differ
       completed_at: i % 3 === 1 ? new Date().toISOString() : null,
     }))
   ),
-  "todos"
+  "tasks"
 );
 
 await must(supabase.from("goals").insert([{ user_id: userId, title: "perf goal" }]), "goals");

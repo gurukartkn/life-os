@@ -258,7 +258,7 @@ export type Database = {
           },
         ]
       }
-      todos: {
+      tasks: {
         Row: {
           completed_at: string | null
           created_at: string

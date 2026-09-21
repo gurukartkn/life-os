@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { emptyStateTitle, filterHref, filterTodos, parseStatusFilter } from "./todo-filters";
+import { emptyStateTitle, filterHref, filterTasks, parseStatusFilter } from "./task-filters";
 import type { Tables } from "@/lib/types/database";
 
-function todo(id: string, isCompleted: boolean): Tables<"todos"> {
+function task(id: string, isCompleted: boolean): Tables<"tasks"> {
   return {
     id,
     user_id: "u1",
-    title: `Todo ${id}`,
+    title: `Task ${id}`,
     description: null,
     due_date: null,
     is_completed: isCompleted,
@@ -16,7 +16,7 @@ function todo(id: string, isCompleted: boolean): Tables<"todos"> {
   };
 }
 
-const todos = [todo("1", false), todo("2", true), todo("3", false), todo("4", true), todo("5", true)];
+const tasks = [task("1", false), task("2", true), task("3", false), task("4", true), task("5", true)];
 
 describe("parseStatusFilter", () => {
   it("accepts active and completed", () => {
@@ -32,29 +32,29 @@ describe("parseStatusFilter", () => {
   });
 });
 
-describe("filterTodos", () => {
-  it("returns every todo for all", () => {
-    expect(filterTodos(todos, "all")).toHaveLength(5);
+describe("filterTasks", () => {
+  it("returns every task for all", () => {
+    expect(filterTasks(tasks, "all")).toHaveLength(5);
   });
 
-  it("returns only open todos for active", () => {
-    expect(filterTodos(todos, "active").map((t) => t.id)).toEqual(["1", "3"]);
+  it("returns only open tasks for active", () => {
+    expect(filterTasks(tasks, "active").map((t) => t.id)).toEqual(["1", "3"]);
   });
 
-  it("returns only done todos for completed", () => {
-    expect(filterTodos(todos, "completed").map((t) => t.id)).toEqual(["2", "4", "5"]);
+  it("returns only done tasks for completed", () => {
+    expect(filterTasks(tasks, "completed").map((t) => t.id)).toEqual(["2", "4", "5"]);
   });
 
   it("keeps the original order", () => {
-    expect(filterTodos(todos, "completed").map((t) => t.id)).toEqual(["2", "4", "5"]);
+    expect(filterTasks(tasks, "completed").map((t) => t.id)).toEqual(["2", "4", "5"]);
   });
 });
 
 describe("filterHref", () => {
   it("omits the param for all and sets it otherwise", () => {
-    expect(filterHref("all")).toBe("/todos");
-    expect(filterHref("active")).toBe("/todos?status=active");
-    expect(filterHref("completed")).toBe("/todos?status=completed");
+    expect(filterHref("all")).toBe("/tasks");
+    expect(filterHref("active")).toBe("/tasks?status=active");
+    expect(filterHref("completed")).toBe("/tasks?status=completed");
   });
 });
 

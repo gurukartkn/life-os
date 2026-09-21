@@ -10,7 +10,7 @@ async function sidebarWidth(page: Page) {
 // Start every test expanded. Cleared once (not via an init script, which would
 // also wipe the stored choice on the reloads some tests do on purpose).
 async function openExpanded(page: Page) {
-  await page.goto("/todos");
+  await page.goto("/tasks");
   await page.evaluate(() => window.localStorage.removeItem("life-os-sidebar"));
   await page.reload();
 }

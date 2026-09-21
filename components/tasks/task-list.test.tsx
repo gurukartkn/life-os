@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { TodoList } from "./todo-list";
+import { TaskList } from "./task-list";
 import type { Tables } from "@/lib/types/database";
 
-function makeTodo(overrides: Partial<Tables<"todos">> = {}): Tables<"todos"> {
+function makeTask(overrides: Partial<Tables<"tasks">> = {}): Tables<"tasks"> {
   return {
     id: "550e8400-e29b-41d4-a716-446655440000",
     user_id: "user-1",
@@ -18,23 +18,23 @@ function makeTodo(overrides: Partial<Tables<"todos">> = {}): Tables<"todos"> {
   };
 }
 
-describe("TodoList", () => {
-  it("renders one row per todo in the list", () => {
-    const todos = [
-      makeTodo({ id: "550e8400-e29b-41d4-a716-446655440001", title: "Buy groceries" }),
-      makeTodo({ id: "550e8400-e29b-41d4-a716-446655440002", title: "Walk the dog" }),
-      makeTodo({ id: "550e8400-e29b-41d4-a716-446655440003", title: "Read a book" }),
+describe("TaskList", () => {
+  it("renders one row per task in the list", () => {
+    const tasks = [
+      makeTask({ id: "550e8400-e29b-41d4-a716-446655440001", title: "Buy groceries" }),
+      makeTask({ id: "550e8400-e29b-41d4-a716-446655440002", title: "Walk the dog" }),
+      makeTask({ id: "550e8400-e29b-41d4-a716-446655440003", title: "Read a book" }),
     ];
 
-    render(<TodoList todos={todos} />);
+    render(<TaskList tasks={tasks} />);
 
     expect(screen.getByText("Buy groceries")).toBeInTheDocument();
     expect(screen.getByText("Walk the dog")).toBeInTheDocument();
     expect(screen.getByText("Read a book")).toBeInTheDocument();
   });
 
-  it("renders nothing when there are no todos", () => {
-    render(<TodoList todos={[]} />);
+  it("renders nothing when there are no tasks", () => {
+    render(<TaskList tasks={[]} />);
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 });

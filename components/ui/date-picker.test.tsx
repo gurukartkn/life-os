@@ -46,7 +46,7 @@ describe("DatePicker", () => {
     expect(screen.getByRole("button", { name: "Due date, Mar 10, 2026" })).toBeInTheDocument();
   });
 
-  // Stage 2 will render past dates as overdue, so the picker must not block them.
+  // Past dates render as overdue on a task, so the picker must not block them.
   it("lets a date in the past be selected", async () => {
     const onChange = vi.fn();
     const user = userEvent.setup();

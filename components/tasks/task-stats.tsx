@@ -6,7 +6,7 @@ const STATS = [
   { key: "completed", label: "Completed", colorClass: "text-teal-ink" },
 ] as const;
 
-export function TodoStats({
+export function TaskStats({
   dueToday,
   overdue,
   completed,

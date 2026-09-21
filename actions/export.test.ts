@@ -10,7 +10,7 @@ const mockedCreateClient = vi.mocked(createClient);
 // Order matches the Promise.all call order in actions/export.ts.
 const TABLE_ORDER = [
   "user_settings",
-  "todos",
+  "tasks",
   "goals",
   "routines",
   "routine_items",
@@ -73,7 +73,7 @@ describe("exportUserData", () => {
     expect(result.success).toBe(true);
     expect(result.data).toMatchObject({
       user_settings: [{ table: "user_settings" }],
-      todos: [{ table: "todos" }],
+      tasks: [{ table: "tasks" }],
       goals: [{ table: "goals" }],
       routines: [{ table: "routines" }],
       routine_items: [{ table: "routine_items" }],
@@ -88,6 +88,17 @@ describe("exportUserData", () => {
     expect(typeof result.data?.exported_at).toBe("string");
   });
 
+  // v2 Stage 2 renamed the todos table; the export key follows it, with no leftover `todos`.
+  it("exports the tasks key and no todos key", async () => {
+    queueAllSuccess();
+
+    const result = await exportUserData();
+
+    expect(Object.keys(result.data ?? {})).toContain("tasks");
+    expect(result.data).not.toHaveProperty("todos");
+    expect(supabase.from).not.toHaveBeenCalledWith("todos");
+  });
+
   it("defaults each table to an empty array when data is null", async () => {
     for (const _table of TABLE_ORDER) {
       supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
@@ -96,7 +107,7 @@ describe("exportUserData", () => {
     const result = await exportUserData();
 
     expect(result.success).toBe(true);
-    expect(result.data?.todos).toEqual([]);
+    expect(result.data?.tasks).toEqual([]);
     expect(result.data?.set_logs).toEqual([]);
   });
 });

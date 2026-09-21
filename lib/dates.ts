@@ -1,14 +1,13 @@
 import {
   format,
   formatDistanceToNow,
-  isPast,
   isToday,
   isTomorrow,
   parseISO,
   startOfWeek,
 } from "date-fns";
 
-// Todos store due_date as a plain "YYYY-MM-DD" date column, parsed as local midnight.
+// Tasks store due_date as a plain "YYYY-MM-DD" date column, parsed as local midnight.
 export function todayIso(): string {
   return format(new Date(), "yyyy-MM-dd");
 }
@@ -22,9 +21,10 @@ export function periodStartFor(cadence: string): string {
   return todayIso();
 }
 
+// A plain "YYYY-MM-DD" date sorts lexically, so "before today" is a string comparison
+// against the one todayIso() — the page's overdue count uses the same rule.
 export function isOverdue(dueDate: string): boolean {
-  const date = parseISO(dueDate);
-  return isPast(date) && !isToday(date);
+  return dueDate < todayIso();
 }
 
 export function formatDueDate(dueDate: string): string {

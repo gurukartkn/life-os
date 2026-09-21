@@ -39,7 +39,7 @@ describe("login", () => {
     expect(supabase.auth.signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it("signs in and redirects to /todos on success", async () => {
+  it("signs in and redirects to /tasks on success", async () => {
     supabase.auth.signInWithPassword.mockResolvedValue({ error: null });
     const { redirect } = await import("next/navigation");
 
@@ -49,7 +49,7 @@ describe("login", () => {
       email: "user@example.com",
       password: "secretpw",
     });
-    expect(redirect).toHaveBeenCalledWith("/todos");
+    expect(redirect).toHaveBeenCalledWith("/tasks");
   });
 
   it("maps a Supabase auth error to a friendly message", async () => {
@@ -69,14 +69,14 @@ describe("signup", () => {
     expect(supabase.auth.signUp).not.toHaveBeenCalled();
   });
 
-  it("redirects to /todos when signup returns an immediate session", async () => {
+  it("redirects to /tasks when signup returns an immediate session", async () => {
     supabase.auth.signUp.mockResolvedValue({ data: { session: { access_token: "tok" } }, error: null });
     const { redirect } = await import("next/navigation");
 
     await signup({ success: false }, formData({ email: "user@example.com", password: "secretpw" }));
 
     expect(supabase.auth.signUp).toHaveBeenCalledWith({ email: "user@example.com", password: "secretpw" });
-    expect(redirect).toHaveBeenCalledWith("/todos");
+    expect(redirect).toHaveBeenCalledWith("/tasks");
   });
 
   it("returns a confirmation message when signup has no immediate session", async () => {

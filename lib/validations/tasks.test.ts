@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { todoDeleteSchema, todoInsertSchema, todoToggleSchema } from "./todos";
+import { format, subDays } from "date-fns";
+import { taskDeleteSchema, taskInsertSchema, taskToggleSchema } from "./tasks";
 
-describe("todoInsertSchema", () => {
+describe("taskInsertSchema", () => {
   it("accepts a title with no other fields", () => {
-    const result = todoInsertSchema.safeParse({ title: "Buy groceries" });
+    const result = taskInsertSchema.safeParse({ title: "Buy groceries" });
     expect(result.success).toBe(true);
   });
 
   it("accepts a title with a description and due date", () => {
-    const result = todoInsertSchema.safeParse({
+    const result = taskInsertSchema.safeParse({
       title: "Buy groceries",
       description: "Milk, eggs, bread",
       due_date: "2026-09-20",
@@ -17,22 +18,22 @@ describe("todoInsertSchema", () => {
   });
 
   it("rejects an empty title", () => {
-    const result = todoInsertSchema.safeParse({ title: "" });
+    const result = taskInsertSchema.safeParse({ title: "" });
     expect(result.success).toBe(false);
   });
 
   it("rejects a missing title", () => {
-    const result = todoInsertSchema.safeParse({});
+    const result = taskInsertSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 
   it("rejects a title over 200 characters", () => {
-    const result = todoInsertSchema.safeParse({ title: "a".repeat(201) });
+    const result = taskInsertSchema.safeParse({ title: "a".repeat(201) });
     expect(result.success).toBe(false);
   });
 
   it("rejects a description over 2000 characters", () => {
-    const result = todoInsertSchema.safeParse({
+    const result = taskInsertSchema.safeParse({
       title: "Buy groceries",
       description: "a".repeat(2001),
     });
@@ -40,19 +41,29 @@ describe("todoInsertSchema", () => {
   });
 
   it("rejects a malformed due date", () => {
-    const result = todoInsertSchema.safeParse({ title: "Buy groceries", due_date: "09/20/2026" });
+    const result = taskInsertSchema.safeParse({ title: "Buy groceries", due_date: "09/20/2026" });
     expect(result.success).toBe(false);
   });
 
+  // v2 Stage 2: a task can be created already overdue, so the schema has no past-date rule.
+  it("accepts a due date before today", () => {
+    const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
+
+    for (const due_date of [yesterday, "2000-01-01"]) {
+      const result = taskInsertSchema.safeParse({ title: "Renew passport", due_date });
+      expect(result.success).toBe(true);
+    }
+  });
+
   it("accepts an empty due date", () => {
-    const result = todoInsertSchema.safeParse({ title: "Buy groceries", due_date: "" });
+    const result = taskInsertSchema.safeParse({ title: "Buy groceries", due_date: "" });
     expect(result.success).toBe(true);
   });
 });
 
-describe("todoToggleSchema", () => {
+describe("taskToggleSchema", () => {
   it("accepts a valid id and boolean", () => {
-    const result = todoToggleSchema.safeParse({
+    const result = taskToggleSchema.safeParse({
       id: "550e8400-e29b-41d4-a716-446655440000",
       is_completed: true,
     });
@@ -60,12 +71,12 @@ describe("todoToggleSchema", () => {
   });
 
   it("rejects a non-uuid id", () => {
-    const result = todoToggleSchema.safeParse({ id: "not-a-uuid", is_completed: true });
+    const result = taskToggleSchema.safeParse({ id: "not-a-uuid", is_completed: true });
     expect(result.success).toBe(false);
   });
 
   it("rejects a non-boolean is_completed", () => {
-    const result = todoToggleSchema.safeParse({
+    const result = taskToggleSchema.safeParse({
       id: "550e8400-e29b-41d4-a716-446655440000",
       is_completed: "true",
     });
@@ -73,14 +84,14 @@ describe("todoToggleSchema", () => {
   });
 });
 
-describe("todoDeleteSchema", () => {
+describe("taskDeleteSchema", () => {
   it("accepts a valid id", () => {
-    const result = todoDeleteSchema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" });
+    const result = taskDeleteSchema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" });
     expect(result.success).toBe(true);
   });
 
   it("rejects a non-uuid id", () => {
-    const result = todoDeleteSchema.safeParse({ id: "not-a-uuid" });
+    const result = taskDeleteSchema.safeParse({ id: "not-a-uuid" });
     expect(result.success).toBe(false);
   });
 });

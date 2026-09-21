@@ -68,7 +68,7 @@ async function provisionAndClear(url: string, anonKey: string, email: string, pa
     if (error) throw new Error(`e2e/global-setup.ts: failed to clear ${table}: ${error.message}`);
   }
 
-  const remainingTables = ["exercises", "todos", "goals", "links"] as const;
+  const remainingTables = ["exercises", "tasks", "goals", "links"] as const;
   for (const table of remainingTables) {
     const { error } = await supabase.from(table).delete().eq("user_id", userId);
     if (error) throw new Error(`e2e/global-setup.ts: failed to clear ${table}: ${error.message}`);

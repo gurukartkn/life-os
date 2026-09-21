@@ -23,7 +23,7 @@ import {
 import { useUIStore } from "@/stores/use-ui-store";
 
 const NAV_ITEMS = [
-  { href: "/todos", label: "Today", icon: CalendarCheck },
+  { href: "/tasks", label: "Tasks", icon: CalendarCheck },
   { href: "/fitness", label: "Fitness", icon: Dumbbell },
   { href: "/routines", label: "Routines", icon: ListChecks },
 ];

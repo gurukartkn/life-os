@@ -4,8 +4,8 @@ import { startTransition, useActionState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
-import { createTodo } from "@/actions/todos";
-import { todoInsertSchema, type TodoInsertInput } from "@/lib/validations/todos";
+import { createTask } from "@/actions/tasks";
+import { taskInsertSchema, type TaskInsertInput } from "@/lib/validations/tasks";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,10 @@ import type { ActionResult } from "@/lib/types/action-result";
 
 const initialState: ActionResult = { success: false };
 
-export function AddTodoForm() {
-  const [state, formAction, isPending] = useActionState(createTodo, initialState);
-  const form = useForm<TodoInsertInput>({
-    resolver: zodResolver(todoInsertSchema),
+export function AddTaskForm() {
+  const [state, formAction, isPending] = useActionState(createTask, initialState);
+  const form = useForm<TaskInsertInput>({
+    resolver: zodResolver(taskInsertSchema),
     defaultValues: { title: "", due_date: "" },
   });
 
@@ -26,7 +26,7 @@ export function AddTodoForm() {
     }
   }, [state, form]);
 
-  function onSubmit(values: TodoInsertInput) {
+  function onSubmit(values: TaskInsertInput) {
     const formData = new FormData();
     formData.append("title", values.title);
     if (values.due_date) formData.append("due_date", values.due_date);
@@ -37,8 +37,8 @@ export function AddTodoForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-1.5" noValidate>
       <div className="flex items-start gap-2">
         <Input
-          aria-label="Todo title"
-          placeholder="Add a todo…"
+          aria-label="Task title"
+          placeholder="Add a task…"
           {...form.register("title")}
         />
         <Controller
@@ -56,7 +56,7 @@ export function AddTodoForm() {
         />
         <Button type="submit" disabled={isPending}>
           <Plus />
-          {isPending ? "Adding…" : "Add todo"}
+          {isPending ? "Adding…" : "New task"}
         </Button>
       </div>
       {(form.formState.errors.title || form.formState.errors.due_date || state.error) && (
