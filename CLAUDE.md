@@ -1,6 +1,6 @@
 # Life OS
 
-A personal life-tracking web app. MVP domains: **Todo, Fitness, Routines** (Finance and 16 other domains deferred to later versions — see `docs/01-prd.md` §2). Single-player v1, web-only, no offline requirement.
+A personal life-tracking web app. MVP domains: **Tasks, Fitness, Routines** (Finance and 16 other domains deferred to later versions — see `docs/01-prd.md` §2). Single-player v1, web-only, no offline requirement.
 
 **Why this exists:** replaces Obsidian (too much time customizing, not enough using it) and Notion (data entry/display never fit). The core idea: one relational data backbone, built to eventually support 19 life domains, with only 3 domains' worth of UI shipped in v1.
 
@@ -10,7 +10,9 @@ Next.js (App Router) · TypeScript · Supabase (Postgres + Auth + RLS) · Vercel
 
 ## Current phase
 
-**Phase 8 — Implementation (Build).** Phases 1–7 (data model, architecture decisions, backend architecture, design system, wireframes, mockups, implementation plan) are approved and documented in `/docs`. Build order: **Todo → Fitness → Routines**, following the six stages in `docs/08-implementation-plan.md` (Stage 0: Setup is first).
+**Phase 8 — Implementation (Build).** Phases 1–7 (data model, architecture decisions, backend architecture, design system, wireframes, mockups, implementation plan) are approved and documented in `/docs`. Build order: **Tasks → Fitness → Routines**, following the six stages in `docs/08-implementation-plan.md` (Stage 0: Setup is first).
+
+> **v2 Stage 2:** this domain was renamed to **Tasks** (table `tasks`, route `/tasks`, `actions/tasks.ts`, `components/tasks/`, entity type `task` in `links`). The v1 docs below still use its old name and are kept as the historical record until the v2 close-out folds the rename into them.
 
 ## Full project docs
 
@@ -35,12 +37,12 @@ Read these in `/docs` before starting implementation work — each is a phase de
 - **Forms:** Zod schema (shared client/server) + React Hook Form + `useActionState`.
 - **Filters:** URL search params, not client state.
 - **No Realtime** in v1 — request/refresh model only.
-- **Environments:** two Supabase projects (`life-os-dev`, `life-os-prod`), migrations versioned in `supabase/migrations/`, never edited by hand in the dashboard.
+- **Environments:** two Supabase projects (`life-os-dev`, `life-os-prod`), migrations versioned in `supabase/migrations/`, never edited by hand in the dashboard. Each schema change also gets a rollback script in `supabase/rollbacks/<same timestamp>_<name>.down.sql` (never in `migrations/`, which the CLI applies forward).
 - **Error handling:** Server Actions return `{ success, error?, data? }`, never throw to the client. Unexpected errors go through `logError()` (console, plus Sentry in production — ADR-008, which limits what a report may contain: no user content or identity).
 
 ## Design tokens quick reference
 
-Light theme only. Font: Inter. Accent colors are domain identities *and* status semantics: **violet** = Todo/primary action, **teal** = Fitness/done, **blue** = Routines/in-progress, **pink** = overdue/attention. Full token values and voice/copy rules in `docs/05-design-system.md`.
+Light theme only. Font: Inter. Accent colors are domain identities *and* status semantics: **violet** = Tasks/primary action, **teal** = Fitness/done, **blue** = Routines/in-progress, **pink** = overdue/attention. Full token values and voice/copy rules in `docs/05-design-system.md`.
 
 ## Testing
 
