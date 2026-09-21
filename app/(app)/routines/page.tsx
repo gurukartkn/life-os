@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ListChecks, Plus } from "lucide-react";
 import { RoutineList, type RoutineCardData } from "@/components/routines/routine-list";
+import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
@@ -8,52 +9,43 @@ import { periodStartFor } from "@/lib/dates";
 
 export default async function RoutinesPage() {
   const supabase = await createClient();
+  const dailyPeriod = periodStartFor("daily");
+  const weeklyPeriod = periodStartFor("weekly");
 
-  const { data: routinesData, error } = await supabase
-    .from("routines")
-    .select("id, title, cadence, created_at")
-    .order("created_at", { ascending: false });
+  // Three independent reads, issued together (one round trip of wall-clock time,
+  // not three). RLS already limits every table to this user, so items and
+  // completions need no filtering by routine id here — each routine picks out its own below.
+  const [
+    { data: routinesData, error },
+    { data: itemsData },
+    { data: completionsData },
+  ] = await Promise.all([
+    supabase
+      .from("routines")
+      .select("id, title, cadence, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("routine_items").select("id, routine_id").eq("is_active", true),
+    supabase
+      .from("routine_completions")
+      .select("routine_item_id, period_start")
+      .in("period_start", [dailyPeriod, weeklyPeriod]),
+  ]);
 
   if (error) logError("Load routines", error);
 
   const routines = routinesData ?? [];
-  const routineIds = routines.map((routine) => routine.id);
-
-  const { data: itemsData } =
-    routineIds.length > 0
-      ? await supabase
-          .from("routine_items")
-          .select("id, routine_id")
-          .eq("is_active", true)
-          .in("routine_id", routineIds)
-      : { data: [] as { id: string; routine_id: string }[] };
-
   const items = itemsData ?? [];
-  const itemIds = items.map((item) => item.id);
-  const dailyPeriod = periodStartFor("daily");
-  const weeklyPeriod = periodStartFor("weekly");
-
-  const { data: completionsData } =
-    itemIds.length > 0
-      ? await supabase
-          .from("routine_completions")
-          .select("routine_item_id, period_start")
-          .in("routine_item_id", itemIds)
-          .in("period_start", [dailyPeriod, weeklyPeriod])
-      : { data: [] as { routine_item_id: string; period_start: string }[] };
-
   const completions = completionsData ?? [];
 
   const routineCards: RoutineCardData[] = routines.map((routine) => {
     const periodStart = routine.cadence === "weekly" ? weeklyPeriod : dailyPeriod;
-    const routineItemIds = items
-      .filter((item) => item.routine_id === routine.id)
-      .map((item) => item.id);
-    const totalCount = routineItemIds.length;
+    const routineItemIds = new Set(
+      items.filter((item) => item.routine_id === routine.id).map((item) => item.id)
+    );
+    const totalCount = routineItemIds.size;
     const doneCount = completions.filter(
       (completion) =>
-        routineItemIds.includes(completion.routine_item_id) &&
-        completion.period_start === periodStart
+        routineItemIds.has(completion.routine_item_id) && completion.period_start === periodStart
     ).length;
     return { id: routine.id, title: routine.title, cadence: routine.cadence, totalCount, doneCount };
   });
@@ -62,11 +54,8 @@ export default async function RoutinesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-page-title text-ink">Routines</h1>
-        <Link
-          href="/routines/new"
-          className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-blue px-4.5 text-white outline-none transition-colors hover:bg-blue/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-        >
-          <Plus className="size-4" />
+        <Link href="/routines/new" className={buttonVariants({ tone: "blue" })}>
+          <Plus />
           New routine
         </Link>
       </div>

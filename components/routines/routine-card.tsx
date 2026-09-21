@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { DeleteRoutineButton } from "@/components/routines/delete-routine-button";
 
@@ -41,7 +43,7 @@ export function RoutineCard({
       </div>
       <Link
         href={`/routines/${id}`}
-        className="text-button-text flex h-[38px] w-full items-center justify-center gap-1.5 rounded-md bg-blue-soft text-blue-ink transition-colors hover:bg-blue-soft/80"
+        className={cn(buttonVariants({ variant: "soft", tone: "blue" }), "w-full")}
       >
         View checklist
       </Link>

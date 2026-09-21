@@ -36,7 +36,7 @@ Read these in `/docs` before starting implementation work — each is a phase de
 - **Filters:** URL search params, not client state.
 - **No Realtime** in v1 — request/refresh model only.
 - **Environments:** two Supabase projects (`life-os-dev`, `life-os-prod`), migrations versioned in `supabase/migrations/`, never edited by hand in the dashboard.
-- **Error handling:** Server Actions return `{ success, error?, data? }`, never throw to the client. Console-only logging for v1 (no Sentry).
+- **Error handling:** Server Actions return `{ success, error?, data? }`, never throw to the client. Unexpected errors go through `logError()` (console, plus Sentry in production — ADR-008, which limits what a report may contain: no user content or identity).
 
 ## Design tokens quick reference
 

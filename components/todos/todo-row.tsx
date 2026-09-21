@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { deleteTodo, toggleTodo } from "@/actions/todos";
 import { formatDueDate, isOverdue } from "@/lib/dates";

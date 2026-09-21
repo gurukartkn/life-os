@@ -1,0 +1,766 @@
+{
+  "meta": {
+    "label": "after-w8ii-small-rtt0",
+    "date": "2026-09-20T04:20:27.142Z",
+    "commit": "5f3a653",
+    "node": "v23.11.0",
+    "platform": "win32 10.0.19045 AMD Ryzen 7 3700X 8-Core Processor",
+    "base": "http://localhost:3000",
+    "iterations": 20,
+    "emulatedRttMs": 0
+  },
+  "results": {
+    "cold": {
+      "Today": {
+        "ttfbMs": {
+          "n": 10,
+          "median": 367,
+          "p90": 382,
+          "min": 329,
+          "max": 382
+        },
+        "fcpMs": {
+          "n": 6,
+          "median": 400,
+          "p90": 412,
+          "min": 392,
+          "max": 412
+        },
+        "loadMs": {
+          "n": 10,
+          "median": 398,
+          "p90": 411,
+          "min": 360,
+          "max": 411
+        },
+        "wallMs": {
+          "n": 10,
+          "median": 400,
+          "p90": 413,
+          "min": 361,
+          "max": 413
+        }
+      },
+      "Fitness": {
+        "ttfbMs": {
+          "n": 10,
+          "median": 371,
+          "p90": 386,
+          "min": 334,
+          "max": 386
+        },
+        "fcpMs": {
+          "n": 4,
+          "median": 388,
+          "p90": 404,
+          "min": 356,
+          "max": 404
+        },
+        "loadMs": {
+          "n": 10,
+          "median": 398,
+          "p90": 413,
+          "min": 382,
+          "max": 413
+        },
+        "wallMs": {
+          "n": 10,
+          "median": 400,
+          "p90": 415,
+          "min": 384,
+          "max": 415
+        }
+      },
+      "Routines": {
+        "ttfbMs": {
+          "n": 10,
+          "median": 380,
+          "p90": 385,
+          "min": 345,
+          "max": 385
+        },
+        "fcpMs": {
+          "n": 5,
+          "median": 404,
+          "p90": 404,
+          "min": 364,
+          "max": 404
+        },
+        "loadMs": {
+          "n": 10,
+          "median": 404,
+          "p90": 409,
+          "min": 372,
+          "max": 409
+        },
+        "wallMs": {
+          "n": 10,
+          "median": 406,
+          "p90": 411,
+          "min": 374,
+          "max": 411
+        }
+      },
+      "routine-detail": {
+        "ttfbMs": {
+          "n": 10,
+          "median": 378,
+          "p90": 458,
+          "min": 353,
+          "max": 458
+        },
+        "fcpMs": {
+          "n": 5,
+          "median": 400,
+          "p90": 408,
+          "min": 384,
+          "max": 408
+        },
+        "loadMs": {
+          "n": 10,
+          "median": 407,
+          "p90": 485,
+          "min": 381,
+          "max": 485
+        },
+        "wallMs": {
+          "n": 10,
+          "median": 408,
+          "p90": 486,
+          "min": 382,
+          "max": 486
+        }
+      }
+    },
+    "nav": {
+      "todos→fitness": {
+        "contentMs": {
+          "n": 20,
+          "median": 360,
+          "p90": 408,
+          "min": 309,
+          "max": 414
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 4
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 1,
+          "p90": 1,
+          "min": 0,
+          "max": 1
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 2,
+          "p90": 2,
+          "min": 2,
+          "max": 2
+        },
+        "serverRestMs": {
+          "n": 20,
+          "median": 682,
+          "p90": 786,
+          "min": 569,
+          "max": 805
+        }
+      },
+      "fitness→routines": {
+        "contentMs": {
+          "n": 20,
+          "median": 401,
+          "p90": 423,
+          "min": 341,
+          "max": 453
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 1,
+          "min": 0,
+          "max": 1
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3
+        },
+        "serverRestMs": {
+          "n": 20,
+          "median": 1080,
+          "p90": 1207,
+          "min": 929,
+          "max": 1241
+        }
+      },
+      "routines→routine-detail": {
+        "contentMs": {
+          "n": 20,
+          "median": 378,
+          "p90": 429,
+          "min": 331,
+          "max": 453
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 1
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 5,
+          "p90": 5,
+          "min": 5,
+          "max": 5
+        },
+        "serverRestMs": {
+          "n": 20,
+          "median": 1683,
+          "p90": 1966,
+          "min": 1560,
+          "max": 2085
+        }
+      },
+      "routine-detail→todos": {
+        "contentMs": {
+          "n": 20,
+          "median": 346,
+          "p90": 406,
+          "min": 295,
+          "max": 414
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 3
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 1,
+          "min": 0,
+          "max": 1
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 1,
+          "p90": 1,
+          "min": 1,
+          "max": 1
+        },
+        "serverRestMs": {
+          "n": 20,
+          "median": 330,
+          "p90": 394,
+          "min": 282,
+          "max": 401
+        }
+      }
+    },
+    "filters": {
+      "expectedRows": {
+        "all": 12,
+        "active": 8,
+        "completed": 4
+      },
+      "all→active": {
+        "contentMs": {
+          "n": 20,
+          "median": 2,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 2,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "longtaskMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "eventDurationMaxMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "clsSum": 0
+      },
+      "active→completed": {
+        "contentMs": {
+          "n": 20,
+          "median": 2,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 2,
+          "p90": 3,
+          "min": 2,
+          "max": 3
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "longtaskMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "eventDurationMaxMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "clsSum": 0
+      },
+      "completed→all": {
+        "contentMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 3,
+          "max": 4
+        },
+        "firstDomChangeMs": {
+          "n": 20,
+          "median": 3,
+          "p90": 3,
+          "min": 2,
+          "max": 4
+        },
+        "browserRequests": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverRestCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "serverAuthCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "longtaskMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "eventDurationMaxMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "clsSum": 1.921
+      }
+    },
+    "server": {
+      "/todos": {
+        "totalMs": {
+          "n": 20,
+          "median": 357,
+          "p90": 403,
+          "min": 342,
+          "max": 403
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 7,
+          "p90": 7,
+          "min": 7,
+          "max": 7
+        },
+        "restMs": {
+          "n": 20,
+          "median": 2321,
+          "p90": 2594,
+          "min": 2109,
+          "max": 2707
+        }
+      },
+      "/todos?status=active": {
+        "totalMs": {
+          "n": 20,
+          "median": 352,
+          "p90": 413,
+          "min": 340,
+          "max": 457
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 7,
+          "p90": 7,
+          "min": 7,
+          "max": 7
+        },
+        "restMs": {
+          "n": 20,
+          "median": 2289,
+          "p90": 2490,
+          "min": 2131,
+          "max": 3092
+        }
+      },
+      "/fitness": {
+        "totalMs": {
+          "n": 20,
+          "median": 361,
+          "p90": 401,
+          "min": 329,
+          "max": 412
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 8,
+          "p90": 8,
+          "min": 8,
+          "max": 8
+        },
+        "restMs": {
+          "n": 20,
+          "median": 2683,
+          "p90": 3068,
+          "min": 2394,
+          "max": 3180
+        }
+      },
+      "/fitness?tab=exercises": {
+        "totalMs": {
+          "n": 20,
+          "median": 353,
+          "p90": 403,
+          "min": 329,
+          "max": 405
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 7,
+          "p90": 7,
+          "min": 7,
+          "max": 7
+        },
+        "restMs": {
+          "n": 20,
+          "median": 2275,
+          "p90": 2608,
+          "min": 2051,
+          "max": 2710
+        }
+      },
+      "/routines": {
+        "totalMs": {
+          "n": 20,
+          "median": 359,
+          "p90": 401,
+          "min": 338,
+          "max": 453
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 9,
+          "p90": 9,
+          "min": 9,
+          "max": 9
+        },
+        "restMs": {
+          "n": 20,
+          "median": 3006,
+          "p90": 3486,
+          "min": 2692,
+          "max": 3898
+        }
+      },
+      "/routines/442a4d5f-5438-4cd6-a532-ca5b311f132f": {
+        "totalMs": {
+          "n": 20,
+          "median": 362,
+          "p90": 400,
+          "min": 346,
+          "max": 417
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 11,
+          "p90": 11,
+          "min": 11,
+          "max": 11
+        },
+        "restMs": {
+          "n": 20,
+          "median": 3651,
+          "p90": 4045,
+          "min": 3335,
+          "max": 4249
+        }
+      },
+      "/goals": {
+        "totalMs": {
+          "n": 20,
+          "median": 353,
+          "p90": 402,
+          "min": 337,
+          "max": 412
+        },
+        "authCalls": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "authMs": {
+          "n": 20,
+          "median": 0,
+          "p90": 0,
+          "min": 0,
+          "max": 0
+        },
+        "restCalls": {
+          "n": 20,
+          "median": 7,
+          "p90": 7,
+          "min": 7,
+          "max": 7
+        },
+        "restMs": {
+          "n": 20,
+          "median": 2319,
+          "p90": 2459,
+          "min": 2102,
+          "max": 2479
+        }
+      }
+    }
+  }
+}

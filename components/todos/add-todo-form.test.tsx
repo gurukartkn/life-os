@@ -31,6 +31,37 @@ describe("AddTodoForm", () => {
     await waitFor(() => expect(titleInput).toHaveValue(""));
   });
 
+  it("submits the date picked in the calendar as YYYY-MM-DD, including a past date", async () => {
+    mockedCreateTodo.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<AddTodoForm />);
+
+    await user.type(screen.getByLabelText("Todo title"), "Renew passport");
+    await user.click(screen.getByRole("button", { name: "Due date" }));
+    // Any month works: the calendar opens on the current month, and days from a
+    // past month are reached with the previous-month button.
+    await user.click(await screen.findByRole("button", { name: /Go to the Previous Month/i }));
+    const days = await screen.findAllByRole("button", { name: /^\w+day, \w+ 1(st)?, \d{4}$/ });
+    await user.click(days[0]);
+    await user.click(screen.getByRole("button", { name: /add todo/i }));
+
+    await waitFor(() => expect(mockedCreateTodo).toHaveBeenCalled());
+    const formData = mockedCreateTodo.mock.calls[0][1];
+    expect(formData.get("due_date")).toMatch(/^\d{4}-\d{2}-01$/);
+  });
+
+  it("sends no due_date when none is picked", async () => {
+    mockedCreateTodo.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<AddTodoForm />);
+
+    await user.type(screen.getByLabelText("Todo title"), "Buy milk");
+    await user.click(screen.getByRole("button", { name: /add todo/i }));
+
+    await waitFor(() => expect(mockedCreateTodo).toHaveBeenCalled());
+    expect(mockedCreateTodo.mock.calls[0][1].get("due_date")).toBeNull();
+  });
+
   it("shows a client-side error and does not submit when the title is empty", async () => {
     const user = userEvent.setup();
     render(<AddTodoForm />);

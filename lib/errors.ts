@@ -1,10 +1,20 @@
 import type { AuthError } from "@supabase/supabase-js";
+import { reportError } from "@/lib/sentry/report";
 
-// Console-only server-side logging (docs/04-backend-architecture.md §7) — the
-// one place every Server Action and Server Component funnels unexpected
-// errors through, so the format stays consistent without a hosted service.
+// The one place every Server Action and Server Component funnels unexpected
+// errors through. Always logs to the console; in production it also reports to
+// Sentry (ADR-008), reduced to what is safe to send — see lib/sentry/report.ts.
 export function logError(context: string, error: unknown): void {
   console.error(`${context} failed:`, error);
+  reportError(context, error);
+}
+
+// For error boundaries (error.tsx). An error that carries a `digest` happened on the
+// server and has already been reported by onRequestError, so only client-side
+// errors are reported from here.
+export function logBoundaryError(context: string, error: Error & { digest?: string }): void {
+  console.error(`${context} failed:`, error);
+  if (!error.digest) reportError(context, error);
 }
 
 // Maps Supabase/Postgres errors to short, plain user-facing messages

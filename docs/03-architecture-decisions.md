@@ -135,3 +135,48 @@ Source: https://claude.ai/artifact/Q2wwsznZJLMNEqnnJzyauu
 | 005 | Zod schemas + React Hook Form + `useActionState`, shared client/server validation |
 | 006 | No Realtime in v1 — request/refresh model |
 | 007 | Separate Supabase projects for prod/dev, migrations tracked in version control |
+
+
+---
+
+# v2 additions
+
+## ADR-008: Hosted Error Tracking with Sentry
+
+**Status:** Approved · **Date:** 2026-09-19 · **Supersedes:** the "console-only logging" clause in `docs/04-backend-architecture.md` §7 and the v1 deferral of a hosted logging service. ADR-001 to ADR-007 are unchanged.
+
+**Decision:** Report unhandled server and browser errors from **production** to **Sentry**, with stack traces. `console.error` logging stays as well. Local development, tests and preview deployments send nothing.
+
+**Why:** Errors in production are otherwise only visible in Vercel runtime logs, ungrouped and easy to miss. Server Actions never throw (`ActionResult`), so unexpected failures are caught and logged; they need to reach a place where they are grouped and seen.
+
+**Limits on what a report may contain** (enforced in code by a `beforeSend` scrubber and by SDK options; covered by unit tests):
+
+1. **Allowlist, not blocklist.** A report carries only: error type, a sanitised message, stack frames, the route path (no query string), release, environment, and runtime/browser/OS.
+2. **No user content.** Never task titles or descriptions, workout, set or exercise values, routine items, goal titles, and — from Finance onward — amounts, account labels or transaction descriptions. This holds for every field, including messages, extra data and breadcrumbs.
+3. **No user identity.** `sendDefaultPii` is off, `setUser` is never called, and no email, user id or IP address is sent. The Sentry project is also set not to store IP addresses.
+4. **No request or response bodies, cookies, headers or Server Action form data.**
+5. **Database errors are reduced to `context + code`.** A Postgres or Supabase error's `message`, `details` and `hint` can quote row values (for example `Key (title)=(…) already exists`), so they are dropped before reporting.
+6. **No automatic breadcrumbs** for console, fetch, XHR or DOM interaction: Supabase request URLs can carry filter values and DOM breadcrumbs capture button text.
+7. **Session Replay, performance tracing, profiling and local-variable capture are off.**
+8. Sentry's own server-side data scrubbing is turned on as a second layer.
+
+These limits satisfy the v1 PRD rule that financial and fitness data are not sent to any third-party analytics tool: Sentry receives error metadata only.
+
+**Also sent, by the SDK's release-health feature:** aggregated server request counts (started, exited, errored, crashed) tagged with the release and environment, and a session record per server process with the release, environment and "Node.js/23". These carry no user identifier or content. The browser session integration is removed.
+
+**Sentry-side setting required for limit 3.** The SDK sends no IP address, but Sentry derives a coarse location (`user.geo`, city and country) from the IP of the connection that delivers an event, unless "Prevent Storing of IP Addresses" is on. A test event against the real project showed exactly that (2026-09-20). Sentry's documentation states that geo is extracted from the IP even when "Prevent Storing of IP Addresses" is on, so that setting alone does not remove it. Two things are needed, in Settings → Security & Privacy (organization level, so any later project inherits them; mirror at project level if desired): (1) turn on "Prevent Storing of IP Addresses", together with "Data Scrubber" and "Use Default Scrubbers"; (2) add an Advanced Data Scrubbing rule **Remove · Anything · `$user.geo.**`**. Neither can be set from code, so this is a deploy checklist item: after enabling both, send one test event and confirm the issue shows no `user.geo`. Done on 2026-09-21: a browser event sent after both settings were saved carried no `user` block, while the same test on 2026-09-20 carried a city and country.
+
+**How it was verified:** a production build pointed at a local stand-in for Sentry's ingest endpoint, with a Server Component error, a `logError` call carrying a Postgres-shaped error, and a browser click error, each containing a fake task title, email, workout values and an amount. None of that text, and no cookie, header, token or IP, appeared in what was sent; the Postgres error arrived as `sentryTest failed (23505)`. The same fixtures live in `lib/sentry/*.test.ts`.
+
+**Alternatives considered:** Vercel runtime logs alone (no grouping or alerting); self-hosted GlitchTip (operating a service for a single-user app).
+
+**Consequences:** Easier — production errors are grouped, with stack traces and releases. Harder — one more vendor and environment variables (`NEXT_PUBLIC_SENTRY_DSN`, and `SENTRY_AUTH_TOKEN` at build time only for source maps), and a small client-bundle increase, which is measured in the Stage 1 performance report. Every new domain must add fixtures to the scrubber tests; Finance in particular must be covered before it ships.
+
+**Action items:**
+- [ ] Add `@sentry/nextjs` with the scrubber and unit tests
+- [ ] Route `logError()` and both error boundaries through Sentry
+- [ ] Set DSN and auth token in Vercel Production; confirm one test event in the Sentry UI after deploy
+
+| ADR | Decision |
+|---|---|
+| 008 | Sentry error tracking in production only, with an allowlist that keeps user content, identity and request data out of reports |

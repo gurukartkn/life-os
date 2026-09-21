@@ -20,7 +20,7 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    { name: "setup", testMatch: /.*\.setup\.ts/ },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], storageState: path.join(__dirname, "e2e/.auth/user.json") },
@@ -31,5 +31,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    // `next dev` appends a generated "agent rules" block to CLAUDE.md whenever it detects an AI
+    // coding agent from these variables. Blanking them for the test server keeps the file clean.
+    env: { AI_AGENT: "", CLAUDECODE: "", CLAUDE_CODE: "", CLAUDE_CODE_IS_COWORK: "" },
   },
 });

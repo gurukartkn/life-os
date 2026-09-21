@@ -1,12 +1,13 @@
 "use client";
 
 import { startTransition, useActionState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import { createTodo } from "@/actions/todos";
 import { todoInsertSchema, type TodoInsertInput } from "@/lib/validations/todos";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import type { ActionResult } from "@/lib/types/action-result";
 
@@ -40,7 +41,19 @@ export function AddTodoForm() {
           placeholder="Add a todo…"
           {...form.register("title")}
         />
-        <Input aria-label="Due date" type="date" className="w-40" {...form.register("due_date")} />
+        <Controller
+          control={form.control}
+          name="due_date"
+          render={({ field }) => (
+            <DatePicker
+              label="Due date"
+              placeholder="Due date"
+              className="w-44 shrink-0"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+            />
+          )}
+        />
         <Button type="submit" disabled={isPending}>
           <Plus />
           {isPending ? "Adding…" : "Add todo"}

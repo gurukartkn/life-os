@@ -12,7 +12,7 @@ A personal system for the things a notebook used to hold — todos, workouts, ro
 
 **One accent, three supporting hues, no more.** Four identity colors across every chart, gauge, and status pill: violet, teal, blue, and pink. Violet (`accent`) is the primary action color and the Todo domain's identity; teal, blue, and pink are reused consistently as both domain accents (Fitness = teal, Routines = blue) and status semantics (teal = done, blue = in progress/upcoming, pink = needs attention/overdue). Don't introduce a fifth hue for a new feature — extend meaning from these four instead.
 
-Light theme only for now — no dark theme was invented since the reference had none.
+Light theme only for now — no dark theme was invented since the reference had none. *(Superseded: v2 adds a dark palette — see "v2 Amendment" at the end of this document.)*
 
 ## Voice & content
 
@@ -25,6 +25,8 @@ Life OS is a tool one person uses privately, many times a day. The voice is **pl
 - Numbers carry their own weight (`stat-xl`) — don't wrap them in congratulatory copy. Let "12-day streak" sit on its own line instead of "You're on an amazing 12-day streak!"
 
 ## Design tokens (CSS custom properties)
+
+*(v2: the values of `ink-muted` and `ink-faint` below are superseded, and `teal-fill` / `blue-fill` are added. See "v2 Amendment" §H.)*
 
 ```css
 :root, [data-theme="light"] {
@@ -104,3 +106,96 @@ Button, Input, Checkbox, Tag (status pill), Card, Tabs, Progress bar, and Empty 
 - The reference's CTA button and chart colors sit close to but not always above 4.5:1 contrast (`accent` on white is ~4.4:1) — kept as sampled for medium/bold labels; don't use for small body text.
 - `pink` was deepened one step from the sampled magenta specifically for use as a solid button fill with white text (a destructive action); the lighter, true-sampled tint lives in `pink-soft`.
 - The reference's four-stage deal pipeline (Negotiating → Drafting → Activated → Pending Approval) was translated into three status semantics — teal (done), blue (in progress/upcoming), pink (overdue/attention) — reusing the same hues and soft-pill visual pattern.
+
+
+---
+
+# v2 Amendment (Stage 1) — 2026-09-19
+
+Approved in v2 Phase 2 (see `docs/v2-prd-erd-baseline.md`, Stage 1). Amends, does not replace, the tokens and rules above. Where the two differ, this section wins.
+
+## A. Token mapping fix
+
+The design token `--accent` is the brand violet (`#6c4cf5` fill). Shadcn also has an `accent` slot, meant for a neutral hover highlight, and the v1 build mapped it to `surface-200` — which silently turned every `bg-accent` into light grey. Fix:
+
+- `--accent`, `--accent-hover`, `--accent-text`, `--accent-soft`, `--accent-ink` keep the design-system meaning (violet family).
+- Shadcn's neutral highlight (menu/list hover) uses `--surface-200` directly (`bg-surface-200`); the Shadcn `--accent` / `--accent-foreground` variables are not used by any Life OS component.
+
+A related fix: the class-merge helper `cn` (`lib/utils.ts`) is configured to know the named text styles (`text-body`, `text-button-text`, …) are font sizes. Before, it read them as text colours and dropped them whenever a colour class such as `text-ink-muted` sat beside them, so some labels rendered in the browser default font.
+
+## B. Input
+
+One style for every text-like control (text, email, password, date-picker trigger, number):
+
+| Property | Value |
+|---|---|
+| Height | 38px (matches the default Button) |
+| Radius | `--radius-md` (10px) — not the card radius |
+| Fill | `--surface-100` (white in light) — never transparent or grey |
+| Border | 1px `--border-strong` |
+| Text | `text-body`; placeholder `--ink-faint` |
+| Focus | border `--accent`, plus 2px `--ring` ring with 2px offset |
+| Invalid | border `--pink`, message in `pink-ink` `text-caption` below |
+| Disabled | 50% opacity, same fill |
+
+## C. Button
+
+Default size is 38px tall, `--radius-md`, `text-button-text`. Small is 32px. Icon buttons are 38px square.
+
+Variants: `primary` (filled), `soft` (tinted background with the tone's ink colour, for a secondary action inside a card such as "Start workout" or "View checklist"), `secondary`, `outline`, `ghost`, `destructive` (`--pink` fill, white text), `link`.
+
+`primary` and `soft` take a `tone` that carries the domain identity: `violet` (Todo, default), `teal` (Fitness), `blue` (Routines). Every "add / new" action in every domain uses `primary` at the default size, so shape, height, radius and type are identical across screens — only the tone differs. The same styles apply when a Button renders as a link (for example "New workout", "New routine"). Hand-rolled button class strings are not used.
+
+## D. Date picker
+
+One `DatePicker` for every date field: a Popover whose trigger is styled as an Input (B) and whose content is the Shadcn Calendar (`react-day-picker`).
+
+- Selected day: `--accent` fill with `--accent-ink` text. Today: `--accent-soft` ring. Outside-month days: `--ink-faint`. Cell radius `--radius-sm`.
+- Week starts Monday (matches the routine week boundary).
+- Value is the same `YYYY-MM-DD` string the `date` columns already use; empty means no date, and the picker offers a clear action.
+- Past dates are selectable (Stage 2 renders them as overdue).
+
+## E. Sidebar
+
+Collapsible on desktop: expanded 240px, collapsed 64px icon rail. Collapsed items keep their icon and expose the label through `aria-label` and `title`. The toggle uses `PanelLeftClose` / `PanelLeftOpen` and `aria-expanded`. Width animates for ~150ms and does not animate under `prefers-reduced-motion`. The mobile top bar is unchanged. The choice is kept in the browser and applied before first paint.
+
+## F. Dark palette
+
+Set with `data-theme="dark"` on `<html>`; light stays the default token set. Accent, teal, blue and pink keep the same identity and status meaning — only the soft tints and text tones change. Pairs are checked for 4.5:1 for body text.
+
+```css
+[data-theme="dark"] {
+  --surface-050: #0f1014;  --surface-100: #17181d;  --surface-200: #1f2127;
+  --border: #26282f;       --border-strong: #363944;
+  --ink: #f2f2f4;         --ink-muted: #a3a5ad;    --ink-faint: #868992;
+  --accent: #6c4cf5;       --accent-text: #a595ff;
+  --accent-soft: #241d4a;  --accent-ink: #ffffff;
+  --teal: #3fa491;         --teal-soft: #12312c;    --teal-ink: #6fd0bd;
+  --blue: #4b9eea;         --blue-soft: #14293d;    --blue-ink: #8cc4f5;
+  --pink: #c81e5c;         --pink-soft: #3a1626;    --pink-ink: #f28aae;
+  --ring: #8b70ff;
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+```
+
+Dark --accent-hover is not overridden: the light value (#5b3ee0) stays, because a lighter violet on hover would drop white button text below 4.5:1. Values were nudged to meet contrast (see §H); this list is the final set.
+
+## G. Theme switching
+
+Two themes, light and dark, with a toggle (Sun / Moon icon) in the sidebar footer. On a first visit the theme follows the operating-system preference; after that the explicit choice wins. The choice is stored in the browser only (no schema change) and applied by a small inline script before first paint so there is no flash. The theme is UI state (ADR-003), held in the Zustand UI store.
+
+
+## H. Contrast fixes (WCAG AA)
+
+Checked with axe on every screen in both themes, plus overdue and completed todos, validation errors and the open calendar (`e2e/contrast.spec.ts`). These v1 values fell short of 4.5:1 and are changed, in both themes where noted:
+
+| Token | Was | Now | Why |
+|---|---|---|---|
+| `ink-faint` (light) | `#9a9a9a` (2.7:1) | `#6f6f6f` (4.6:1 on the darkest light surface) | Captions, placeholders, inactive tab labels |
+| `ink-muted` (light) | `#6b6b6b` | `#555555` | Kept one clear step above `ink-faint` so the three text tiers stay distinct |
+| `ink-faint` (dark) | `#7f828c` (4.2:1 on a hovered row) | `#868992` | Same reason, on `surface-200` |
+| `teal-fill` (new, both themes) | white on `teal` `#3fa491` (3.0:1) | `#318172` (4.65:1), hover `#2b7264` | Solid button fill behind white text |
+| `blue-fill` (new, both themes) | white on `blue` `#4b9eea` (2.8:1) | `#3979b3` (4.6:1), hover `#326b9e` | Same |
+| `accent-hover` (dark) | `#7d61f7` (4.3:1 with white) | inherits `#5b3ee0` | Hover must not lighten the fill under white text |
+
+`teal` and `blue` keep their identity meaning for bars, dots, icons and charts (3:1 is enough there). Only solid button fills use the `-fill` tokens; button hover is a darker token, not an opacity change, because opacity lightens the fill under white text. Any future colour pair used for text must be checked against 4.5:1 (3:1 for large text and graphics) before it is added.

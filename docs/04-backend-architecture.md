@@ -109,7 +109,7 @@ For a read-only page: Server Component queries Supabase directly, no Server Acti
 
 - Server Actions never throw to the client — they catch and return `{ success: false, error: string }`, which `useActionState` surfaces via the form UI.
 - Supabase/Postgres errors (e.g. RLS rejection, unique constraint) are caught and mapped to short user-facing messages in a shared `lib/errors.ts` helper — raw Postgres error text never reaches the UI.
-- **Unexpected errors are logged server-side (console only for v1)** — a hosted logging service (e.g. Sentry) is deferred to a later part of the build, not v1 scope.
+- **Unexpected errors are logged server-side (console only for v1)** — a hosted logging service (e.g. Sentry) is deferred to a later part of the build, not v1 scope. *(Superseded in v2 by ADR-008: production errors also go to Sentry, with strict limits on report contents.)*
 
 ## 8. Deployment
 

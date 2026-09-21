@@ -2,6 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Dark mode is keyed to <html data-theme="dark"> (docs/05-design-system.md, v2 Amendment §G),
+   not the OS media query — so `dark:` utilities follow the user's stored choice. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Sidebar collapse is keyed to <html data-sidebar="collapsed"> the same way, so the
+   collapsed layout is right on first paint (components/shell/sidebar-styles.ts). */
+@custom-variant sidebar-collapsed (&:where([data-sidebar="collapsed"] *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -53,9 +61,13 @@
   --color-teal: var(--teal);
   --color-teal-soft: var(--teal-soft);
   --color-teal-ink: var(--teal-ink);
+  --color-teal-fill: var(--teal-fill);
+  --color-teal-fill-hover: var(--teal-fill-hover);
   --color-blue: var(--blue);
   --color-blue-soft: var(--blue-soft);
   --color-blue-ink: var(--blue-ink);
+  --color-blue-fill: var(--blue-fill);
+  --color-blue-fill-hover: var(--blue-fill-hover);
   --color-pink: var(--pink);
   --color-pink-soft: var(--pink-soft);
   --color-pink-ink: var(--pink-ink);
@@ -79,8 +91,8 @@
   --surface-200: #f4f5f7;
   --border-strong: #e0e0e0;
   --ink: #141414;
-  --ink-muted: #6b6b6b;
-  --ink-faint: #9a9a9a;
+  --ink-muted: #555555;
+  --ink-faint: #6f6f6f;
   --accent-hover: #5b3ee0;
   --accent-text: #5b3ee0;
   --accent-soft: #eee9fe;
@@ -88,9 +100,14 @@
   --teal: #3fa491;
   --teal-soft: #e1f5f1;
   --teal-ink: #1f6a5c;
+  /* Solid fill behind white text (v2 Amendment §H): the identity colour itself is too light for AA. */
+  --teal-fill: #318172;
+  --teal-fill-hover: #2b7264;
   --blue: #4b9eea;
   --blue-soft: #e5f2fd;
   --blue-ink: #235e8c;
+  --blue-fill: #3979b3;
+  --blue-fill-hover: #326b9e;
   --pink: #c81e5c;
   --pink-soft: #fce7ef;
   --pink-ink: #a32359;
@@ -109,8 +126,10 @@
   --secondary-foreground: var(--ink);
   --muted: var(--surface-200);
   --muted-foreground: var(--ink-muted);
-  --accent: var(--surface-200);
-  --accent-foreground: var(--ink);
+  /* v2 Amendment §A: `accent` is the brand violet, as in the design system. Shadcn's
+     neutral hover highlight is not mapped here — use bg-surface-200 for that. */
+  --accent: #6c4cf5;
+  --accent-foreground: var(--accent-ink);
   --destructive: var(--pink);
   --destructive-foreground: #ffffff;
   --border: #efefef;
@@ -131,9 +150,37 @@
   --sidebar-ring: var(--ring);
 }
 
+/* v2 Amendment §F — dark palette. Shadcn variables above are var() references to these
+   tokens on the same element, so they follow automatically; `--border` is the one raw value. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-050: #0f1014;
+  --surface-100: #17181d;
+  --surface-200: #1f2127;
+  --border-strong: #363944;
+  --ink: #f2f2f4;
+  --ink-muted: #a3a5ad;
+  --ink-faint: #868992;
+  --accent-text: #a595ff;
+  --accent-soft: #241d4a;
+  --teal-soft: #12312c;
+  --teal-ink: #6fd0bd;
+  --blue-soft: #14293d;
+  --blue-ink: #8cc4f5;
+  --pink-soft: #3a1626;
+  --pink-ink: #f28aae;
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+  --border: #26282f;
+  --ring: #8b70ff;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Focus-ring offset follows the page background, so it is right in both themes. */
+    --tw-ring-offset-color: var(--background);
   }
   body {
     @apply bg-background text-foreground;

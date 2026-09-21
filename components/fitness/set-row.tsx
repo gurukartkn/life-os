@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, Trash2 } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import { deleteSetLog, saveSetLog } from "@/actions/workout-logs";
 
 export type SetData = {

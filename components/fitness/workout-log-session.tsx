@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { WorkoutLogExercise } from "@/components/fitness/workout-log-exercise";
 import type { SetData } from "@/components/fitness/set-row";
 
@@ -63,10 +64,7 @@ export function WorkoutLogSession({
               />
             </div>
           </div>
-          <Link
-            href="/fitness"
-            className="text-button-text flex h-[38px] items-center gap-1.5 rounded-md bg-teal px-4.5 text-white outline-none transition-colors hover:bg-teal/90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-          >
+          <Link href="/fitness" className={buttonVariants({ tone: "teal" })}>
             Finish workout
           </Link>
         </div>
