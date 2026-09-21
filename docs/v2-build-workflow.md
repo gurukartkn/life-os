@@ -87,13 +87,13 @@ Phases 2 to 7 pick from these eight steps. Each phase below lists only the steps
 
 **Surfaces: Chat** for the delta and plan, **Claude Code** for the sweep.
 
-- [ ] A. Data-model delta: rename `todos` to `tasks` with its RLS policies, and update any `links` rows that reference the old type name
-- [ ] D. Task plan: routes, types, Zod schemas, Server Actions, UI copy, tests and export shape
-- [ ] E. Reversible migration on life-os-dev, then the code sweep
-- [ ] E. Allow past dates on task creation and render them as overdue
-- [ ] F. Update the existing Todo tests to Tasks and add a test for past dates
-- [ ] G. Migration on life-os-prod, deploy, smoke test
-- [ ] H. Close-out: ERD and PRD updated for the merged domain
+- [x] A. Data-model delta: rename `todos` to `tasks` with its RLS policies, and update any `links` rows that reference the old type name
+- [x] D. Task plan: routes, types, Zod schemas, Server Actions, UI copy, tests and export shape
+- [x] E. Reversible migration on life-os-dev, then the code sweep
+- [x] E. Allow past dates on task creation and render them as overdue
+- [x] F. Update the existing Todo tests to Tasks and add a test for past dates
+- [x] G. Migration on life-os-prod, deploy, smoke test
+- [x] H. Close-out: ERD and PRD updated for the merged domain
 - [ ] Review & approve
 
 ## Phase 4 — Stage 3: Fitness Rework

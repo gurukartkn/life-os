@@ -2,14 +2,16 @@
 
 Source: https://claude.ai/artifact/RyUsWhuRf77CRsYRmPEEDM
 
-Companion to the PRD and Build Workflow. MVP domains: **Todo, Fitness, Routines**, plus the Universal Link Engine and a minimal Goal entity. Finance is deferred to a later version.
+Companion to the PRD and Build Workflow. MVP domains: **Tasks, Fitness, Routines**, plus the Universal Link Engine and a minimal Goal entity. Finance is deferred to a later version.
+
+> **v2 Stage 2 (2026-09-21):** the `todos` table was renamed to `tasks` (primary key and foreign key renamed with it, RLS policy unchanged) and the `links` type value `todo` became `task`. Applied to life-os-dev and life-os-prod by `supabase/migrations/20260921193344_rename_todos_to_tasks.sql`; the inverse is `supabase/rollbacks/20260921193344_rename_todos_to_tasks.down.sql`.
 
 ## Entities
 
 13 tables total, plus Supabase's own `auth.users`:
 
 - `user_settings` — extends `auth.users` with app settings (timezone, needed for Routine reset boundaries)
-- `todos`
+- `tasks`
 - `goals` — minimal, per FR-12
 - `routines`, `routine_items`, `routine_completions` — a Routine is a checklist; items are the checklist rows; completions are period-stamped log entries, not a boolean that gets reset
 - `links` — the generic cross-entity Link Engine (FR-02)
@@ -24,7 +26,7 @@ Companion to the PRD and Build Workflow. MVP domains: **Todo, Fitness, Routines*
 ```mermaid
 erDiagram
   USERS ||--o| USER_SETTINGS : has
-  USERS ||--o{ TODOS : owns
+  USERS ||--o{ TASKS : owns
   USERS ||--o{ GOALS : owns
   USERS ||--o{ ROUTINES : owns
   USERS ||--o{ LINKS : owns
@@ -38,14 +40,14 @@ erDiagram
   WORKOUTS ||--o{ WORKOUT_LOGS : performed_as
   WORKOUT_LOGS ||--o{ SET_LOGS : contains
   EXERCISES ||--o{ SET_LOGS : performed_via
-  LINKS }o..o| TODOS : polymorphic
+  LINKS }o..o| TASKS : polymorphic
   LINKS }o..o| WORKOUT_LOGS : polymorphic
   LINKS }o..o| GOALS : polymorphic
   LINKS }o..o| ROUTINES : polymorphic
 
   USERS { uuid id PK }
   USER_SETTINGS { uuid user_id PK_FK text timezone }
-  TODOS { uuid id PK uuid user_id FK text title bool is_completed date due_date }
+  TASKS { uuid id PK uuid user_id FK text title bool is_completed date due_date }
   GOALS { uuid id PK uuid user_id FK text title date target_date text status }
   ROUTINES { uuid id PK uuid user_id FK text title text cadence }
   ROUTINE_ITEMS { uuid id PK uuid routine_id FK text title int sort_order }
@@ -79,7 +81,7 @@ create table goals (
   updated_at timestamptz not null default now()
 );
 
-create table todos (
+create table tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   title text not null,
@@ -180,9 +182,9 @@ create table set_logs (
 create table links (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  source_type text not null check (source_type in ('todo','workout_log','goal','routine')),
+  source_type text not null check (source_type in ('task','workout_log','goal','routine')),
   source_id uuid not null,
-  target_type text not null check (target_type in ('todo','workout_log','goal','routine')),
+  target_type text not null check (target_type in ('task','workout_log','goal','routine')),
   target_id uuid not null,
   relationship_label text,
   created_at timestamptz not null default now(),
@@ -195,9 +197,9 @@ create table links (
 Every table carries a real `user_id` column — including child tables, denormalized rather than reached through a join. One policy pattern, verbatim, on every table:
 
 ```sql
-alter table todos enable row level security;
+alter table tasks enable row level security;
 
-create policy "own rows only" on todos
+create policy "own rows only" on tasks
 for all
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
@@ -212,5 +214,5 @@ Swap the table name for the other eleven (twelve including `user_settings`, wher
 - **`links` has no real foreign keys** on `source_id`/`target_id` — can't point at four different tables with one constraint. Integrity is enforced at the app layer (Zod validates `source_type`/`target_type`).
 - **`exercises`/`set_logs` use `on delete restrict`**, not cascade — retiring an exercise sets `is_active = false` rather than deleting it, so historical `set_logs` never lose their reference.
 - **`workout_logs.workout_id` is nullable** — ad-hoc sessions (not built from a saved template) are allowed, to keep Quick Capture low-friction.
-- **Todo → Project linking** (mentioned in the PRD's screen inventory) has no backing table yet — Projects is still deferred, so only Goal and Routine links are functionally available in v1.
+- **Task → Project linking** (mentioned in the PRD's screen inventory) has no backing table yet — Projects is still deferred, so only Goal and Routine links are functionally available in v1.
 - **Finance is out of the schema entirely for v1** — deferred to a later version, not scaffolded now.

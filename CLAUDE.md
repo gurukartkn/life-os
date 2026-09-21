@@ -12,7 +12,7 @@ Next.js (App Router) · TypeScript · Supabase (Postgres + Auth + RLS) · Vercel
 
 **Phase 8 — Implementation (Build).** Phases 1–7 (data model, architecture decisions, backend architecture, design system, wireframes, mockups, implementation plan) are approved and documented in `/docs`. Build order: **Tasks → Fitness → Routines**, following the six stages in `docs/08-implementation-plan.md` (Stage 0: Setup is first).
 
-> **v2 Stage 2:** this domain was renamed to **Tasks** (table `tasks`, route `/tasks`, `actions/tasks.ts`, `components/tasks/`, entity type `task` in `links`). The v1 docs below still use its old name and are kept as the historical record until the v2 close-out folds the rename into them.
+> **v2 Stage 2:** this domain was renamed to **Tasks** (table `tasks`, route `/tasks`, `actions/tasks.ts`, `components/tasks/`, entity type `task` in `links`). The ERD (`docs/02`) and PRD (`docs/01`) were updated for it; `docs/03`–`08` are v1 records and still use the old name.
 
 ## Full project docs
 
