@@ -22,6 +22,10 @@ export type ExportData = {
   workout_exercises: Tables<"workout_exercises">[];
   workout_logs: Tables<"workout_logs">[];
   set_logs: Tables<"set_logs">[];
+  muscle_groups: Tables<"muscle_groups">[];
+  equipment: Tables<"equipment">[];
+  exercise_muscle_groups: Tables<"exercise_muscle_groups">[];
+  exercise_equipment: Tables<"exercise_equipment">[];
 };
 
 export async function exportUserData(): Promise<ActionResult<ExportData>> {
@@ -47,6 +51,10 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     workoutExercises,
     workoutLogs,
     setLogs,
+    muscleGroups,
+    equipment,
+    exerciseMuscleGroups,
+    exerciseEquipment,
   ] = await Promise.all([
     supabase.from("user_settings").select("*"),
     supabase.from("tasks").select("*"),
@@ -60,6 +68,10 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     supabase.from("workout_exercises").select("*"),
     supabase.from("workout_logs").select("*"),
     supabase.from("set_logs").select("*"),
+    supabase.from("muscle_groups").select("*"),
+    supabase.from("equipment").select("*"),
+    supabase.from("exercise_muscle_groups").select("*"),
+    supabase.from("exercise_equipment").select("*"),
   ]);
 
   const results = {
@@ -75,6 +87,10 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     workoutExercises,
     workoutLogs,
     setLogs,
+    muscleGroups,
+    equipment,
+    exerciseMuscleGroups,
+    exerciseEquipment,
   };
 
   for (const [key, result] of Object.entries(results)) {
@@ -100,6 +116,10 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
       workout_exercises: workoutExercises.data ?? [],
       workout_logs: workoutLogs.data ?? [],
       set_logs: setLogs.data ?? [],
+      muscle_groups: muscleGroups.data ?? [],
+      equipment: equipment.data ?? [],
+      exercise_muscle_groups: exerciseMuscleGroups.data ?? [],
+      exercise_equipment: exerciseEquipment.data ?? [],
     },
   };
 }

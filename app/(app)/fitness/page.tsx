@@ -18,7 +18,7 @@ type WorkoutWithRelations = {
   name: string;
   created_at: string;
   workout_exercises: { exercise_id: string; exercises: { muscle_groups: string[] } | null }[];
-  workout_logs: { performed_on: string }[];
+  workout_logs: { performed_at: string }[];
 };
 
 type RecentLogRow = {
@@ -50,7 +50,7 @@ export default async function FitnessPage({
       supabase
         .from("workouts")
         .select(
-          "id, name, created_at, workout_exercises(exercise_id, exercises(muscle_groups)), workout_logs(performed_on)"
+          "id, name, created_at, workout_exercises(exercise_id, exercises(muscle_groups)), workout_logs(performed_at)"
         )
         .order("created_at", { ascending: false }),
       supabase
@@ -67,8 +67,12 @@ export default async function FitnessPage({
       const muscleGroups = Array.from(
         new Set(workout.workout_exercises.flatMap((we) => we.exercises?.muscle_groups ?? []))
       ).slice(0, 3);
+      // Compared as instants: performed_at is a timestamp, and its text form can vary in length.
       const lastLogged = workout.workout_logs.reduce<string | null>(
-        (latest, log) => (!latest || log.performed_on > latest ? log.performed_on : latest),
+        (latest, log) =>
+          !latest || new Date(log.performed_at).getTime() > new Date(latest).getTime()
+            ? log.performed_at
+            : latest,
         null
       );
       return {

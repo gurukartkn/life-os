@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { formatDueDate, formatRelative, isOverdue, periodStartFor, todayIso } from "./dates";
+import {
+  formatDueDate,
+  formatRelativeTime,
+  isOverdue,
+  periodStartFor,
+  todayIso,
+  workoutLogStamp,
+} from "./dates";
 
 describe("dates", () => {
   beforeEach(() => {
@@ -55,13 +62,52 @@ describe("dates", () => {
     });
   });
 
-  describe("formatRelative", () => {
-    it("returns a relative time string with a suffix", () => {
-      expect(formatRelative("2026-09-14")).toBe("3 days ago");
+  describe("todayIso with a timezone", () => {
+    // 2026-09-21 23:30 UTC is already the 22nd in Kolkata (+05:30), still the 21st in New York.
+    const now = new Date("2026-09-21T23:30:00Z");
+
+    it("is the calendar date in that zone", () => {
+      expect(todayIso("Asia/Kolkata", now)).toBe("2026-09-22");
+      expect(todayIso("America/New_York", now)).toBe("2026-09-21");
+      expect(todayIso("UTC", now)).toBe("2026-09-21");
+    });
+  });
+
+  describe("workoutLogStamp", () => {
+    it("stamps the instant and its date in the user's timezone", () => {
+      const now = new Date("2026-09-21T23:30:00Z");
+
+      expect(workoutLogStamp("Asia/Kolkata", now)).toEqual({
+        performed_at: "2026-09-21T23:30:00.000Z",
+        performed_on: "2026-09-22",
+      });
+    });
+  });
+
+  describe("formatRelativeTime", () => {
+    const now = new Date("2026-09-21T12:00:00Z");
+    const ago = (seconds: number) => new Date(now.getTime() - seconds * 1000);
+
+    it("says 'just now' under 60 seconds", () => {
+      expect(formatRelativeTime(ago(0), now)).toBe("just now");
+      expect(formatRelativeTime(ago(59), now)).toBe("just now");
     });
 
-    it("returns 'about 1 month ago' for a month-old date", () => {
-      expect(formatRelative("2026-08-17")).toBe("about 1 month ago");
+    it("switches to minutes at 60 seconds and to hours at 60 minutes", () => {
+      expect(formatRelativeTime(ago(60), now)).toBe("1 minute ago");
+      expect(formatRelativeTime(ago(59 * 60), now)).toBe("59 minutes ago");
+      expect(formatRelativeTime(ago(60 * 60), now)).toBe("1 hour ago");
+    });
+
+    it("switches to days at 24 hours", () => {
+      expect(formatRelativeTime(ago(23 * 3600), now)).toBe("23 hours ago");
+      expect(formatRelativeTime(ago(24 * 3600), now)).toBe("1 day ago");
+      expect(formatRelativeTime(ago(3 * 24 * 3600), now)).toBe("3 days ago");
+    });
+
+    it("accepts an ISO string and treats a future time as just now", () => {
+      expect(formatRelativeTime("2026-09-21T11:00:00Z", now)).toBe("1 hour ago");
+      expect(formatRelativeTime("2026-09-21T12:05:00Z", now)).toBe("just now");
     });
   });
 });

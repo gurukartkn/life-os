@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { DeleteWorkoutButton } from "@/components/fitness/delete-workout-button";
 import { startWorkoutLog } from "@/actions/workout-logs";
-import { formatRelative } from "@/lib/dates";
+import { formatRelativeTime } from "@/lib/dates";
 
 export function WorkoutCard({
   id,
@@ -38,7 +38,7 @@ export function WorkoutCard({
       </div>
       <span className="flex items-center gap-1.5 text-caption text-ink-faint">
         <Clock3 className="size-3.5" />
-        {lastLogged ? `Last logged ${formatRelative(lastLogged)}` : "Not logged yet"}
+        {lastLogged ? `Last logged ${formatRelativeTime(lastLogged)}` : "Not logged yet"}
       </span>
       <form action={startWorkoutLog}>
         <input type="hidden" name="workout_id" value={id} />
