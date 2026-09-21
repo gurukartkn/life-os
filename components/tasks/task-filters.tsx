@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { filterHref, type StatusFilter } from "@/lib/todo-filters";
+import { filterHref, type StatusFilter } from "@/lib/task-filters";
 
 const FILTERS = [
   { value: "all", label: "All" },
@@ -14,10 +14,10 @@ const BASE_CLASS =
 const INACTIVE_CLASS = `${BASE_CLASS} text-ink-muted hover:bg-surface-200 hover:text-ink`;
 const ACTIVE_CLASS = `${BASE_CLASS} bg-accent-soft text-accent-text hover:bg-accent-soft hover:text-accent-text`;
 
-// The filter is URL state (docs/04 §5) but the page already holds every todo, so
+// The filter is URL state (docs/04 §5) but the page already holds every task, so
 // selecting a tab only updates the URL with history.pushState — Next syncs
 // useSearchParams from it without a server round trip — and the list filters in
-// memory (TodoView). Modified clicks (new tab etc.) and no-JS keep the real href.
+// memory (TaskView). Modified clicks (new tab etc.) and no-JS keep the real href.
 function handleSelect(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
   if (event.defaultPrevented || event.button !== 0) return;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -28,7 +28,7 @@ function handleSelect(event: React.MouseEvent<HTMLAnchorElement>, href: string) 
   }
 }
 
-export function TodoFilters({ active }: { active: StatusFilter }) {
+export function TaskFilters({ active }: { active: StatusFilter }) {
   return (
     <div className="flex gap-1">
       {FILTERS.map(({ value, label }) => {

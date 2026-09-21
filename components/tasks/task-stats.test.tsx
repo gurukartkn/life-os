@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { TodoStats } from "./todo-stats";
+import { TaskStats } from "./task-stats";
 
-describe("TodoStats", () => {
+describe("TaskStats", () => {
   it("renders each count under its label", () => {
-    render(<TodoStats dueToday={3} overdue={1} completed={7} />);
+    render(<TaskStats dueToday={3} overdue={1} completed={7} />);
 
     const dueTodayCard = screen.getByText("Due today").closest("div");
     const overdueCard = screen.getByText("Overdue").closest("div");

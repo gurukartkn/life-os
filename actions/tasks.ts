@@ -2,15 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { todoInsertSchema, todoToggleSchema, todoDeleteSchema } from "@/lib/validations/todos";
+import { taskInsertSchema, taskToggleSchema, taskDeleteSchema } from "@/lib/validations/tasks";
 import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
-export async function createTodo(
+export async function createTask(
   _prevState: ActionResult,
   formData: FormData
 ): Promise<ActionResult> {
-  const parsed = todoInsertSchema.safeParse({
+  const parsed = taskInsertSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     due_date: formData.get("due_date") || undefined,
@@ -29,7 +29,7 @@ export async function createTodo(
     return { success: false, error: "You need to be logged in." };
   }
 
-  const { error } = await supabase.from("todos").insert({
+  const { error } = await supabase.from("tasks").insert({
     user_id: user.id,
     title: parsed.data.title,
     description: parsed.data.description || null,
@@ -37,16 +37,16 @@ export async function createTodo(
   });
 
   if (error) {
-    logError("createTodo", error);
-    return { success: false, error: "Couldn't add the todo. Try again." };
+    logError("createTask", error);
+    return { success: false, error: "Couldn't add the task. Try again." };
   }
 
-  revalidatePath("/todos");
+  revalidatePath("/tasks");
   return { success: true };
 }
 
-export async function toggleTodo(id: string, isCompleted: boolean): Promise<ActionResult> {
-  const parsed = todoToggleSchema.safeParse({ id, is_completed: isCompleted });
+export async function toggleTask(id: string, isCompleted: boolean): Promise<ActionResult> {
+  const parsed = taskToggleSchema.safeParse({ id, is_completed: isCompleted });
 
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message };
@@ -54,7 +54,7 @@ export async function toggleTodo(id: string, isCompleted: boolean): Promise<Acti
 
   const supabase = await createClient();
   const { error } = await supabase
-    .from("todos")
+    .from("tasks")
     .update({
       is_completed: parsed.data.is_completed,
       completed_at: parsed.data.is_completed ? new Date().toISOString() : null,
@@ -62,29 +62,29 @@ export async function toggleTodo(id: string, isCompleted: boolean): Promise<Acti
     .eq("id", parsed.data.id);
 
   if (error) {
-    logError("toggleTodo", error);
-    return { success: false, error: "Couldn't update the todo. Try again." };
+    logError("toggleTask", error);
+    return { success: false, error: "Couldn't update the task. Try again." };
   }
 
-  revalidatePath("/todos");
+  revalidatePath("/tasks");
   return { success: true };
 }
 
-export async function deleteTodo(id: string): Promise<ActionResult> {
-  const parsed = todoDeleteSchema.safeParse({ id });
+export async function deleteTask(id: string): Promise<ActionResult> {
+  const parsed = taskDeleteSchema.safeParse({ id });
 
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("todos").delete().eq("id", parsed.data.id);
+  const { error } = await supabase.from("tasks").delete().eq("id", parsed.data.id);
 
   if (error) {
-    logError("deleteTodo", error);
-    return { success: false, error: "Couldn't delete the todo. Try again." };
+    logError("deleteTask", error);
+    return { success: false, error: "Couldn't delete the task. Try again." };
   }
 
-  revalidatePath("/todos");
+  revalidatePath("/tasks");
   return { success: true };
 }

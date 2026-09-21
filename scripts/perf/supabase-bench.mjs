@@ -37,10 +37,10 @@ const results = Object.fromEntries([
   await time("rtt_auth_health (GET /auth/v1/health)", () => fetch(`${url}/auth/v1/health`, { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY } })),
   await time("auth.getUser (network)", () => supabase.auth.getUser()),
   await time("auth.getClaims (local, JWKS cached)", () => supabase.auth.getClaims()),
-  await time("select todos (all)", () => supabase.from("todos").select("*")),
-  await time("select todos limit 1", () => supabase.from("todos").select("id").limit(1)),
+  await time("select tasks (all)", () => supabase.from("tasks").select("*")),
+  await time("select tasks limit 1", () => supabase.from("tasks").select("id").limit(1)),
   await time("6 parallel select-limit-1 (export-has-data probe)", () =>
-    Promise.all(["todos", "goals", "routines", "exercises", "workouts", "workout_logs"].map((t) => supabase.from(t).select("id").limit(1)))
+    Promise.all(["tasks", "goals", "routines", "exercises", "workouts", "workout_logs"].map((t) => supabase.from(t).select("id").limit(1)))
   ),
 ]);
 

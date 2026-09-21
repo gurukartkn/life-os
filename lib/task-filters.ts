@@ -9,14 +9,14 @@ export function parseStatusFilter(status: string | null | undefined): StatusFilt
 }
 
 export function filterHref(filter: StatusFilter): string {
-  return filter === "all" ? "/todos" : `/todos?status=${filter}`;
+  return filter === "all" ? "/tasks" : `/tasks?status=${filter}`;
 }
 
-// The page loads every todo, so a filter is a pure in-memory pass — no server round trip.
-export function filterTodos(todos: Tables<"todos">[], filter: StatusFilter): Tables<"todos">[] {
-  if (filter === "active") return todos.filter((todo) => !todo.is_completed);
-  if (filter === "completed") return todos.filter((todo) => todo.is_completed);
-  return todos;
+// The page loads every task, so a filter is a pure in-memory pass — no server round trip.
+export function filterTasks(tasks: Tables<"tasks">[], filter: StatusFilter): Tables<"tasks">[] {
+  if (filter === "active") return tasks.filter((task) => !task.is_completed);
+  if (filter === "completed") return tasks.filter((task) => task.is_completed);
+  return tasks;
 }
 
 export function emptyStateTitle(filter: StatusFilter): string {

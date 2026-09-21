@@ -14,7 +14,7 @@ async function forceLight(page: Page) {
 }
 
 test.describe("signed in", () => {
-  for (const path of ["/todos", "/fitness", "/routines", "/goals"]) {
+  for (const path of ["/tasks", "/fitness", "/routines", "/goals"]) {
     test(`${path}: switch to dark and back`, async ({ page }) => {
       await forceLight(page);
       await page.goto(path);
@@ -34,7 +34,7 @@ test.describe("signed in", () => {
   test("the choice survives a reload and applies before first paint", async ({ page }) => {
     // Start from an explicit light choice (set once — an init script would also
     // overwrite the stored choice on the reload below).
-    await page.goto("/todos");
+    await page.goto("/tasks");
     await page.evaluate(() => window.localStorage.setItem("life-os-theme", "light"));
     await page.reload();
     await page.getByRole("button", { name: "Switch to dark theme" }).click();

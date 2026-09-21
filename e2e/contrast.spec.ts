@@ -3,11 +3,11 @@ import AxeBuilder from "@axe-core/playwright";
 
 // v2 Stage 1: "the user can switch between light and dark on every screen" — so
 // every screen, and the states that change text colour (overdue and completed
-// todos, validation errors, the open calendar), must meet WCAG AA text contrast
+// tasks, validation errors, the open calendar), must meet WCAG AA text contrast
 // in both themes (docs/05-design-system.md, v2 Amendment §F and §H).
 
 const APP_SCREENS = [
-  "/todos",
+  "/tasks",
   "/fitness",
   "/fitness?tab=exercises",
   "/fitness/workouts/new",
@@ -44,23 +44,23 @@ for (const theme of ["light", "dark"] as const) {
       });
     }
 
-    test("Today with an overdue and a completed todo, an error and the open calendar", async ({ page }) => {
+    test("Tasks with an overdue and a completed task, an error and the open calendar", async ({ page }) => {
       const stamp = Date.now();
       await useTheme(page, theme);
-      await page.goto("/todos");
+      await page.goto("/tasks");
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 
-      // An overdue todo (previous month) and a completed one.
-      await page.getByLabel("Todo title").fill(`Overdue sample ${stamp}`);
+      // An overdue task (previous month) and a completed one.
+      await page.getByLabel("Task title").fill(`Overdue sample ${stamp}`);
       await page.getByRole("button", { name: "Due date" }).click();
       await page.getByRole("button", { name: /previous month/i }).click();
       await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
-      await page.getByRole("button", { name: "Add todo" }).click();
+      await page.getByRole("button", { name: "New task" }).click();
       const overdue = page.locator("div.rounded-md.border", { hasText: `Overdue sample ${stamp}` });
       await expect(overdue).toContainText("Due", { timeout: 20_000 });
 
-      await page.getByLabel("Todo title").fill(`Done sample ${stamp}`);
-      await page.getByRole("button", { name: "Add todo" }).click();
+      await page.getByLabel("Task title").fill(`Done sample ${stamp}`);
+      await page.getByRole("button", { name: "New task" }).click();
       const done = page.locator("div.rounded-md.border", { hasText: `Done sample ${stamp}` });
       await done.getByRole("checkbox", { name: "Mark as done" }).click();
       await expect(done.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({ timeout: 20_000 });
@@ -68,7 +68,7 @@ for (const theme of ["light", "dark"] as const) {
       expect(await contrastViolations(page)).toEqual([]);
 
       // Validation error text.
-      await page.getByRole("button", { name: "Add todo" }).click();
+      await page.getByRole("button", { name: "New task" }).click();
       await expect(page.getByText("Enter a title.")).toBeVisible();
       expect(await contrastViolations(page)).toEqual([]);
 

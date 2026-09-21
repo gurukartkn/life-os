@@ -11,7 +11,7 @@ import type { Tables } from "@/lib/types/database";
 export type ExportData = {
   exported_at: string;
   user_settings: Tables<"user_settings">[];
-  todos: Tables<"todos">[];
+  tasks: Tables<"tasks">[];
   goals: Tables<"goals">[];
   routines: Tables<"routines">[];
   routine_items: Tables<"routine_items">[];
@@ -36,7 +36,7 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
 
   const [
     userSettings,
-    todos,
+    tasks,
     goals,
     routines,
     routineItems,
@@ -49,7 +49,7 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     setLogs,
   ] = await Promise.all([
     supabase.from("user_settings").select("*"),
-    supabase.from("todos").select("*"),
+    supabase.from("tasks").select("*"),
     supabase.from("goals").select("*"),
     supabase.from("routines").select("*"),
     supabase.from("routine_items").select("*"),
@@ -64,7 +64,7 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
 
   const results = {
     userSettings,
-    todos,
+    tasks,
     goals,
     routines,
     routineItems,
@@ -89,7 +89,7 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     data: {
       exported_at: new Date().toISOString(),
       user_settings: userSettings.data ?? [],
-      todos: todos.data ?? [],
+      tasks: tasks.data ?? [],
       goals: goals.data ?? [],
       routines: routines.data ?? [],
       routine_items: routineItems.data ?? [],

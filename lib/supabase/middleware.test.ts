@@ -31,7 +31,7 @@ describe("updateSession", () => {
   it("redirects a signed-out visitor to /login", async () => {
     signedIn(null);
 
-    const response = await updateSession(request("/todos"));
+    const response = await updateSession(request("/tasks"));
 
     expect(response.status).toBe(307);
     expect(new URL(response.headers.get("location")!).pathname).toBe("/login");
@@ -46,12 +46,12 @@ describe("updateSession", () => {
     }
   });
 
-  it("sends a signed-in user away from /login to /todos", async () => {
+  it("sends a signed-in user away from /login to /tasks", async () => {
     signedIn({ sub: "user-1" });
 
     const response = await updateSession(request("/login"));
 
-    expect(new URL(response.headers.get("location")!).pathname).toBe("/todos");
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/tasks");
   });
 
   it("lets a signed-in user through to app routes", async () => {

@@ -1,4 +1,4 @@
-// Perf harness only — measures page switching and todo filter tabs against a
+// Perf harness only — measures page switching and task filter tabs against a
 // running production build (`next build && next start`).
 //
 //   $env:PERF_LOG="perf-out/server.log"; $env:NODE_OPTIONS="--require ./scripts/perf/fetch-timer.cjs"
@@ -6,7 +6,7 @@
 //   node scripts/perf/measure.mjs --label=baseline-small --n=20 --rtt=0
 //
 // Scenarios: cold (full page loads), nav (sidebar click → destination h1),
-// filters (todo tab click → URL + list settled), server (single non-prefetched
+// filters (task tab click → URL + list settled), server (single non-prefetched
 // document requests, correlated with the fetch-timer log so auth round trips
 // and query time per route are attributable).
 import fs from "node:fs";
@@ -92,7 +92,7 @@ async function login(page) {
   await page.getByLabel("Email").fill(process.env.E2E_EMAIL);
   await page.getByLabel("Password", { exact: true }).fill(process.env.E2E_PASSWORD);
   await page.getByRole("button", { name: "Log in" }).click();
-  await page.waitForURL("**/todos");
+  await page.waitForURL("**/tasks");
 }
 
 const browser = await chromium.launch();
@@ -143,7 +143,7 @@ async function firstRoutineHref() {
 const routineHref = await firstRoutineHref();
 
 if (SCENARIOS.includes("cold")) {
-  const routes = { "/todos": "Today", "/fitness": "Fitness", "/routines": "Routines", [routineHref ?? "/routines"]: "routine-detail" };
+  const routes = { "/tasks": "Tasks", "/fitness": "Fitness", "/routines": "Routines", [routineHref ?? "/routines"]: "routine-detail" };
   results.cold = {};
   for (const [route, name] of Object.entries(routes)) {
     const ttfb = [], fcp = [], load = [], wall = [];
@@ -166,13 +166,13 @@ if (SCENARIOS.includes("cold")) {
 
 // ---- nav: sidebar / card clicks -------------------------------------------
 if (SCENARIOS.includes("nav")) {
-  await page.goto(`${BASE}/todos`);
+  await page.goto(`${BASE}/tasks`);
   await page.waitForTimeout(1000);
   const steps = [
-    { name: "todos→fitness", sel: 'aside nav a[href="/fitness"]', done: `document.querySelector('h1')?.textContent?.trim() === 'Fitness'` },
+    { name: "tasks→fitness", sel: 'aside nav a[href="/fitness"]', done: `document.querySelector('h1')?.textContent?.trim() === 'Fitness'` },
     { name: "fitness→routines", sel: 'aside nav a[href="/routines"]', done: `document.querySelector('h1')?.textContent?.trim() === 'Routines'` },
     { name: "routines→routine-detail", sel: `main a[href="${routineHref}"]`, done: `location.pathname === '${routineHref}' && document.querySelector('h1')?.textContent?.trim().startsWith('perf routine')` },
-    { name: "routine-detail→todos", sel: 'aside nav a[href="/todos"]', done: `document.querySelector('h1')?.textContent?.trim() === 'Today'` },
+    { name: "routine-detail→tasks", sel: 'aside nav a[href="/tasks"]', done: `document.querySelector('h1')?.textContent?.trim() === 'Tasks'` },
   ];
   const acc = Object.fromEntries(steps.map((s) => [s.name, { content: [], feedback: [], reqs: [], auth: [], authMs: [], rest: [], restMs: [], longtaskMs: [] }]));
   for (let cycle = 0; cycle < N + 1; cycle++) {
@@ -195,19 +195,19 @@ if (SCENARIOS.includes("nav")) {
   );
 }
 
-// ---- filters: todo tabs ----------------------------------------------------
+// ---- filters: task tabs ----------------------------------------------------
 if (SCENARIOS.includes("filters")) {
   const expected = {};
-  for (const [name, url] of [["all", "/todos"], ["active", "/todos?status=active"], ["completed", "/todos?status=completed"]]) {
+  for (const [name, url] of [["all", "/tasks"], ["active", "/tasks?status=active"], ["completed", "/tasks?status=completed"]]) {
     await page.goto(`${BASE}${url}`);
     expected[name] = await page.locator('[role="checkbox"]').count();
   }
-  await page.goto(`${BASE}/todos`);
+  await page.goto(`${BASE}/tasks`);
   await page.waitForTimeout(1000);
   const steps = [
-    { name: "all→active", sel: 'a[href="/todos?status=active"]', done: `location.search === '?status=active' && document.querySelectorAll('[role="checkbox"]').length === ${expected.active}` },
-    { name: "active→completed", sel: 'a[href="/todos?status=completed"]', done: `location.search === '?status=completed' && document.querySelectorAll('[role="checkbox"]').length === ${expected.completed}` },
-    { name: "completed→all", sel: 'a[href="/todos"]:not(aside a)', done: `location.search === '' && document.querySelectorAll('[role="checkbox"]').length === ${expected.all}` },
+    { name: "all→active", sel: 'a[href="/tasks?status=active"]', done: `location.search === '?status=active' && document.querySelectorAll('[role="checkbox"]').length === ${expected.active}` },
+    { name: "active→completed", sel: 'a[href="/tasks?status=completed"]', done: `location.search === '?status=completed' && document.querySelectorAll('[role="checkbox"]').length === ${expected.completed}` },
+    { name: "completed→all", sel: 'a[href="/tasks"]:not(aside a)', done: `location.search === '' && document.querySelectorAll('[role="checkbox"]').length === ${expected.all}` },
   ];
   const acc = Object.fromEntries(steps.map((s) => [s.name, { content: [], feedback: [], reqs: [], rest: [], auth: [], longtask: [], eventMax: [], cls: [] }]));
   for (let cycle = 0; cycle < N + 1; cycle++) {
@@ -243,7 +243,7 @@ if (SCENARIOS.includes("filters")) {
 // ---- server: isolated document requests ------------------------------------
 if (SCENARIOS.includes("server")) {
   results.server = {};
-  const routes = ["/todos", "/todos?status=active", "/fitness", "/fitness?tab=exercises", "/routines", routineHref ?? "/routines", "/goals"];
+  const routes = ["/tasks", "/tasks?status=active", "/fitness", "/fitness?tab=exercises", "/routines", routineHref ?? "/routines", "/goals"];
   for (const route of routes) {
     const ms = [], auth = [], authMs = [], rest = [], restMs = [];
     for (let i = 0; i < N + 1; i++) {

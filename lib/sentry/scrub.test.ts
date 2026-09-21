@@ -28,7 +28,7 @@ function leakyEvent(): Event {
     fingerprint: [TASK_TITLE],
     modules: { next: "16" },
     request: {
-      url: "https://life-os.example/todos?status=active&q=Buy%20milk#top",
+      url: "https://life-os.example/tasks?status=active&q=Buy%20milk#top",
       method: "POST",
       headers: { cookie: COOKIE, "user-agent": "x" },
       cookies: { session: COOKIE },
@@ -52,9 +52,9 @@ function leakyEvent(): Event {
           stacktrace: {
             frames: [
               {
-                filename: "app/actions/todos.ts",
-                abs_path: "C:/secret/path/todos.ts",
-                function: "createTodo",
+                filename: "app/actions/tasks.ts",
+                abs_path: "C:/secret/path/tasks.ts",
+                function: "createTask",
                 lineno: 32,
                 colno: 5,
                 in_app: true,
@@ -107,7 +107,7 @@ describe("scrubEvent", () => {
     expect(exception?.type).toBe("error");
     expect(exception?.mechanism).toEqual({ type: "generic", handled: true });
     expect(exception?.stacktrace?.frames).toEqual([
-      { filename: "app/actions/todos.ts", function: "createTodo", lineno: 32, colno: 5, in_app: true },
+      { filename: "app/actions/tasks.ts", function: "createTask", lineno: 32, colno: 5, in_app: true },
     ]);
   });
 
@@ -120,7 +120,7 @@ describe("scrubEvent", () => {
   it("reduces the request to method and a query-free, id-free path", () => {
     const scrubbed = scrubEvent(leakyEvent());
 
-    expect(scrubbed.request).toEqual({ url: "https://life-os.example/todos", method: "POST" });
+    expect(scrubbed.request).toEqual({ url: "https://life-os.example/tasks", method: "POST" });
     expect(scrubbed.transaction).toBe("GET /routines/:id");
   });
 
@@ -159,6 +159,6 @@ describe("sanitizeUrl", () => {
   });
 
   it("handles a relative path", () => {
-    expect(sanitizeUrl("/todos?status=active")).toBe("/todos");
+    expect(sanitizeUrl("/tasks?status=active")).toBe("/tasks");
   });
 });

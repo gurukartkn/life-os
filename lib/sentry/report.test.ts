@@ -18,14 +18,14 @@ describe("toReportableError", () => {
   it("reduces a Postgres/PostgREST error to context + code, dropping message, details and hint", () => {
     const postgresError = {
       code: "23505",
-      message: `duplicate key value violates unique constraint "todos_title_key"`,
+      message: `duplicate key value violates unique constraint "tasks_title_key"`,
       details: `Key (title)=(${TITLE}) already exists.`,
       hint: `try another ${TITLE}`,
     };
 
-    const reportable = toReportableError("createTodo", postgresError);
+    const reportable = toReportableError("createTask", postgresError);
 
-    expect(reportable.message).toBe("createTodo failed (23505)");
+    expect(reportable.message).toBe("createTask failed (23505)");
     expect(JSON.stringify([reportable.message, reportable.stack])).not.toContain(TITLE);
   });
 
@@ -43,30 +43,30 @@ describe("toReportableError", () => {
   it("keeps an unexpected Error (with its stack) when it has no code", () => {
     const boom = new TypeError("Cannot read properties of undefined");
 
-    expect(toReportableError("Load todos", boom)).toBe(boom);
+    expect(toReportableError("Load tasks", boom)).toBe(boom);
   });
 
   it("offers nothing but the context for values with no safe text", () => {
-    expect(toReportableError("Load todos", { message: TITLE }).message).toBe("Load todos failed");
-    expect(toReportableError("Load todos", TITLE).message).toBe("Load todos failed");
-    expect(toReportableError("Load todos", null).message).toBe("Load todos failed");
+    expect(toReportableError("Load tasks", { message: TITLE }).message).toBe("Load tasks failed");
+    expect(toReportableError("Load tasks", TITLE).message).toBe("Load tasks failed");
+    expect(toReportableError("Load tasks", null).message).toBe("Load tasks failed");
   });
 });
 
 describe("reportError", () => {
   it("sends the reduced error to Sentry", () => {
-    reportError("createTodo", { code: "23505", details: `Key (title)=(${TITLE})` });
+    reportError("createTask", { code: "23505", details: `Key (title)=(${TITLE})` });
 
     expect(captureException).toHaveBeenCalledTimes(1);
-    expect((captureException.mock.calls[0][0] as Error).message).toBe("createTodo failed (23505)");
+    expect((captureException.mock.calls[0][0] as Error).message).toBe("createTask failed (23505)");
   });
 });
 
 describe("logError", () => {
   it("logs to the console and reports", () => {
-    logError("deleteTodo", { code: "42501" });
+    logError("deleteTask", { code: "42501" });
 
-    expect(console.error).toHaveBeenCalledWith("deleteTodo failed:", { code: "42501" });
+    expect(console.error).toHaveBeenCalledWith("deleteTask failed:", { code: "42501" });
     expect(captureException).toHaveBeenCalledTimes(1);
   });
 });

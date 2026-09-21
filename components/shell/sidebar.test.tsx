@@ -46,7 +46,7 @@ describe("Sidebar", () => {
   it("keeps every item reachable by name when collapsed (labels are CSS-hidden)", () => {
     render(<Sidebar userEmail="me@example.com" hasExportableData />);
 
-    expect(screen.getByRole("link", { name: "Today" })).toHaveAttribute("href", "/todos");
+    expect(screen.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", "/tasks");
     expect(screen.getByRole("link", { name: "Fitness" })).toHaveAttribute("href", "/fitness");
     expect(screen.getByRole("link", { name: "Routines" })).toHaveAttribute("href", "/routines");
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
@@ -57,7 +57,7 @@ describe("Sidebar", () => {
     render(<Sidebar userEmail="me@example.com" hasExportableData />);
 
     expect(screen.getByRole("link", { name: "Fitness" }).className).toContain("bg-accent-soft");
-    expect(screen.getByRole("link", { name: "Today" }).className).not.toContain("bg-accent-soft");
+    expect(screen.getByRole("link", { name: "Tasks" }).className).not.toContain("bg-accent-soft");
   });
 
   // Regression for backlog #19.

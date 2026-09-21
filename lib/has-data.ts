@@ -4,10 +4,10 @@ import type { Database } from "@/lib/types/database";
 
 // The tables a user creates rows in directly. Child tables (workout_exercises,
 // set_logs, routine_items, …) can't exist without one of these parents, and
-// `links` needs a goal/todo/routine/workout log, so they add nothing. `user_settings`
+// `links` needs a goal/task/routine/workout log, so they add nothing. `user_settings`
 // is left out on purpose: it is created at signup, so every account has one.
 const USER_CONTENT_TABLES = [
-  "todos",
+  "tasks",
   "goals",
   "routines",
   "exercises",

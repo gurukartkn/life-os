@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 // One set of button variants (docs/05-design-system.md, v2 Amendment §C).
 // `primary` and `soft` take a `tone` that carries the domain identity — violet
-// (Todo, default), teal (Fitness), blue (Routines) — so every add/new action
+// (Tasks, default), teal (Fitness), blue (Routines) — so every add/new action
 // shares one shape and only the colour changes. To style a link as a button,
 // pass the same props to buttonVariants: <Link className={buttonVariants({ tone: "teal" })} />.
 const buttonVariants = cva(

@@ -23,7 +23,7 @@ describe("userHasData", () => {
     expect(await userHasData(supabase as never)).toBe(false);
   });
 
-  it.each(["todos", "goals", "routines", "exercises", "workouts", "workout_logs"])(
+  it.each(["tasks", "goals", "routines", "exercises", "workouts", "workout_logs"])(
     "is true when only %s has a row",
     async (table) => {
       answer([], { [table]: queryResult([{ id: "1" }], null) });
@@ -50,7 +50,7 @@ describe("userHasData", () => {
     await userHasData(supabase as never);
 
     expect(Object.keys(builders).sort()).toEqual(
-      ["exercises", "goals", "routines", "todos", "workout_logs", "workouts"].sort()
+      ["exercises", "goals", "routines", "tasks", "workout_logs", "workouts"].sort()
     );
     for (const builder of Object.values(builders)) expect(builder.limit).toHaveBeenCalledWith(1);
   });

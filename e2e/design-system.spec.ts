@@ -24,9 +24,9 @@ async function forceTheme(page: Page, theme: "light" | "dark") {
 
 test("input: 38px, 10px radius, white fill, 1px strong border (light)", async ({ page }) => {
   await forceTheme(page, "light");
-  await page.goto("/todos");
+  await page.goto("/tasks");
 
-  const input = await style(page.getByLabel("Todo title"));
+  const input = await style(page.getByLabel("Task title"));
 
   expect(input.height).toBe("38px");
   expect(input.radius).toBe("10px");
@@ -37,9 +37,9 @@ test("input: 38px, 10px radius, white fill, 1px strong border (light)", async ({
 
 test("input: dark fill is the dark card surface, same shape", async ({ page }) => {
   await forceTheme(page, "dark");
-  await page.goto("/todos");
+  await page.goto("/tasks");
 
-  const input = await style(page.getByLabel("Todo title"));
+  const input = await style(page.getByLabel("Task title"));
 
   expect(input.height).toBe("38px");
   expect(input.radius).toBe("10px");
@@ -59,11 +59,11 @@ test("every text input on the login page shares one style", async ({ browser }) 
   await context.close();
 });
 
-test("add-todo, New workout and New routine buttons share one shape (tone differs)", async ({ page }) => {
+test("New task, New workout and New routine buttons share one shape (tone differs)", async ({ page }) => {
   await forceTheme(page, "light");
 
-  await page.goto("/todos");
-  const addTodo = await style(page.getByRole("button", { name: "Add todo" }));
+  await page.goto("/tasks");
+  const addTask = await style(page.getByRole("button", { name: "New task" }));
   await page.goto("/fitness");
   const newWorkout = await style(page.getByRole("link", { name: "New workout" }));
   await page.goto("/routines");
@@ -76,13 +76,13 @@ test("add-todo, New workout and New routine buttons share one shape (tone differ
     fontWeight,
     paddingLeft,
   });
-  expect(shape(newWorkout)).toEqual(shape(addTodo));
-  expect(shape(newRoutine)).toEqual(shape(addTodo));
-  expect(addTodo.height).toBe("38px");
-  expect(addTodo.radius).toBe("10px");
+  expect(shape(newWorkout)).toEqual(shape(addTask));
+  expect(shape(newRoutine)).toEqual(shape(addTask));
+  expect(addTask.height).toBe("38px");
+  expect(addTask.radius).toBe("10px");
 
-  // Domain identity: violet (Todo), teal (Fitness), blue (Routines) — the -fill variants of teal and blue.
-  expect(addTodo.background).toBe("rgb(108, 76, 245)");
+  // Domain identity: violet (Task), teal (Fitness), blue (Routines) — the -fill variants of teal and blue.
+  expect(addTask.background).toBe("rgb(108, 76, 245)");
   expect(newWorkout.background).toBe("rgb(49, 129, 114)");
   expect(newRoutine.background).toBe("rgb(57, 121, 179)");
 });
