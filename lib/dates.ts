@@ -38,6 +38,18 @@ export function periodStartFor(cadence: string): string {
   return todayIso();
 }
 
+// A friendly "Sep 21, 2026 at 8:00 AM" rendering of an instant (workout_logs.performed_at)
+// in the user's timezone — consistent with how performed_on is derived, not the server's own
+// zone. Formatted as two separate pieces joined with "at": a combined dateStyle+timeStyle
+// string has two commas ("Sep 21, 2026, 8:00 AM"), and replacing just the first turns into
+// the wrong one (the one inside the date itself).
+export function formatDateTime(date: Date | string, timeZone: string): string {
+  const value = new Date(date);
+  const day = new Intl.DateTimeFormat("en-US", { timeZone, dateStyle: "medium" }).format(value);
+  const time = new Intl.DateTimeFormat("en-US", { timeZone, timeStyle: "short" }).format(value);
+  return `${day} at ${time}`;
+}
+
 // A plain "YYYY-MM-DD" date sorts lexically, so "before today" is a string comparison
 // against the one todayIso() — the page's overdue count uses the same rule.
 export function isOverdue(dueDate: string): boolean {

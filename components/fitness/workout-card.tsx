@@ -1,4 +1,5 @@
-import { Clock3 } from "lucide-react";
+import Link from "next/link";
+import { Clock3, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { DeleteWorkoutButton } from "@/components/fitness/delete-workout-button";
@@ -34,7 +35,16 @@ export function WorkoutCard({
             </div>
           )}
         </div>
-        <DeleteWorkoutButton id={id} />
+        <div className="flex items-center gap-2.5">
+          <Link
+            href={`/fitness/workouts/${id}/edit`}
+            aria-label="Edit workout"
+            className="rounded-sm text-ink-faint outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          >
+            <Pencil className="size-4" />
+          </Link>
+          <DeleteWorkoutButton id={id} />
+        </div>
       </div>
       <span className="flex items-center gap-1.5 text-caption text-ink-faint">
         <Clock3 className="size-3.5" />

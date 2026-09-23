@@ -3,66 +3,71 @@
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
-import { createExerciseWithTags } from "@/actions/exercises";
+import { updateExercise } from "@/actions/exercises";
 import { createMuscleGroupInline } from "@/actions/muscle-groups";
 import { createEquipmentInline } from "@/actions/equipment";
-import { exerciseCreateSchema, type ExerciseCreateInput } from "@/lib/validations/fitness";
+import { exerciseUpdateSchema, type ExerciseUpdateInput } from "@/lib/validations/fitness";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TagPicker } from "@/components/fitness/tag-picker";
+import type { ExerciseWithTags } from "@/lib/queries/fitness";
 import type { CatalogItem } from "@/lib/fitness/catalog";
 
-const DEFAULT_VALUES: ExerciseCreateInput = {
-  name: "",
-  exerciseType: "weight_training",
-  muscleGroupIds: [],
-  equipmentIds: [],
-};
+// A picker's own item list may be active-only, but an exercise that is already tagged
+// with an archived (or otherwise unlisted) item still needs to show that tag as chosen.
+function withCurrentTags(items: CatalogItem[], current: CatalogItem[]): CatalogItem[] {
+  const known = new Set(items.map((item) => item.id));
+  return [...items, ...current.filter((item) => !known.has(item.id))];
+}
 
-// Creates an exercise picked from the muscle group and equipment catalogs, with an
-// inline "add one" on each picker (lib/fitness/catalog.ts's create-or-get action) — the
-// v2 Stage 3 redesign of what used to be two comma-separated text inputs.
-export function AddExerciseForm({
+// The inline row an exercise expands into when its pencil is clicked — the same tag
+// pickers as the add form, prefilled, replacing the row until saved or cancelled.
+export function EditExerciseForm({
+  exercise,
   muscleGroups,
   equipment,
+  onDone,
 }: {
+  exercise: ExerciseWithTags;
   muscleGroups: CatalogItem[];
   equipment: CatalogItem[];
+  onDone: () => void;
 }) {
+  const muscleGroupOptions = withCurrentTags(muscleGroups, exercise.muscleGroups);
+  const equipmentOptions = withCurrentTags(equipment, exercise.equipment);
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
-  const form = useForm<ExerciseCreateInput>({
-    resolver: zodResolver(exerciseCreateSchema),
-    defaultValues: DEFAULT_VALUES,
+  const form = useForm<ExerciseUpdateInput>({
+    resolver: zodResolver(exerciseUpdateSchema),
+    defaultValues: {
+      id: exercise.id,
+      name: exercise.name,
+      exerciseType: exercise.exerciseType as ExerciseUpdateInput["exerciseType"],
+      muscleGroupIds: exercise.muscleGroups.map((g) => g.id),
+      equipmentIds: exercise.equipment.map((e) => e.id),
+    },
   });
 
-  function onSubmit(values: ExerciseCreateInput) {
+  function onSubmit(values: ExerciseUpdateInput) {
     setServerError(null);
     startTransition(async () => {
-      const result = await createExerciseWithTags(values);
+      const result = await updateExercise(values);
       if (!result.success) {
-        setServerError(result.error ?? "Couldn't add the exercise. Try again.");
+        setServerError(result.error ?? "Couldn't update the exercise. Try again.");
         return;
       }
-      form.reset(DEFAULT_VALUES);
+      onDone();
     });
   }
-
-  const fieldError = form.formState.errors.name?.message ?? serverError;
 
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-100 p-5"
+      className="flex flex-col gap-3 rounded-md border border-accent bg-surface-100 p-4"
       noValidate
     >
       <div className="flex flex-wrap items-start gap-2">
-        <Input
-          aria-label="Exercise name"
-          placeholder="Add an exercise…"
-          {...form.register("name")}
-        />
+        <Input aria-label="Exercise name" {...form.register("name")} />
         <select
           aria-label="Exercise type"
           className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -72,10 +77,6 @@ export function AddExerciseForm({
           <option value="cardio">Cardio</option>
           <option value="other">Other</option>
         </select>
-        <Button type="submit" tone="teal" disabled={isPending}>
-          <Plus />
-          {isPending ? "Adding…" : "Add exercise"}
-        </Button>
       </div>
 
       <div className="flex flex-wrap gap-6">
@@ -85,7 +86,7 @@ export function AddExerciseForm({
           render={({ field }) => (
             <TagPicker
               label="Muscle groups"
-              items={muscleGroups}
+              items={muscleGroupOptions}
               selectedIds={field.value}
               onChange={field.onChange}
               onCreate={async (name) => {
@@ -104,7 +105,7 @@ export function AddExerciseForm({
           render={({ field }) => (
             <TagPicker
               label="Equipment"
-              items={equipment}
+              items={equipmentOptions}
               selectedIds={field.value}
               onChange={field.onChange}
               onCreate={async (name) => {
@@ -119,7 +120,18 @@ export function AddExerciseForm({
         />
       </div>
 
-      {fieldError && <p className="text-caption text-pink-ink">{fieldError}</p>}
+      {(form.formState.errors.name?.message ?? serverError) && (
+        <p className="text-caption text-pink-ink">{form.formState.errors.name?.message ?? serverError}</p>
+      )}
+
+      <div className="flex gap-2">
+        <Button type="submit" tone="teal" size="sm" disabled={isPending}>
+          {isPending ? "Saving…" : "Save"}
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={onDone} disabled={isPending}>
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 }

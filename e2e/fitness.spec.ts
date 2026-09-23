@@ -29,8 +29,15 @@ test("create a workout and log a full set", async ({ page }) => {
   await page.getByRole("button", { name: "Save set 1" }).click();
   await expect(page.getByRole("button", { name: "Save set 1" })).toHaveClass(/bg-teal/);
 
-  await page.getByRole("link", { name: "Finish workout" }).click();
+  await page.getByRole("button", { name: "Finish workout" }).click();
 
+  // Finishing lands on the read-only past-log view (v2 Stage 3), not back on /fitness.
+  // A generous timeout: dev mode compiles this route on its first hit.
+  await expect(page).toHaveURL(/\/fitness\/logs\/.+/, { timeout: 20_000 });
+  await expect(page.getByText(workoutName, { exact: true })).toBeVisible();
+  await expect(page.getByText("Set 1: 135 × 8")).toBeVisible();
+
+  await page.getByRole("link", { name: "Back to Fitness" }).click();
   await expect(page).toHaveURL("/fitness");
   const loggedCard = page
     .getByText(workoutName, { exact: true })

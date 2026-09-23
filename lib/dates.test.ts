@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  formatDateTime,
   formatDueDate,
   formatRelativeTime,
   isOverdue,
@@ -59,6 +60,18 @@ describe("dates", () => {
 
     it("returns that week's Monday for a weekly cadence", () => {
       expect(periodStartFor("weekly")).toBe("2026-09-14");
+    });
+  });
+
+  describe("formatDateTime", () => {
+    it("puts the date and time on either side of 'at', not split on the date's own comma", () => {
+      // A combined Intl dateStyle+timeStyle string has two commas ("Sep 21, 2026, 8:00 AM") —
+      // this guards against replacing the wrong one and reading "Sep 21 at 2026, 8:00 AM".
+      expect(formatDateTime("2026-09-21T08:00:00.000Z", "UTC")).toBe("Sep 21, 2026 at 8:00 AM");
+    });
+
+    it("renders in the given timezone, not UTC", () => {
+      expect(formatDateTime("2026-09-21T23:30:00.000Z", "Asia/Kolkata")).toBe("Sep 22, 2026 at 5:00 AM");
     });
   });
 
