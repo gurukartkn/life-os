@@ -1,46 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   createWorkoutSchema,
-  exerciseInsertSchema,
   setLogSaveSchema,
   startWorkoutLogSchema,
   workoutDeleteSchema,
 } from "./fitness";
-
-describe("exerciseInsertSchema", () => {
-  it("accepts a name and type with no other fields", () => {
-    const result = exerciseInsertSchema.safeParse({
-      name: "Bench Press",
-      exercise_type: "weight_training",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts muscle groups and equipment", () => {
-    const result = exerciseInsertSchema.safeParse({
-      name: "Bench Press",
-      exercise_type: "weight_training",
-      muscle_groups: "Chest, Triceps",
-      equipment: "Barbell, Bench",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects an empty name", () => {
-    const result = exerciseInsertSchema.safeParse({ name: "", exercise_type: "cardio" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects an invalid exercise type", () => {
-    const result = exerciseInsertSchema.safeParse({ name: "Bench Press", exercise_type: "yoga" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects a missing exercise type", () => {
-    const result = exerciseInsertSchema.safeParse({ name: "Bench Press" });
-    expect(result.success).toBe(false);
-  });
-});
 
 describe("workoutDeleteSchema", () => {
   it("accepts a valid id", () => {

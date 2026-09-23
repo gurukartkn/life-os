@@ -2,15 +2,6 @@ import { z } from "zod";
 
 export const exerciseTypeSchema = z.enum(["weight_training", "cardio", "other"]);
 
-export const exerciseInsertSchema = z.object({
-  name: z.string().min(1, "Enter a name.").max(200, "Keep the name under 200 characters."),
-  exercise_type: exerciseTypeSchema,
-  muscle_groups: z.string().max(200, "Keep muscle groups under 200 characters.").optional(),
-  equipment: z.string().max(200, "Keep equipment under 200 characters.").optional(),
-});
-
-export type ExerciseInsertInput = z.infer<typeof exerciseInsertSchema>;
-
 export const exerciseArchiveSchema = z.object({ id: z.string().uuid() });
 
 // Muscle groups and equipment are per-user catalogs (their own tables), tagged onto

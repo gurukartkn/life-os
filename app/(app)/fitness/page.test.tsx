@@ -10,7 +10,7 @@ import {
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("@/actions/workouts", () => ({ deleteWorkout: vi.fn() }));
 vi.mock("@/actions/workout-logs", () => ({ startWorkoutLog: vi.fn() }));
-vi.mock("@/actions/exercises", () => ({ createExercise: vi.fn(), archiveExercise: vi.fn() }));
+vi.mock("@/actions/exercises", () => ({ archiveExercise: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const mockedCreateClient = vi.mocked(createClient);
