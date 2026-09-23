@@ -116,33 +116,27 @@ export type Database = {
       exercises: {
         Row: {
           created_at: string
-          equipment: string[]
           exercise_type: string
           id: string
           is_active: boolean
-          muscle_groups: string[]
           name: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          equipment?: string[]
           exercise_type: string
           id?: string
           is_active?: boolean
-          muscle_groups?: string[]
           name: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          equipment?: string[]
           exercise_type?: string
           id?: string
           is_active?: boolean
-          muscle_groups?: string[]
           name?: string
           updated_at?: string
           user_id?: string

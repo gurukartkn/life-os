@@ -18,7 +18,11 @@ type WorkoutExerciseRow = {
   sort_order: number;
   target_sets: number | null;
   target_reps: string | null;
-  exercises: { name: string; exercise_type: string; muscle_groups: string[] } | null;
+  exercises: {
+    name: string;
+    exercise_type: string;
+    exercise_muscle_groups: { muscle_groups: { name: string } | null }[];
+  } | null;
 };
 
 type SetLogRow = {
@@ -48,7 +52,7 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
     ? await supabase
         .from("workout_exercises")
         .select(
-          "id, exercise_id, sort_order, target_sets, target_reps, exercises(name, exercise_type, muscle_groups)"
+          "id, exercise_id, sort_order, target_sets, target_reps, exercises(name, exercise_type, exercise_muscle_groups(muscle_groups(name)))"
         )
         .eq("workout_id", log.workout_id)
         .order("sort_order", { ascending: true })
@@ -100,7 +104,10 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
       exerciseId: we.exercise_id,
       exerciseName: we.exercises?.name ?? "Exercise",
       exerciseType: we.exercises?.exercise_type ?? "weight_training",
-      muscleGroups: we.exercises?.muscle_groups ?? [],
+      muscleGroups:
+        we.exercises?.exercise_muscle_groups.flatMap((link) =>
+          link.muscle_groups ? [link.muscle_groups.name] : []
+        ) ?? [],
       targetSets: we.target_sets,
       sets,
       savedCount,
