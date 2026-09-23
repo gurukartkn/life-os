@@ -36,10 +36,16 @@ describe("FitnessPage", () => {
     ]);
   });
 
-  it("on the Exercises tab, reads only exercises", async () => {
+  it("on the Exercises tab, reads exercises and both catalogs (active and archive-included)", async () => {
     void FitnessPage({ searchParams: Promise.resolve({ tab: "exercises" }) });
     await flush();
 
-    expect(supabase.from.mock.calls.map((call) => call[0])).toEqual(["exercises"]);
+    expect(supabase.from.mock.calls.map((call) => call[0])).toEqual([
+      "exercises",
+      "muscle_groups",
+      "equipment",
+      "muscle_groups",
+      "equipment",
+    ]);
   });
 });

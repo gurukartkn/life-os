@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      equipment: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exercise_equipment: {
+        Row: {
+          created_at: string
+          equipment_id: string
+          exercise_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipment_id: string
+          exercise_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          equipment_id?: string
+          exercise_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_equipment_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_muscle_groups: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          muscle_group_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          muscle_group_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          muscle_group_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_muscle_groups_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_muscle_groups_muscle_group_id_fkey"
+            columns: ["muscle_group_id"]
+            isOneToOne: false
+            referencedRelation: "muscle_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           created_at: string
@@ -109,6 +208,33 @@ export type Database = {
           source_type?: string
           target_id?: string
           target_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      muscle_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -368,6 +494,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          performed_at: string
           performed_on: string
           user_id: string
           workout_id: string | null
@@ -376,6 +503,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          performed_at?: string
           performed_on: string
           user_id: string
           workout_id?: string | null
@@ -384,6 +512,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          performed_at?: string
           performed_on?: string
           user_id?: string
           workout_id?: string | null

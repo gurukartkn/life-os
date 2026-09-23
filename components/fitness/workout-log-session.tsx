@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { WorkoutLogExercise } from "@/components/fitness/workout-log-exercise";
+import { finishWorkoutLog } from "@/actions/workout-logs";
 import type { SetData } from "@/components/fitness/set-row";
 
 export type ExerciseCardData = {
@@ -40,10 +41,25 @@ export function WorkoutLogSession({
       ])
     )
   );
+  const router = useRouter();
+  const [isFinishing, startFinishing] = useTransition();
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   const totalCount = exerciseCards.length;
   const doneCount = Object.values(completion).filter(Boolean).length;
   const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+  function handleFinish() {
+    setFinishError(null);
+    startFinishing(async () => {
+      const result = await finishWorkoutLog(workoutLogId);
+      if (!result.success) {
+        setFinishError(result.error ?? "Couldn't finish the workout. Try again.");
+        return;
+      }
+      router.push(`/fitness/logs/${workoutLogId}`);
+    });
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -64,11 +80,12 @@ export function WorkoutLogSession({
               />
             </div>
           </div>
-          <Link href="/fitness" className={buttonVariants({ tone: "teal" })}>
-            Finish workout
-          </Link>
+          <Button type="button" tone="teal" onClick={handleFinish} disabled={isFinishing}>
+            {isFinishing ? "Finishing…" : "Finish workout"}
+          </Button>
         </div>
       </div>
+      {finishError && <p className="text-caption text-pink-ink">{finishError}</p>}
 
       {children}
 

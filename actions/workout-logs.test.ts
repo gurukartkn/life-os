@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteSetLog, saveSetLog, startWorkoutLog } from "@/actions/workout-logs";
+import { deleteSetLog, finishWorkoutLog, saveSetLog, startWorkoutLog } from "@/actions/workout-logs";
 import { createClient } from "@/lib/supabase/server";
 import { makeQueryBuilder, makeSupabaseMock, queryResult, type SupabaseMock } from "@/lib/test/supabase-mock";
 import type { SetLogSaveInput } from "@/lib/validations/fitness";
@@ -55,6 +55,7 @@ describe("startWorkoutLog", () => {
   });
 
   it("redirects to /fitness when the insert fails", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "UTC" }, null)));
     supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
     const fd = formData({ workout_id: WORKOUT_ID });
 
@@ -65,18 +66,112 @@ describe("startWorkoutLog", () => {
   });
 
   it("inserts a workout log and redirects to the new log's page", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "UTC" }, null)));
     supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ id: WORKOUT_LOG_ID }, null)));
     const fd = formData({ workout_id: WORKOUT_ID });
 
     await startWorkoutLog(fd);
 
-    expect(supabase.from).toHaveBeenCalledWith("workout_logs");
-    const builder = supabase.from.mock.results[0].value;
+    expect(supabase.from).toHaveBeenNthCalledWith(1, "user_settings");
+    expect(supabase.from).toHaveBeenNthCalledWith(2, "workout_logs");
+    const builder = supabase.from.mock.results[1].value;
     expect(builder.insert).toHaveBeenCalledWith(
       expect.objectContaining({ user_id: "user-1", workout_id: WORKOUT_ID })
     );
     const { redirect } = await import("next/navigation");
     expect(redirect).toHaveBeenCalledWith(`/fitness/log/${WORKOUT_LOG_ID}`);
+  });
+
+  it("dates the new log in the user's timezone, not the server's", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-21T23:30:00Z"));
+    try {
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "Asia/Kolkata" }, null)));
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ id: WORKOUT_LOG_ID }, null)));
+
+      await startWorkoutLog(formData({ workout_id: WORKOUT_ID }));
+
+      const builder = supabase.from.mock.results[1].value;
+      expect(builder.insert).toHaveBeenCalledWith(expect.objectContaining({ performed_on: "2026-09-22" }));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("finishWorkoutLog", () => {
+  it("rejects an invalid id without calling Supabase", async () => {
+    const result = await finishWorkoutLog("not-a-uuid");
+
+    expect(result.success).toBe(false);
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("requires the user to be logged in", async () => {
+    supabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+    const result = await finishWorkoutLog(WORKOUT_LOG_ID);
+
+    expect(result).toEqual({ success: false, error: "You need to be logged in." });
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("stamps performed_at as the finishing instant and performed_on as its date in the user's timezone", async () => {
+    const { revalidatePath } = await import("next/cache");
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-21T23:30:00Z"));
+    try {
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "Asia/Kolkata" }, null)));
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ id: WORKOUT_LOG_ID }, null)));
+
+      const result = await finishWorkoutLog(WORKOUT_LOG_ID);
+
+      const builder = supabase.from.mock.results[1].value;
+      expect(supabase.from).toHaveBeenNthCalledWith(2, "workout_logs");
+      expect(builder.update).toHaveBeenCalledWith({
+        performed_at: "2026-09-21T23:30:00.000Z",
+        performed_on: "2026-09-22",
+      });
+      expect(builder.eq).toHaveBeenCalledWith("id", WORKOUT_LOG_ID);
+      expect(revalidatePath).toHaveBeenCalledWith(`/fitness/log/${WORKOUT_LOG_ID}`);
+      expect(result).toEqual({ success: true });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("falls back to UTC when the user has no settings row", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-21T23:30:00Z"));
+    try {
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ id: WORKOUT_LOG_ID }, null)));
+
+      await finishWorkoutLog(WORKOUT_LOG_ID);
+
+      const builder = supabase.from.mock.results[1].value;
+      expect(builder.update).toHaveBeenCalledWith(expect.objectContaining({ performed_on: "2026-09-21" }));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reports a log that does not exist", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "UTC" }, null)));
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+
+    const result = await finishWorkoutLog(WORKOUT_LOG_ID);
+
+    expect(result).toEqual({ success: false, error: "That workout log no longer exists." });
+  });
+
+  it("maps a Supabase error to a friendly message", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult({ timezone: "UTC" }, null)));
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+
+    const result = await finishWorkoutLog(WORKOUT_LOG_ID);
+
+    expect(result).toEqual({ success: false, error: "Couldn't finish the workout. Try again." });
   });
 });
 

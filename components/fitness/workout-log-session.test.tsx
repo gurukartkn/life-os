@@ -1,7 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WorkoutLogSession, type ExerciseCardData } from "./workout-log-session";
+import { finishWorkoutLog } from "@/actions/workout-logs";
+
+const pushMock = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
+vi.mock("@/actions/workout-logs", () => ({ finishWorkoutLog: vi.fn() }));
+
+const mockedFinishWorkoutLog = vi.mocked(finishWorkoutLog);
 
 vi.mock("@/components/fitness/workout-log-exercise", () => ({
   WorkoutLogExercise: ({
@@ -45,6 +52,11 @@ function progressBar(container: HTMLElement) {
   return container.querySelector(".bg-teal.transition-all") as HTMLElement;
 }
 
+beforeEach(() => {
+  pushMock.mockReset();
+  mockedFinishWorkoutLog.mockReset();
+});
+
 describe("WorkoutLogSession", () => {
   it("shows the empty-state message when exerciseCards is empty", () => {
     render(<WorkoutLogSession workoutLogId="log-1" workoutName="Push Day" exerciseCards={[]} />);
@@ -79,9 +91,25 @@ describe("WorkoutLogSession", () => {
     expect(progressBar(container).style.width).toBe("50%");
   });
 
-  it("renders the Finish workout link pointing to /fitness", () => {
+  it("finishes the workout log and navigates to its past-log view", async () => {
+    mockedFinishWorkoutLog.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
     render(<WorkoutLogSession workoutLogId="log-1" workoutName="Push Day" exerciseCards={[CARD_A]} />);
 
-    expect(screen.getByRole("link", { name: "Finish workout" })).toHaveAttribute("href", "/fitness");
+    await user.click(screen.getByRole("button", { name: "Finish workout" }));
+
+    await waitFor(() => expect(mockedFinishWorkoutLog).toHaveBeenCalledWith("log-1"));
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/fitness/logs/log-1"));
+  });
+
+  it("shows an error and does not navigate when finishing fails", async () => {
+    mockedFinishWorkoutLog.mockResolvedValue({ success: false, error: "Couldn't finish the workout. Try again." });
+    const user = userEvent.setup();
+    render(<WorkoutLogSession workoutLogId="log-1" workoutName="Push Day" exerciseCards={[CARD_A]} />);
+
+    await user.click(screen.getByRole("button", { name: "Finish workout" }));
+
+    expect(await screen.findByText("Couldn't finish the workout. Try again.")).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { WorkoutCard } from "./workout-card";
-import { formatRelative } from "@/lib/dates";
+import { formatRelativeTime } from "@/lib/dates";
 
 describe("WorkoutCard", () => {
   it("renders the name, exercise count, and muscle group tags", () => {
@@ -49,7 +49,7 @@ describe("WorkoutCard", () => {
       />
     );
 
-    expect(screen.getByText(`Last logged ${formatRelative(lastLogged)}`)).toBeInTheDocument();
+    expect(screen.getByText(`Last logged ${formatRelativeTime(lastLogged)}`)).toBeInTheDocument();
   });
 
   it("renders a form posting to startWorkoutLog with a hidden workout_id input", () => {

@@ -5,11 +5,12 @@ import { WorkoutList, type WorkoutCardData } from "@/components/fitness/workout-
 import { RecentLogs, type RecentLogData } from "@/components/fitness/recent-logs";
 import { ExerciseList } from "@/components/fitness/exercise-list";
 import { AddExerciseForm } from "@/components/fitness/add-exercise-form";
+import { ManageTags } from "@/components/fitness/manage-tags";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
-import type { Tables } from "@/lib/types/database";
+import { getCatalogItems, getExercisesWithTags } from "@/lib/queries/fitness";
 
 type FitnessTab = "workouts" | "exercises";
 
@@ -17,8 +18,11 @@ type WorkoutWithRelations = {
   id: string;
   name: string;
   created_at: string;
-  workout_exercises: { exercise_id: string; exercises: { muscle_groups: string[] } | null }[];
-  workout_logs: { performed_on: string }[];
+  workout_exercises: {
+    exercise_id: string;
+    exercises: { exercise_muscle_groups: { muscle_groups: { name: string } | null }[] } | null;
+  }[];
+  workout_logs: { performed_at: string }[];
 };
 
 type RecentLogRow = {
@@ -42,7 +46,11 @@ export default async function FitnessPage({
 
   let workouts: WorkoutCardData[] = [];
   let recentLogs: RecentLogData[] = [];
-  let exercises: Tables<"exercises">[] = [];
+  let exercises: Awaited<ReturnType<typeof getExercisesWithTags>> = [];
+  let activeMuscleGroups: Awaited<ReturnType<typeof getCatalogItems>> = [];
+  let activeEquipment: Awaited<ReturnType<typeof getCatalogItems>> = [];
+  let allMuscleGroups: Awaited<ReturnType<typeof getCatalogItems>> = [];
+  let allEquipment: Awaited<ReturnType<typeof getCatalogItems>> = [];
 
   if (activeTab === "workouts") {
     // The workouts and the recent logs don't depend on each other, so they are read together.
@@ -50,7 +58,7 @@ export default async function FitnessPage({
       supabase
         .from("workouts")
         .select(
-          "id, name, created_at, workout_exercises(exercise_id, exercises(muscle_groups)), workout_logs(performed_on)"
+          "id, name, created_at, workout_exercises(exercise_id, exercises(exercise_muscle_groups(muscle_groups(name)))), workout_logs(performed_at)"
         )
         .order("created_at", { ascending: false }),
       supabase
@@ -65,10 +73,21 @@ export default async function FitnessPage({
 
     workouts = ((data ?? []) as unknown as WorkoutWithRelations[]).map((workout) => {
       const muscleGroups = Array.from(
-        new Set(workout.workout_exercises.flatMap((we) => we.exercises?.muscle_groups ?? []))
+        new Set(
+          workout.workout_exercises.flatMap(
+            (we) =>
+              we.exercises?.exercise_muscle_groups.flatMap((link) =>
+                link.muscle_groups ? [link.muscle_groups.name] : []
+              ) ?? []
+          )
+        )
       ).slice(0, 3);
+      // Compared as instants: performed_at is a timestamp, and its text form can vary in length.
       const lastLogged = workout.workout_logs.reduce<string | null>(
-        (latest, log) => (!latest || log.performed_on > latest ? log.performed_on : latest),
+        (latest, log) =>
+          !latest || new Date(log.performed_at).getTime() > new Date(latest).getTime()
+            ? log.performed_at
+            : latest,
         null
       );
       return {
@@ -88,14 +107,15 @@ export default async function FitnessPage({
       performedOn: log.performed_on,
     }));
   } else {
-    const { data, error } = await supabase
-      .from("exercises")
-      .select("*")
-      .order("is_active", { ascending: false })
-      .order("name", { ascending: true });
-
-    if (error) logError("Load exercises", error);
-    exercises = data ?? [];
+    // Pickers (the add/edit forms) offer only active catalog items; the manager
+    // underneath lists every one, archived included, so it can restore or rename them.
+    [exercises, activeMuscleGroups, activeEquipment, allMuscleGroups, allEquipment] = await Promise.all([
+      getExercisesWithTags(supabase),
+      getCatalogItems(supabase, "muscle_groups"),
+      getCatalogItems(supabase, "equipment"),
+      getCatalogItems(supabase, "muscle_groups", { includeArchived: true }),
+      getCatalogItems(supabase, "equipment", { includeArchived: true }),
+    ]);
   }
 
   return (
@@ -121,11 +141,16 @@ export default async function FitnessPage({
         </>
       ) : (
         <>
-          <AddExerciseForm />
+          <AddExerciseForm muscleGroups={activeMuscleGroups} equipment={activeEquipment} />
+          <ManageTags muscleGroups={allMuscleGroups} equipment={allEquipment} />
           {exercises.length === 0 ? (
             <EmptyState icon={Dumbbell} title="No exercises yet." />
           ) : (
-            <ExerciseList exercises={exercises} />
+            <ExerciseList
+              exercises={exercises}
+              muscleGroups={activeMuscleGroups}
+              equipment={activeEquipment}
+            />
           )}
         </>
       )}
