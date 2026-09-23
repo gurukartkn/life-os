@@ -34,7 +34,9 @@ test("create a workout and log a full set", async ({ page }) => {
   // Finishing lands on the read-only past-log view (v2 Stage 3), not back on /fitness.
   // A generous timeout: dev mode compiles this route on its first hit.
   await expect(page).toHaveURL(/\/fitness\/logs\/.+/, { timeout: 20_000 });
-  await expect(page.getByText(workoutName, { exact: true })).toBeVisible();
+  // The heading specifically: Next.js's route announcer also echoes the page title as
+  // plain text after a client-side navigation, so a bare getByText matches both.
+  await expect(page.getByRole("heading", { name: workoutName, exact: true })).toBeVisible();
   await expect(page.getByText("Set 1: 135 × 8")).toBeVisible();
 
   await page.getByRole("link", { name: "Back to Fitness" }).click();

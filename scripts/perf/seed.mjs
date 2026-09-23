@@ -31,7 +31,10 @@ async function clear() {
   for (const table of ["workout_logs", "workouts", "routines"]) {
     await must(supabase.from(table).delete().eq("user_id", userId), `clear ${table}`);
   }
-  for (const table of ["exercises", "tasks", "goals", "links"]) {
+  // exercises before muscle_groups/equipment: their join rows cascade away with the
+  // exercise, and the join tables' `on delete restrict` would refuse the catalog rows
+  // any earlier (mirrors e2e/global-setup.ts's ordering).
+  for (const table of ["exercises", "muscle_groups", "equipment", "tasks", "goals", "links"]) {
     await must(supabase.from(table).delete().eq("user_id", userId), `clear ${table}`);
   }
 }
@@ -69,6 +72,20 @@ await must(
 
 await must(supabase.from("goals").insert([{ user_id: userId, title: "perf goal" }]), "goals");
 
+// Muscle groups and equipment are their own tables now (v2 Stage 3), so a realistic
+// perf seed tags exercises through the join tables instead of the old text arrays.
+const muscleGroups = await must(
+  supabase
+    .from("muscle_groups")
+    .insert(["chest", "back", "legs"].map((name) => ({ user_id: userId, name })))
+    .select("id"),
+  "muscle_groups"
+);
+const equipment = await must(
+  supabase.from("equipment").insert([{ user_id: userId, name: "barbell" }]).select("id"),
+  "equipment"
+);
+
 const exercises = await must(
   supabase
     .from("exercises")
@@ -77,12 +94,26 @@ const exercises = await must(
         user_id: userId,
         name: `perf exercise ${i + 1}`,
         exercise_type: "weight_training",
-        muscle_groups: ["chest", "back", "legs"].slice(0, (i % 3) + 1),
-        equipment: ["barbell"],
       }))
     )
     .select("id"),
   "exercises"
+);
+await must(
+  supabase.from("exercise_muscle_groups").insert(
+    exercises.flatMap((e, i) =>
+      muscleGroups
+        .slice(0, (i % 3) + 1)
+        .map((mg) => ({ user_id: userId, exercise_id: e.id, muscle_group_id: mg.id }))
+    )
+  ),
+  "exercise_muscle_groups"
+);
+await must(
+  supabase
+    .from("exercise_equipment")
+    .insert(exercises.map((e) => ({ user_id: userId, exercise_id: e.id, equipment_id: equipment[0].id }))),
+  "exercise_equipment"
 );
 
 const workouts = await must(

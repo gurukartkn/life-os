@@ -22,8 +22,6 @@ const EXERCISES: Tables<"exercises">[] = [
     id: EXERCISE_ID,
     name: "Bench Press",
     exercise_type: "weight_training",
-    muscle_groups: ["Chest"],
-    equipment: [],
     is_active: true,
     user_id: "user-1",
     created_at: "2024-01-01T00:00:00Z",
