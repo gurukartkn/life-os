@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { format, subDays } from "date-fns";
-import { createTask, deleteTask, toggleTask } from "@/actions/tasks";
+import { createTask, deleteTask, toggleTask, updateTask } from "@/actions/tasks";
 import { createClient } from "@/lib/supabase/server";
 import { makeQueryBuilder, makeSupabaseMock, queryResult, type SupabaseMock } from "@/lib/test/supabase-mock";
 
@@ -83,6 +83,55 @@ describe("createTask", () => {
     const result = await createTask({ success: false }, formData({ title: "Buy groceries" }));
 
     expect(result).toEqual({ success: false, error: "Couldn't add the task. Try again." });
+  });
+});
+
+describe("updateTask", () => {
+  it("returns a validation error and never calls Supabase when the title is empty", async () => {
+    const result = await updateTask({ success: false }, formData({ id: VALID_ID, title: "" }));
+
+    expect(result).toEqual({ success: false, error: "Enter a title." });
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid id without calling Supabase", async () => {
+    const result = await updateTask({ success: false }, formData({ id: "nope", title: "Renew passport" }));
+
+    expect(result.success).toBe(false);
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it("saves the title and due date and revalidates /tasks", async () => {
+    const { revalidatePath } = await import("next/cache");
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+
+    const result = await updateTask(
+      { success: false },
+      formData({ id: VALID_ID, title: "Renew passport", due_date: "2026-10-02" })
+    );
+
+    const builder = supabase.from.mock.results[0].value;
+    expect(builder.update).toHaveBeenCalledWith({ title: "Renew passport", due_date: "2026-10-02" });
+    expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
+    expect(revalidatePath).toHaveBeenCalledWith("/tasks");
+    expect(result).toEqual({ success: true });
+  });
+
+  it("clears the due date when none is sent", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+
+    await updateTask({ success: false }, formData({ id: VALID_ID, title: "Renew passport" }));
+
+    const builder = supabase.from.mock.results[0].value;
+    expect(builder.update).toHaveBeenCalledWith({ title: "Renew passport", due_date: null });
+  });
+
+  it("maps a Supabase error to a friendly message", async () => {
+    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+
+    const result = await updateTask({ success: false }, formData({ id: VALID_ID, title: "Renew passport" }));
+
+    expect(result).toEqual({ success: false, error: "Couldn't save the task. Try again." });
   });
 });
 

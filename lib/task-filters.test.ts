@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyStateTitle, filterHref, filterTasks, parseStatusFilter } from "./task-filters";
+import { emptyStateCopy, filterCounts, filterHref, filterTasks, parseStatusFilter } from "./task-filters";
 import type { Tables } from "@/lib/types/database";
 
 function task(id: string, isCompleted: boolean): Tables<"tasks"> {
@@ -58,10 +58,22 @@ describe("filterHref", () => {
   });
 });
 
-describe("emptyStateTitle", () => {
-  it("says what is true for each filter", () => {
-    expect(emptyStateTitle("all")).toBe("Nothing on the list today.");
-    expect(emptyStateTitle("active")).toBe("Nothing left to do.");
-    expect(emptyStateTitle("completed")).toBe("Nothing completed yet.");
+describe("filterCounts", () => {
+  it("counts every, open and done task for the tab pills", () => {
+    expect(filterCounts(tasks)).toEqual({ all: 5, active: 2, completed: 3 });
+    expect(filterCounts([])).toEqual({ all: 0, active: 0, completed: 0 });
+  });
+});
+
+describe("emptyStateCopy", () => {
+  it("uses the no-tasks copy when there are no tasks at all, whatever the filter", () => {
+    const none = { title: "No tasks yet", description: "Add a task and it will show up here." };
+    expect(emptyStateCopy("all", false)).toEqual(none);
+    expect(emptyStateCopy("completed", false)).toEqual(none);
+  });
+
+  it("says what is true for a filter that matches nothing", () => {
+    expect(emptyStateCopy("active", true).title).toBe("Nothing left to do");
+    expect(emptyStateCopy("completed", true).title).toBe("Nothing completed yet");
   });
 });

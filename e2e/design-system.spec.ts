@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
+import { openAddTask } from "./task-helpers";
 
 // Backlog #2 and #3 — one input style, one set of button variants (v2 Amendment §B, §C).
 
@@ -26,7 +27,7 @@ test("input: 40px, 10px radius, white fill, 1px strong border (light)", async ({
   await forceTheme(page, "light");
   await page.goto("/tasks");
 
-  const input = await style(page.getByLabel("Task title"));
+  const input = await style((await openAddTask(page)).getByLabel("Title"));
 
   expect(input.height).toBe("40px");
   expect(input.radius).toBe("10px");
@@ -39,7 +40,7 @@ test("input: dark fill is the dark card surface, same shape", async ({ page }) =
   await forceTheme(page, "dark");
   await page.goto("/tasks");
 
-  const input = await style(page.getByLabel("Task title"));
+  const input = await style((await openAddTask(page)).getByLabel("Title"));
 
   expect(input.height).toBe("40px");
   expect(input.radius).toBe("10px");
@@ -59,11 +60,11 @@ test("every text input on the login page shares one style", async ({ browser }) 
   await context.close();
 });
 
-test("New task, New workout and New routine buttons share one shape (tone differs)", async ({ page }) => {
+test("Add task, New workout and New routine buttons share one shape (tone differs)", async ({ page }) => {
   await forceTheme(page, "light");
 
   await page.goto("/tasks");
-  const addTask = await style(page.getByRole("button", { name: "New task" }));
+  const addTask = await style(page.getByRole("button", { name: "Add task" }));
   await page.goto("/fitness/workouts");
   const newWorkout = await style(page.getByRole("link", { name: "New workout" }));
   await page.goto("/routines");

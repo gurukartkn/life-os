@@ -55,6 +55,7 @@ describe("SignupForm", () => {
   });
 
   it("submits email and password (not the confirmation) when they match", async () => {
+    mockedSignup.mockResolvedValue({ success: true, data: "Check your email to confirm your account." });
     const user = userEvent.setup();
     render(<SignupForm />);
 
