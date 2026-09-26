@@ -1,7 +1,6 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createGoal, deleteGoal, updateGoal } from "@/actions/goals";
@@ -29,16 +28,7 @@ const STATUS_OPTIONS = GOAL_STATUSES.map((status) => ({ value: status, label: GO
 
 // The body of the goal sheet, keyed by the goal being edited (or "new") so each open
 // starts from that goal's values with the matching action bound.
-function GoalForm({
-  goal,
-  onDone,
-  afterDelete,
-}: {
-  goal: Goal | null;
-  onDone: () => void;
-  afterDelete?: string;
-}) {
-  const router = useRouter();
+function GoalForm({ goal, onDone }: { goal: Goal | null; onDone: () => void }) {
   const [state, formAction, isSaving] = useActionState(goal ? updateGoal : createGoal, initialState);
   const [isDeleting, startDelete] = useTransition();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -70,13 +60,9 @@ function GoalForm({
     if (!goal) return;
     setDeleteError(null);
     startDelete(async () => {
+      // On success the action redirects to the Goals list; a result means it failed.
       const result = await deleteGoal(goal.id);
-      if (!result.success) {
-        setDeleteError(result.error ?? "Couldn't delete the goal. Try again.");
-        return;
-      }
-      onDone();
-      if (afterDelete) router.push(afterDelete);
+      if (result && !result.success) setDeleteError(result.error ?? "Couldn't delete the goal. Try again.");
     });
   }
 
@@ -167,30 +153,20 @@ function GoalForm({
 }
 
 // New / edit goal sheet (5a · "Goal create / edit"): title, target date and status.
-// Editing adds Delete goal, which asks once before it deletes. `afterDelete` is where to
-// go once the goal is gone (the detail page sends the user back to the list).
+// Editing adds Delete goal, which asks once before it deletes, then lands on the list.
 export function GoalFormDialog({
   open,
   goal,
   onOpenChange,
-  afterDelete,
 }: {
   open: boolean;
   goal: Goal | null;
   onOpenChange: (open: boolean) => void;
-  afterDelete?: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        {open && (
-          <GoalForm
-            key={goal?.id ?? "new"}
-            goal={goal}
-            onDone={() => onOpenChange(false)}
-            afterDelete={afterDelete}
-          />
-        )}
+        {open && <GoalForm key={goal?.id ?? "new"} goal={goal} onDone={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>
   );

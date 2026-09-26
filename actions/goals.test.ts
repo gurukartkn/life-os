@@ -6,6 +6,7 @@ import { makeQueryBuilder, makeSupabaseMock, queryResult, type SupabaseMock } fr
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 const mockedCreateClient = vi.mocked(createClient);
 const GOAL_ID = "550e8400-e29b-41d4-a716-446655440000";
@@ -21,6 +22,7 @@ const timezone = () => makeQueryBuilder(queryResult({ timezone: "UTC" }));
 let supabase: SupabaseMock;
 
 beforeEach(() => {
+  vi.clearAllMocks();
   supabase = makeSupabaseMock();
   mockedCreateClient.mockResolvedValue(supabase as never);
 });
@@ -162,27 +164,30 @@ describe("deleteGoal", () => {
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it("deletes the goal's links first, then the goal", async () => {
+  it("deletes the goal's links first, then the goal, and goes to the Goals list", async () => {
+    const { redirect } = await import("next/navigation");
     supabase.from
       .mockReturnValueOnce(makeQueryBuilder(queryResult(null)))
       .mockReturnValueOnce(makeQueryBuilder(queryResult(null)));
 
-    const result = await deleteGoal(GOAL_ID);
+    await deleteGoal(GOAL_ID);
 
     expect(supabase.from.mock.calls.map((call) => call[0])).toEqual(["links", "goals"]);
     const links = supabase.from.mock.results[0].value;
     expect(links.eq).toHaveBeenCalledWith("source_type", "goal");
     expect(links.eq).toHaveBeenCalledWith("source_id", GOAL_ID);
     expect(supabase.from.mock.results[1].value.eq).toHaveBeenCalledWith("id", GOAL_ID);
-    expect(result).toEqual({ success: true });
+    expect(redirect).toHaveBeenCalledWith("/goals");
   });
 
   it("keeps the goal when its links can't be deleted", async () => {
     supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
 
+    const { redirect } = await import("next/navigation");
     const result = await deleteGoal(GOAL_ID);
 
     expect(result).toEqual({ success: false, error: "Couldn't delete the goal. Try again." });
     expect(supabase.from).toHaveBeenCalledTimes(1);
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

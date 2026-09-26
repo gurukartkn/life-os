@@ -32,13 +32,15 @@ const LAST_15TH = setDate(addMonths(new Date(), -1), 15);
 async function createGoal(page: Page, title: string, { date }: { date?: "next" | "last" } = {}) {
   await page.goto("/goals");
   await page.getByRole("button", { name: "New goal" }).first().click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { name: "New goal" })).toBeVisible();
+  // By name: the calendar popover is a dialog too, and it is still fading out after a pick.
+  const dialog = page.getByRole("dialog", { name: "New goal" });
+  await expect(dialog).toBeVisible();
   await dialog.getByLabel("Title").fill(title);
   if (date) {
     await dialog.getByRole("button", { name: "Target date" }).click();
     await page.getByRole("button", { name: date === "next" ? /next month/i : /previous month/i }).click();
     await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
+    await expect(page.getByRole("grid")).toBeHidden();
   }
   await dialog.getByRole("button", { name: "Save goal" }).click();
   await expect(dialog).toBeHidden(SLOW);
@@ -64,7 +66,7 @@ test("create a goal, edit it, change its status and delete it", async ({ page })
   // The sheet refuses an empty title.
   await openGoal(page, title);
   await page.getByRole("button", { name: "Edit goal" }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole("dialog", { name: "Edit goal" });
   await dialog.getByLabel("Title").fill("   ");
   await dialog.getByRole("button", { name: "Save goal" }).click();
   await expect(dialog.getByText("Enter a title.")).toBeVisible();

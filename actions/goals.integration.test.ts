@@ -175,7 +175,9 @@ describe.skipIf(!configured)("goals data layer against life-os-dev", { timeout: 
     expect(await linkItem(goalId, { type: "exercise", id: exerciseId })).toEqual({ success: true });
     expect(await linksFrom(goalId)).toHaveLength(2);
 
-    expect(await deleteGoal(goalId)).toEqual({ success: true });
+    const { redirect } = await import("next/navigation");
+    await deleteGoal(goalId);
+    expect(redirect).toHaveBeenCalledWith("/goals");
 
     expect(await linksFrom(goalId)).toEqual([]);
     const { data } = await me.from("goals").select("id").eq("id", goalId);

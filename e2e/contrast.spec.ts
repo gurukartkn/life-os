@@ -17,6 +17,7 @@ const APP_SCREENS = [
   "/routines",
   "/routines/new",
   "/goals",
+  "/today",
   "/settings",
 ];
 const AUTH_SCREENS = ["/login", "/signup"];

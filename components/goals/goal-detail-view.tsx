@@ -100,7 +100,7 @@ export function GoalDetailView({
         />
       </div>
 
-      <GoalFormDialog open={editing} goal={goal} onOpenChange={setEditing} afterDelete="/goals" />
+      <GoalFormDialog open={editing} goal={goal} onOpenChange={setEditing} />
     </div>
   );
 }

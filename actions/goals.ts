@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserTimezone } from "@/lib/queries/user-settings";
 import { todayIso } from "@/lib/dates";
@@ -80,7 +81,8 @@ export async function updateGoal(_prevState: ActionResult, formData: FormData): 
   return { success: true };
 }
 
-// Links are polymorphic, so nothing cascades them: the goal's links go first, then the goal.
+// Links are polymorphic, so nothing cascades them: the goal's links go first, then the
+// goal. On success it redirects to the Goals list; a failure comes back as a result.
 export async function deleteGoal(id: string): Promise<ActionResult> {
   const parsed = goalIdSchema.safeParse(id);
   if (!parsed.success) return { success: false, error: "That goal no longer exists." };
@@ -104,5 +106,7 @@ export async function deleteGoal(id: string): Promise<ActionResult> {
   }
 
   revalidateGoals();
-  return { success: true };
+  // Going to the list here, rather than from the client afterwards, keeps the
+  // revalidation from rendering the deleted goal's page (a 404) first.
+  redirect("/goals");
 }
