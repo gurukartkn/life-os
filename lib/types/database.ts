@@ -145,6 +145,7 @@ export type Database = {
       }
       goals: {
         Row: {
+          achieved_on: string | null
           created_at: string
           id: string
           status: string | null
@@ -154,6 +155,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          achieved_on?: string | null
           created_at?: string
           id?: string
           status?: string | null
@@ -163,6 +165,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          achieved_on?: string | null
           created_at?: string
           id?: string
           status?: string | null
