@@ -30,8 +30,8 @@ describe("DatePicker", () => {
   it("shows the chosen date and includes it in the accessible name", () => {
     render(<Controlled initial="2026-03-15" />);
 
-    const trigger = screen.getByRole("button", { name: "Due date, Mar 15, 2026" });
-    expect(trigger).toHaveTextContent("Mar 15, 2026");
+    const trigger = screen.getByRole("button", { name: "Due date, Sun 15 Mar 2026" });
+    expect(trigger).toHaveTextContent("Sun 15 Mar 2026");
   });
 
   it("opens a calendar and reports the picked day as YYYY-MM-DD", async () => {
@@ -43,7 +43,7 @@ describe("DatePicker", () => {
     await user.click(await screen.findByRole("button", { name: /March 10/ }));
 
     expect(onChange).toHaveBeenCalledWith("2026-03-10");
-    expect(screen.getByRole("button", { name: "Due date, Mar 10, 2026" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Due date, Tue 10 Mar 2026" })).toBeInTheDocument();
   });
 
   // Past dates render as overdue on a task, so the picker must not block them.
@@ -64,8 +64,8 @@ describe("DatePicker", () => {
 
     await user.click(screen.getByRole("button", { name: /Due date/ }));
 
-    const weekdays = await screen.findAllByText(/^(Mo|Tu|We|Th|Fr|Sa|Su)$/);
-    expect(weekdays.map((el) => el.textContent)).toEqual(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]);
+    const weekdays = await screen.findAllByText(/^[MTWFS]$/);
+    expect(weekdays.map((el) => el.textContent)).toEqual(["M", "T", "W", "T", "F", "S", "S"]);
   });
 
   it("clears the date", async () => {
@@ -74,7 +74,7 @@ describe("DatePicker", () => {
     render(<Controlled initial="2026-03-15" onChange={onChange} />);
 
     await user.click(screen.getByRole("button", { name: /Due date/ }));
-    await user.click(await screen.findByRole("button", { name: "Clear date" }));
+    await user.click(await screen.findByRole("button", { name: "Clear" }));
 
     expect(onChange).toHaveBeenCalledWith("");
     expect(screen.getByRole("button", { name: "Due date" })).toHaveTextContent("Due date");
@@ -87,7 +87,29 @@ describe("DatePicker", () => {
     await user.click(screen.getByRole("button", { name: "Due date" }));
     await screen.findByRole("grid");
 
-    expect(screen.queryByRole("button", { name: "Clear date" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Clear" })).not.toBeInTheDocument();
+  });
+
+  it("clears the date from the field's x without opening the calendar", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Controlled initial="2026-03-15" onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", { name: "Clear due date" }));
+
+    expect(onChange).toHaveBeenCalledWith("");
+    expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+  });
+
+  it("picks today from the footer", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Controlled onChange={onChange} />);
+
+    await user.click(screen.getByRole("button", { name: "Due date" }));
+    await user.click(await screen.findByRole("button", { name: "Today" }));
+
+    expect(onChange).toHaveBeenCalledWith(new Date().toLocaleDateString("en-CA"));
   });
 
   it("does not shift the day for dates at the start or end of a month", async () => {

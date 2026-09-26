@@ -14,22 +14,37 @@ async function forceLight(page: Page) {
 }
 
 test.describe("signed in", () => {
-  for (const path of ["/tasks", "/fitness", "/routines", "/goals"]) {
+  for (const path of ["/tasks", "/fitness", "/routines", "/goals", "/settings"]) {
     test(`${path}: switch to dark and back`, async ({ page }) => {
       await forceLight(page);
       await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
 
-      await page.getByRole("button", { name: "Switch to dark theme" }).click();
+      // The sidebar's Light / Dark switch.
+      await page.getByRole("button", { name: "Dark", exact: true }).click();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
       expect(await pageBackground(page)).toBe(DARK_PAGE_BG);
 
-      await page.getByRole("button", { name: "Switch to light theme" }).click();
+      await page.getByRole("button", { name: "Light", exact: true }).click();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
     });
   }
+
+  test("the collapsed rail offers a one-icon toggle instead of the switch", async ({ page }) => {
+    await forceLight(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/tasks");
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+
+    await expect(page.getByRole("button", { name: "Dark", exact: true })).toBeHidden();
+    await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
+    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
 
   test("the choice survives a reload and applies before first paint", async ({ page }) => {
     // Start from an explicit light choice (set once — an init script would also
@@ -37,7 +52,7 @@ test.describe("signed in", () => {
     await page.goto("/tasks");
     await page.evaluate(() => window.localStorage.setItem("life-os-theme", "light"));
     await page.reload();
-    await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    await page.getByRole("button", { name: "Dark", exact: true }).click();
     expect(await page.evaluate(() => window.localStorage.getItem("life-os-theme"))).toBe("dark");
 
     // Record the theme the moment the document starts parsing, before any body paint.
@@ -50,7 +65,7 @@ test.describe("signed in", () => {
     await page.reload();
 
     expect(await page.evaluate(() => (window as unknown as { __themeAtDcl: string }).__themeAtDcl)).toBe("dark");
-    await expect(page.getByRole("button", { name: "Switch to light theme" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 });
 

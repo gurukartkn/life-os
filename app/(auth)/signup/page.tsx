@@ -1,22 +1,16 @@
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuthCard } from "@/components/auth/auth-card";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export default function SignupPage() {
   return (
-    <Card className="shadow-float">
-      <CardHeader>
-        <CardTitle className="text-page-title">Create account</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <SignupForm />
-        <p className="text-body-sm text-ink-muted">
-          Already have an account?{" "}
-          <Link href="/login" className="text-accent-text hover:underline">
-            Log in
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+    <AuthCard
+      title="Create account"
+      description="One account, one person. Your data stays yours."
+      footerText="Already have an account?"
+      footerLinkLabel="Log in"
+      footerHref="/login"
+    >
+      <SignupForm />
+    </AuthCard>
   );
 }

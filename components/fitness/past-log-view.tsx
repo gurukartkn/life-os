@@ -51,7 +51,7 @@ export function PastLogView({ log, timeZone }: { log: PastWorkoutLog; timeZone: 
               ) : (
                 <div className="flex flex-col gap-1 pl-[2px]">
                   {exercise.sets.map((set) => (
-                    <span key={set.id} className="text-body-sm text-ink-muted">
+                    <span key={set.id} className="text-body-sm text-ink-muted tabular-nums">
                       {formatSet(set, exercise.exerciseType)}
                     </span>
                   ))}

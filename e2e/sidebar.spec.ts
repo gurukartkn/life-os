@@ -17,7 +17,7 @@ async function openExpanded(page: Page) {
 
 test("collapses to an icon rail and expands again", async ({ page }) => {
   await openExpanded(page);
-  await expect.poll(() => sidebarWidth(page)).toBe(240);
+  await expect.poll(() => sidebarWidth(page)).toBe(216);
   await expect(page.locator("#app-sidebar").getByText("Fitness", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Collapse sidebar" }).click();
@@ -29,7 +29,7 @@ test("collapses to an icon rail and expands again", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Expand sidebar" })).toHaveAttribute("aria-expanded", "false");
 
   await page.getByRole("button", { name: "Expand sidebar" }).click();
-  await expect.poll(() => sidebarWidth(page)).toBe(240);
+  await expect.poll(() => sidebarWidth(page)).toBe(216);
 });
 
 test("stays collapsed across a reload and while navigating", async ({ page }) => {

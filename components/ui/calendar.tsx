@@ -6,10 +6,11 @@ import { DayPicker, getDefaultClassNames, type DayButton } from "react-day-picke
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-// shadcn Calendar (react-day-picker), restyled with the Life OS tokens
-// (docs/05-design-system.md, v2 Amendment §D): selected day is the accent fill,
-// today an accent-soft tint, cells use radius-sm, and the week starts on Monday
-// to match the routine week boundary. Single-date selection only.
+// shadcn Calendar (react-day-picker), restyled to the component sheet's date
+// picker: 38×36 day cells with radius-md and 13px tabular digits, the selected day
+// an accent fill with semibold white text, today a 1px ink outline, outside-month
+// days faint. The week starts on Monday to match the routine week boundary.
+// Single-date selection only.
 function Calendar({
   className,
   classNames,
@@ -17,6 +18,7 @@ function Calendar({
   captionLayout = "label",
   weekStartsOn = 1,
   components,
+  formatters,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
   const defaultClassNames = getDefaultClassNames()
@@ -26,11 +28,11 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       weekStartsOn={weekStartsOn}
       captionLayout={captionLayout}
-      className={cn("p-0 [--cell-radius:var(--radius-sm)] [--cell-size:--spacing(9)]", className)}
+      className={cn("p-0 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(8)]", className)}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn("relative flex flex-col gap-4", defaultClassNames.months),
-        month: cn("flex w-full flex-col gap-3", defaultClassNames.month),
+        month: cn("flex w-full flex-col gap-1.5", defaultClassNames.month),
         nav: cn(
           "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
           defaultClassNames.nav
@@ -53,19 +55,19 @@ function Calendar({
           "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-body",
           defaultClassNames.dropdowns
         ),
-        caption_label: cn("text-heading text-ink select-none", defaultClassNames.caption_label),
+        caption_label: cn("text-body font-semibold text-ink select-none", defaultClassNames.caption_label),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
-          "flex-1 text-label text-ink-muted select-none",
+          "flex h-6 flex-1 items-center justify-center text-label text-ink-muted select-none",
           defaultClassNames.weekday
         ),
-        week: cn("mt-1 flex w-full", defaultClassNames.week),
+        week: cn("flex w-full", defaultClassNames.week),
         day: cn(
-          "group/day relative aspect-square h-full w-full p-0 text-center select-none",
+          "group/day relative flex h-9 w-[42px] items-center justify-center p-0 text-center select-none",
           defaultClassNames.day
         ),
-        today: cn("rounded-(--cell-radius) bg-accent-soft text-accent-text", defaultClassNames.today),
+        today: cn("text-ink", defaultClassNames.today),
         outside: cn("text-ink-faint aria-selected:text-ink-faint", defaultClassNames.outside),
         disabled: cn("text-ink-faint opacity-50", defaultClassNames.disabled),
         hidden: cn("invisible", defaultClassNames.hidden),
@@ -84,6 +86,11 @@ function Calendar({
         DayButton: CalendarDayButton,
         ...components,
       }}
+      formatters={{
+        // Single-letter weekday headers (M T W T F S S), as in the component sheet.
+        formatWeekdayName: (date) => date.toLocaleDateString("en-GB", { weekday: "narrow" }),
+        ...formatters,
+      }}
       {...props}
     />
   )
@@ -101,8 +108,9 @@ function CalendarDayButton({ className, day, modifiers, ...props }: React.Compon
       type="button"
       data-day={day.date.toLocaleDateString()}
       data-selected-single={modifiers.selected}
+      data-today={modifiers.today}
       className={cn(
-        "flex aspect-square size-auto w-full min-w-(--cell-size) items-center justify-center rounded-(--cell-radius) text-body outline-none transition-colors hover:bg-surface-200 focus-visible:ring-2 focus-visible:ring-ring data-[selected-single=true]:bg-accent data-[selected-single=true]:text-accent-ink data-[selected-single=true]:hover:bg-accent-hover",
+        "flex h-9 w-[38px] items-center justify-center rounded-(--cell-radius) border border-transparent text-[13px] tabular-nums outline-none transition-colors hover:bg-surface-200 focus-visible:ring-2 focus-visible:ring-ring data-[today=true]:border-ink data-[selected-single=true]:border-transparent data-[selected-single=true]:bg-accent data-[selected-single=true]:font-semibold data-[selected-single=true]:text-accent-ink data-[selected-single=true]:hover:bg-accent-hover",
         className
       )}
       {...props}
