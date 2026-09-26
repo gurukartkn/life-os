@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { addTask, openAddTask, taskRow } from "./task-helpers";
 
 // v2 Stage 1: "the user can switch between light and dark on every screen" — so
 // every screen, and the states that change text colour (overdue and completed
@@ -45,36 +46,36 @@ for (const theme of ["light", "dark"] as const) {
       });
     }
 
-    test("Tasks with an overdue and a completed task, an error and the open calendar", async ({ page }) => {
+    test("Tasks with an overdue and a completed task, the modal with an error and the open calendar", async ({ page }) => {
       const stamp = Date.now();
       await useTheme(page, theme);
       await page.goto("/tasks");
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
 
       // An overdue task (previous month) and a completed one.
-      await page.getByLabel("Task title").fill(`Overdue sample ${stamp}`);
-      await page.getByRole("button", { name: "Due date" }).click();
+      let dialog = await openAddTask(page);
+      await dialog.getByLabel("Title").fill(`Overdue sample ${stamp}`);
+      await dialog.getByRole("button", { name: "Due date" }).click();
       await page.getByRole("button", { name: /previous month/i }).click();
       await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
-      await page.getByRole("button", { name: "New task" }).click();
-      const overdue = page.locator("div.rounded-md.border", { hasText: `Overdue sample ${stamp}` });
-      await expect(overdue).toContainText("Due", { timeout: 20_000 });
+      await dialog.getByRole("button", { name: "Add task" }).click();
+      await expect(taskRow(page, `Overdue sample ${stamp}`)).toContainText("Overdue", { timeout: 20_000 });
 
-      await page.getByLabel("Task title").fill(`Done sample ${stamp}`);
-      await page.getByRole("button", { name: "New task" }).click();
-      const done = page.locator("div.rounded-md.border", { hasText: `Done sample ${stamp}` });
+      await addTask(page, `Done sample ${stamp}`);
+      const done = taskRow(page, `Done sample ${stamp}`);
       await done.getByRole("checkbox", { name: "Mark as done" }).click();
       await expect(done.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({ timeout: 20_000 });
 
       expect(await contrastViolations(page)).toEqual([]);
 
-      // Validation error text.
-      await page.getByRole("button", { name: "New task" }).click();
-      await expect(page.getByText("Enter a title.")).toBeVisible();
+      // The modal over the scrim, with a validation error.
+      dialog = await openAddTask(page);
+      await dialog.getByRole("button", { name: "Add task" }).click();
+      await expect(dialog.getByText("Enter a title.")).toBeVisible();
       expect(await contrastViolations(page)).toEqual([]);
 
       // Open calendar (weekday labels, outside days, selected and today cells).
-      await page.getByRole("button", { name: "Due date" }).click();
+      await dialog.getByRole("button", { name: "Due date" }).click();
       await expect(page.getByRole("grid")).toBeVisible();
       // The popover fades in; measure once it is fully opaque, not mid-animation.
       await expect(page.locator('[data-slot="popover-content"]')).toHaveCSS("opacity", "1");

@@ -1,16 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { addTask } from "./task-helpers";
 
 // Backlog #19 — Export data is offered only when there is something to export. It
 // lives on Settings › Data; with no data the Data card is not rendered at all.
 
-async function addTask(page: Page, title: string) {
-  await page.goto("/tasks");
-  await page.getByLabel("Task title").fill(title);
-  await page.getByRole("button", { name: "New task" }).click();
-  await expect(page.getByText(title, { exact: true })).toBeVisible();
-}
 
 test.describe("account with no data", () => {
   test.use({ storageState: path.join(__dirname, ".auth/empty-user.json") });

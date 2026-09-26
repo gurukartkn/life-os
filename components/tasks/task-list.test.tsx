@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { TaskList } from "./task-list";
 import type { Tables } from "@/lib/types/database";
+
+vi.mock("@/actions/tasks", () => ({ toggleTask: vi.fn() }));
 
 function makeTask(overrides: Partial<Tables<"tasks">> = {}): Tables<"tasks"> {
   return {
@@ -26,15 +28,14 @@ describe("TaskList", () => {
       makeTask({ id: "550e8400-e29b-41d4-a716-446655440003", title: "Read a book" }),
     ];
 
-    render(<TaskList tasks={tasks} />);
+    render(<TaskList tasks={tasks} onEdit={vi.fn()} />);
 
-    expect(screen.getByText("Buy groceries")).toBeInTheDocument();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(3);
     expect(screen.getByText("Walk the dog")).toBeInTheDocument();
-    expect(screen.getByText("Read a book")).toBeInTheDocument();
   });
 
   it("renders nothing when there are no tasks", () => {
-    render(<TaskList tasks={[]} />);
-    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    const { container } = render(<TaskList tasks={[]} onEdit={vi.fn()} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

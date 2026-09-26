@@ -63,6 +63,11 @@ export function formatDueDate(dueDate: string): string {
   return format(date, "MMM d");
 }
 
+// "Mon 21 Sep" — the date on a task's status pill and in Today's lists.
+export function formatShortDate(date: string): string {
+  return format(parseISO(date), "EEE d MMM");
+}
+
 function ago(count: number, unit: string): string {
   return `${count} ${unit}${count === 1 ? "" : "s"} ago`;
 }

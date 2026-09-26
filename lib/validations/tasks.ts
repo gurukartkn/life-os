@@ -11,6 +11,13 @@ export const taskInsertSchema = z.object({
   due_date: dateStringSchema,
 });
 
+// The edit modal saves the same two fields the add form sets; an empty due date clears it.
+export const taskUpdateSchema = z.object({
+  id: z.string().uuid(),
+  title: taskInsertSchema.shape.title,
+  due_date: dateStringSchema,
+});
+
 export const taskToggleSchema = z.object({
   id: z.string().uuid(),
   is_completed: z.boolean(),

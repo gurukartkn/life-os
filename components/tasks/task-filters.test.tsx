@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TaskFilters } from "./task-filters";
 
+const COUNTS = { all: 10, active: 7, completed: 3 };
+
 describe("TaskFilters", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -11,9 +13,9 @@ describe("TaskFilters", () => {
   // Regression for backlog #7: tabs used to be full server navigations.
   it("selecting a tab updates the URL with pushState and does not navigate", () => {
     const pushState = vi.spyOn(window.history, "pushState");
-    render(<TaskFilters active="all" />);
+    render(<TaskFilters active="all" counts={COUNTS} />);
 
-    const notPrevented = fireEvent.click(screen.getByRole("link", { name: "Active" }));
+    const notPrevented = fireEvent.click(screen.getByRole("link", { name: /^Active/ }));
 
     expect(notPrevented).toBe(false); // default (a full navigation) was prevented
     expect(pushState).toHaveBeenCalledWith(null, "", "/tasks?status=active");
@@ -22,18 +24,18 @@ describe("TaskFilters", () => {
   it("does not push a duplicate history entry for the tab already showing", () => {
     window.history.replaceState(null, "", "/tasks?status=active");
     const pushState = vi.spyOn(window.history, "pushState");
-    render(<TaskFilters active="active" />);
+    render(<TaskFilters active="active" counts={COUNTS} />);
 
-    fireEvent.click(screen.getByRole("link", { name: "Active" }));
+    fireEvent.click(screen.getByRole("link", { name: /^Active/ }));
 
     expect(pushState).not.toHaveBeenCalled();
   });
 
   it("leaves modified clicks alone so a tab can still open in a new tab", () => {
     const pushState = vi.spyOn(window.history, "pushState");
-    render(<TaskFilters active="all" />);
+    render(<TaskFilters active="all" counts={COUNTS} />);
 
-    const notPrevented = fireEvent.click(screen.getByRole("link", { name: "Completed" }), {
+    const notPrevented = fireEvent.click(screen.getByRole("link", { name: /^Completed/ }), {
       ctrlKey: true,
     });
 
@@ -41,43 +43,30 @@ describe("TaskFilters", () => {
     expect(pushState).not.toHaveBeenCalled();
   });
 
-  it("marks only the active tab as current", () => {
-    render(<TaskFilters active="completed" />);
+  it("marks and underlines only the active tab", () => {
+    render(<TaskFilters active="completed" counts={COUNTS} />);
 
-    expect(screen.getByRole("link", { name: "Completed" })).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("link", { name: "All" })).not.toHaveAttribute("aria-current");
+    const completed = screen.getByRole("link", { name: /^Completed/ });
+    expect(completed).toHaveAttribute("aria-current", "true");
+    expect(completed).toHaveClass("border-accent", "text-accent-text");
+    const all = screen.getByRole("link", { name: /^All/ });
+    expect(all).not.toHaveAttribute("aria-current");
+    expect(all).toHaveClass("border-transparent");
   });
 
-  it("applies active styling only to the active filter", () => {
-    render(<TaskFilters active="active" />);
+  it("shows each tab's count", () => {
+    render(<TaskFilters active="all" counts={COUNTS} />);
 
-    expect(screen.getByRole("link", { name: "Active" })).toHaveClass(
-      "bg-accent-soft",
-      "text-accent-text"
-    );
-    expect(screen.getByRole("link", { name: "All" })).not.toHaveClass("bg-accent-soft");
-    expect(screen.getByRole("link", { name: "Completed" })).not.toHaveClass("bg-accent-soft");
-  });
-
-  it("marks All as active by default styling when active is 'all'", () => {
-    render(<TaskFilters active="all" />);
-
-    expect(screen.getByRole("link", { name: "All" })).toHaveClass("bg-accent-soft");
-    expect(screen.getByRole("link", { name: "Active" })).not.toHaveClass("bg-accent-soft");
-    expect(screen.getByRole("link", { name: "Completed" })).not.toHaveClass("bg-accent-soft");
+    expect(screen.getByRole("link", { name: "All 10" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Active 7" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Completed 3" })).toBeInTheDocument();
   });
 
   it("links to the right status query params", () => {
-    render(<TaskFilters active="all" />);
+    render(<TaskFilters active="all" counts={COUNTS} />);
 
-    expect(screen.getByRole("link", { name: "All" })).toHaveAttribute("href", "/tasks");
-    expect(screen.getByRole("link", { name: "Active" })).toHaveAttribute(
-      "href",
-      "/tasks?status=active"
-    );
-    expect(screen.getByRole("link", { name: "Completed" })).toHaveAttribute(
-      "href",
-      "/tasks?status=completed"
-    );
+    expect(screen.getByRole("link", { name: /^All/ })).toHaveAttribute("href", "/tasks");
+    expect(screen.getByRole("link", { name: /^Active/ })).toHaveAttribute("href", "/tasks?status=active");
+    expect(screen.getByRole("link", { name: /^Completed/ })).toHaveAttribute("href", "/tasks?status=completed");
   });
 });

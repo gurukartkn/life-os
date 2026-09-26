@@ -1,47 +1,49 @@
 import { test, expect } from "@playwright/test";
+import { addTask, openAddTask, taskRow } from "./task-helpers";
+
+function shortDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).replace(",", "");
+}
+
+function ordinal(day: number): string {
+  if (day % 10 === 1 && day !== 11) return "st";
+  if (day % 10 === 2 && day !== 12) return "nd";
+  if (day % 10 === 3 && day !== 13) return "rd";
+  return "th";
+}
 
 // Stage 2 checkpoint: the Tasks screen's core flow — add a task, see it in
 // the list, complete it (docs/08-implementation-plan.md).
-test("add a task and mark it complete", async ({ page }) => {
+test("add a task from the header and mark it complete", async ({ page }) => {
   const title = `Buy groceries ${Date.now()}`;
 
   await page.goto("/tasks");
+  await addTask(page, title);
 
-  await page.getByLabel("Task title").fill(title);
-  await page.getByRole("button", { name: "New task" }).click();
-
-  const row = page.getByText(title, { exact: true });
-  await expect(row).toBeVisible();
-
-  // Its own row: other specs share this account and leave open tasks on the page.
-  const taskRow = page.locator("div.rounded-md.border", { hasText: title });
-  await taskRow.getByRole("checkbox", { name: "Mark as done" }).click();
-
-  await expect(row).toHaveClass(/line-through/, { timeout: 20_000 });
-  await expect(taskRow.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible();
+  const row = taskRow(page, title);
+  await row.getByRole("checkbox", { name: "Mark as done" }).click();
+  await expect(row.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({ timeout: 20_000 });
 });
 
-// Backlog #4 — shadcn calendar for date pickers. A past date is allowed (Stage 2
-// shows it as overdue), so pick one from the previous month.
+// Backlog #4 — the calendar date picker. A past date is allowed (it shows as
+// overdue), so pick one from the previous month.
 test("pick a due date in the calendar and see it on the task", async ({ page }) => {
   const title = `Renew passport ${Date.now()}`;
   const past = new Date();
-  past.setDate(1);
+  past.setDate(15);
   past.setMonth(past.getMonth() - 1);
-  const monthShort = past.toLocaleString("en-US", { month: "short" });
 
   await page.goto("/tasks");
-  await page.getByLabel("Task title").fill(title);
-
-  await page.getByRole("button", { name: "Due date" }).click();
+  const dialog = await openAddTask(page);
+  await dialog.getByLabel("Title").fill(title);
+  await dialog.getByRole("button", { name: "Due date" }).click();
   await page.getByRole("button", { name: /previous month/i }).click();
   await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
-  await expect(page.getByRole("button", { name: new RegExp(`Due date, ${monthShort} 15, \\d{4}`) })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /^Due date, \w{3} 15 \w{3} \d{4}$/ })).toBeVisible();
+  await expect(dialog.getByText("Overdue", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Add task" }).click();
 
-  await page.getByRole("button", { name: "New task" }).click();
-
-  const row = page.locator("div.rounded-md.border", { hasText: title });
-  await expect(row).toContainText(`Due ${monthShort} 15`, { timeout: 20_000 });
+  await expect(taskRow(page, title)).toContainText(`Overdue · ${shortDate(past)}`, { timeout: 20_000 });
 });
 
 // v2 Stage 2 — a task can be created already overdue; it shows as overdue until it is completed.
@@ -50,28 +52,50 @@ test("a task dated yesterday saves, shows overdue, and stops being overdue once 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const day = yesterday.getDate();
-  const suffix = day % 10 === 1 && day !== 11 ? "st" : day % 10 === 2 && day !== 12 ? "nd" : day % 10 === 3 && day !== 13 ? "rd" : "th";
   const monthLong = yesterday.toLocaleString("en-US", { month: "long" });
-  const monthShort = yesterday.toLocaleString("en-US", { month: "short" });
 
   await page.goto("/tasks");
-  await page.getByLabel("Task title").fill(title);
-  await page.getByRole("button", { name: "Due date" }).click();
+  const dialog = await openAddTask(page);
+  await dialog.getByLabel("Title").fill(title);
+  await dialog.getByRole("button", { name: "Due date" }).click();
   // Yesterday is in the previous month when today is the 1st.
   if (yesterday.getMonth() !== new Date().getMonth()) {
     await page.getByRole("button", { name: /previous month/i }).click();
   }
-  await page.getByRole("button", { name: new RegExp(`${monthLong} ${day}${suffix}, ${yesterday.getFullYear()}`) }).click();
-  await page.getByRole("button", { name: "New task" }).click();
+  await page
+    .getByRole("button", { name: new RegExp(`${monthLong} ${day}${ordinal(day)}, ${yesterday.getFullYear()}`) })
+    .click();
+  await dialog.getByRole("button", { name: "Add task" }).click();
 
-  const row = page.locator("div.rounded-md.border", { hasText: title });
-  const due = row.getByText(`Due ${monthShort} ${day}`);
-  await expect(due).toBeVisible({ timeout: 20_000 });
-  await expect(due).toHaveClass(/text-pink-ink/);
+  const row = taskRow(page, title);
+  const overdue = row.getByText(`Overdue · ${shortDate(yesterday)}`);
+  await expect(overdue).toBeVisible({ timeout: 20_000 });
+  await expect(overdue).toHaveClass(/text-pink-ink/);
 
   await row.getByRole("checkbox", { name: "Mark as done" }).click();
   await expect(row.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({ timeout: 20_000 });
-  await expect(due).not.toHaveClass(/text-pink-ink/);
+  await expect(row.getByText(/Overdue/)).toHaveCount(0);
+  await expect(row.getByText(shortDate(yesterday), { exact: true })).toBeVisible();
+});
+
+test("edit a task's title and delete it from the modal", async ({ page }) => {
+  const title = `Edit me ${Date.now()}`;
+  const renamed = `${title} (renamed)`;
+
+  await page.goto("/tasks");
+  await addTask(page, title);
+
+  await taskRow(page, title).getByRole("button", { name: `Edit ${title}` }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Edit task" })).toBeVisible();
+  await dialog.getByLabel("Title").fill(renamed);
+  await dialog.getByRole("button", { name: "Save changes" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText(renamed, { exact: true })).toBeVisible({ timeout: 20_000 });
+
+  await taskRow(page, renamed).getByRole("button", { name: `Edit ${renamed}` }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete task" }).click();
+  await expect(page.getByText(renamed, { exact: true })).toHaveCount(0, { timeout: 20_000 });
 });
 
 // Backlog #7 — the filter tabs re-filter the list the page already has; they
@@ -83,11 +107,9 @@ test("filter tabs switch without any network request and keep the URL in sync", 
 
   await page.goto("/tasks");
   for (const title of [openTitle, doneTitle]) {
-    await page.getByLabel("Task title").fill(title);
-    await page.getByRole("button", { name: "New task" }).click();
-    await expect(page.getByText(title, { exact: true })).toBeVisible();
+    await addTask(page, title);
   }
-  const doneRow = page.locator("div.rounded-md.border", { hasText: doneTitle });
+  const doneRow = taskRow(page, doneTitle);
   await doneRow.getByRole("checkbox", { name: "Mark as done" }).click();
   // The toggle is a Server Action plus a page refresh, so allow for the round trips.
   await expect(doneRow.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({
@@ -97,17 +119,17 @@ test("filter tabs switch without any network request and keep the URL in sync", 
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
 
-  await page.getByRole("link", { name: "Active" }).click();
+  await page.getByRole("link", { name: /^Active \d+$/ }).click();
   await expect(page).toHaveURL(/\/tasks\?status=active$/);
   await expect(page.getByText(openTitle, { exact: true })).toBeVisible();
   await expect(page.getByText(doneTitle, { exact: true })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Completed" }).click();
+  await page.getByRole("link", { name: /^Completed \d+$/ }).click();
   await expect(page).toHaveURL(/\/tasks\?status=completed$/);
   await expect(page.getByText(doneTitle, { exact: true })).toBeVisible();
   await expect(page.getByText(openTitle, { exact: true })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "All" }).click();
+  await page.getByRole("link", { name: /^All \d+$/ }).click();
   await expect(page).toHaveURL(/\/tasks$/);
   await expect(page.getByText(openTitle, { exact: true })).toBeVisible();
   await expect(page.getByText(doneTitle, { exact: true })).toBeVisible();
@@ -118,19 +140,17 @@ test("filter tabs switch without any network request and keep the URL in sync", 
 test("a filter deep link loads filtered, and Back returns to the previous filter", async ({ page }) => {
   const title = `Deep ${Date.now()}`;
   await page.goto("/tasks");
-  await page.getByLabel("Task title").fill(title);
-  await page.getByRole("button", { name: "New task" }).click();
-  await expect(page.getByText(title, { exact: true })).toBeVisible();
+  await addTask(page, title);
 
   await page.goto("/tasks?status=completed");
-  await expect(page.getByRole("link", { name: "Completed" })).toHaveAttribute("aria-current", "true");
+  await expect(page.getByRole("link", { name: /^Completed \d+$/ })).toHaveAttribute("aria-current", "true");
   await expect(page.getByText(title, { exact: true })).toHaveCount(0);
 
-  await page.getByRole("link", { name: "Active" }).click();
+  await page.getByRole("link", { name: /^Active \d+$/ }).click();
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 
   await page.goBack();
   await expect(page).toHaveURL(/status=completed$/);
-  await expect(page.getByRole("link", { name: "Completed" })).toHaveAttribute("aria-current", "true");
+  await expect(page.getByRole("link", { name: /^Completed \d+$/ })).toHaveAttribute("aria-current", "true");
   await expect(page.getByText(title, { exact: true })).toHaveCount(0);
 });

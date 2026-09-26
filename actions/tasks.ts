@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { taskInsertSchema, taskToggleSchema, taskDeleteSchema } from "@/lib/validations/tasks";
+import {
+  taskDeleteSchema,
+  taskInsertSchema,
+  taskToggleSchema,
+  taskUpdateSchema,
+} from "@/lib/validations/tasks";
 import { logError } from "@/lib/errors";
 import type { ActionResult } from "@/lib/types/action-result";
 
@@ -39,6 +44,35 @@ export async function createTask(
   if (error) {
     logError("createTask", error);
     return { success: false, error: "Couldn't add the task. Try again." };
+  }
+
+  revalidatePath("/tasks");
+  return { success: true };
+}
+
+export async function updateTask(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const parsed = taskUpdateSchema.safeParse({
+    id: formData.get("id"),
+    title: formData.get("title"),
+    due_date: formData.get("due_date") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("tasks")
+    .update({ title: parsed.data.title, due_date: parsed.data.due_date || null })
+    .eq("id", parsed.data.id);
+
+  if (error) {
+    logError("updateTask", error);
+    return { success: false, error: "Couldn't save the task. Try again." };
   }
 
   revalidatePath("/tasks");

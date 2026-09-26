@@ -1,13 +1,12 @@
-import { AddTaskForm } from "@/components/tasks/add-task-form";
-import { TaskStats } from "@/components/tasks/task-stats";
 import { TaskView } from "@/components/tasks/task-view";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
-import { isOverdue, todayIso } from "@/lib/dates";
 import type { Tables } from "@/lib/types/database";
 
 export default async function TasksPage() {
   const supabase = await createClient();
+  // Open tasks first; within them overdue (earliest dates) first, then by due date,
+  // then undated — the order the Tasks board draws.
   const { data, error } = await supabase
     .from("tasks")
     .select("*")
@@ -20,19 +19,6 @@ export default async function TasksPage() {
   }
 
   const tasks: Tables<"tasks">[] = data ?? [];
-  const today = todayIso();
-  const dueTodayCount = tasks.filter((t) => !t.is_completed && t.due_date === today).length;
-  const overdueCount = tasks.filter(
-    (t) => !t.is_completed && t.due_date !== null && isOverdue(t.due_date)
-  ).length;
-  const completedCount = tasks.filter((t) => t.is_completed).length;
 
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-page-title text-ink">Tasks</h1>
-      <TaskStats dueToday={dueTodayCount} overdue={overdueCount} completed={completedCount} />
-      <AddTaskForm />
-      <TaskView tasks={tasks} />
-    </div>
-  );
+  return <TaskView tasks={tasks} loadError={Boolean(error)} />;
 }
