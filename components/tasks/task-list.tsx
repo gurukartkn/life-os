@@ -1,11 +1,20 @@
 import { TaskRow } from "@/components/tasks/task-row";
 import type { Tables } from "@/lib/types/database";
 
-export function TaskList({ tasks }: { tasks: Tables<"tasks">[] }) {
+// One card holding every row, divided by hairlines (Tasks board).
+export function TaskList({
+  tasks,
+  onEdit,
+}: {
+  tasks: Tables<"tasks">[];
+  onEdit: (task: Tables<"tasks">) => void;
+}) {
+  if (tasks.length === 0) return null;
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="overflow-hidden rounded-lg border border-border bg-surface-100">
       {tasks.map((task) => (
-        <TaskRow key={task.id} task={task} />
+        <TaskRow key={task.id} task={task} onEdit={onEdit} />
       ))}
     </div>
   );

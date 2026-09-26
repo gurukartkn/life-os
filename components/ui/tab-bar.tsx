@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 // Underline tabs (component sheet "Tabs"): 44px tall, fixed minimum width so
 // switching never shifts the row, a 2px accent underline and accent-text semibold
 // label on the active tab, and an optional tabular count pill. The tabs themselves
-// are links or buttons supplied by the caller, styled with `tabClassName`.
+// are links or buttons supplied by the caller, styled with `tabClassName`; the caller
+// sets the matching role (a group of filter links, or a tablist of tabs).
 function TabBar({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      role="tablist"
       className={cn("flex items-end gap-5 border-b border-border", className)}
       {...props}
     />

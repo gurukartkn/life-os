@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TabBar, TabCount, tabClassName } from "@/components/ui/tab-bar";
 import { filterHref, type StatusFilter } from "@/lib/task-filters";
 
 const FILTERS = [
@@ -9,15 +10,10 @@ const FILTERS = [
   { value: "completed", label: "Completed" },
 ] as const;
 
-const BASE_CLASS =
-  "text-button-text rounded-md px-2.5 py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
-const INACTIVE_CLASS = `${BASE_CLASS} text-ink-muted hover:bg-surface-200 hover:text-ink`;
-const ACTIVE_CLASS = `${BASE_CLASS} bg-accent-soft text-accent-text hover:bg-accent-soft hover:text-accent-text`;
-
 // The filter is URL state (docs/04 §5) but the page already holds every task, so
 // selecting a tab only updates the URL with history.pushState — Next syncs
 // useSearchParams from it without a server round trip — and the list filters in
-// memory (TaskView). Modified clicks (new tab etc.) and no-JS keep the real href.
+// memory (TasksScreen). Modified clicks (new tab etc.) and no-JS keep the real href.
 function handleSelect(event: React.MouseEvent<HTMLAnchorElement>, href: string) {
   if (event.defaultPrevented || event.button !== 0) return;
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -28,24 +24,33 @@ function handleSelect(event: React.MouseEvent<HTMLAnchorElement>, href: string) 
   }
 }
 
-export function TaskFilters({ active }: { active: StatusFilter }) {
+// Underline tabs with tabular counts (Tasks board): fixed widths keep the row still.
+export function TaskFilters({
+  active,
+  counts,
+}: {
+  active: StatusFilter;
+  counts: Record<StatusFilter, number>;
+}) {
   return (
-    <div className="flex gap-1">
+    <TabBar role="group" aria-label="Filter tasks">
       {FILTERS.map(({ value, label }) => {
         const href = filterHref(value);
+        const isActive = active === value;
         return (
           <Link
             key={value}
             href={href}
             prefetch={false}
-            aria-current={active === value ? "true" : undefined}
+            aria-current={isActive ? "true" : undefined}
             onClick={(event) => handleSelect(event, href)}
-            className={active === value ? ACTIVE_CLASS : INACTIVE_CLASS}
+            className={tabClassName(isActive)}
           >
-            {label}
+            {label}{" "}
+            <TabCount>{counts[value]}</TabCount>
           </Link>
         );
       })}
-    </div>
+    </TabBar>
   );
 }

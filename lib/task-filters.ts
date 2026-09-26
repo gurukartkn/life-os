@@ -19,8 +19,18 @@ export function filterTasks(tasks: Tables<"tasks">[], filter: StatusFilter): Tab
   return tasks;
 }
 
-export function emptyStateTitle(filter: StatusFilter): string {
-  if (filter === "active") return "Nothing left to do.";
-  if (filter === "completed") return "Nothing completed yet.";
-  return "Nothing on the list today.";
+export function filterCounts(tasks: Tables<"tasks">[]): Record<StatusFilter, number> {
+  const completed = tasks.filter((task) => task.is_completed).length;
+  return { all: tasks.length, active: tasks.length - completed, completed };
+}
+
+// The empty state for a filter. With no tasks at all it is the Tasks empty board's
+// copy; a filter that happens to match nothing says so instead.
+export function emptyStateCopy(
+  filter: StatusFilter,
+  hasAnyTasks: boolean
+): { title: string; description: string } {
+  if (!hasAnyTasks) return { title: "No tasks yet", description: "Add a task and it will show up here." };
+  if (filter === "active") return { title: "Nothing left to do", description: "Every task is done." };
+  return { title: "Nothing completed yet", description: "Tasks you tick off show up here." };
 }

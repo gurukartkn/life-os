@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { deleteTask, toggleTask } from "@/actions/tasks";
-import { formatDueDate, isOverdue } from "@/lib/dates";
+import { TaskDatePill } from "@/components/tasks/task-date-pill";
+import { toggleTask } from "@/actions/tasks";
 import type { Tables } from "@/lib/types/database";
 
-export function TaskRow({ task }: { task: Tables<"tasks"> }) {
+// One 56px row of the task list card: checkbox, title, due-date pill and Edit.
+export function TaskRow({ task, onEdit }: { task: Tables<"tasks">; onEdit: (task: Tables<"tasks">) => void }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -20,20 +22,11 @@ export function TaskRow({ task }: { task: Tables<"tasks"> }) {
     });
   }
 
-  function handleDelete() {
-    setError(null);
-    startTransition(async () => {
-      const result = await deleteTask(task.id);
-      if (!result.success) setError(result.error ?? "Couldn't delete the task. Try again.");
-    });
-  }
-
-  const overdue = !task.is_completed && task.due_date !== null && isOverdue(task.due_date);
-
   return (
     <div
+      data-slot="task-row"
       className={cn(
-        "flex items-center gap-3 rounded-md border border-border bg-surface-100 px-4 py-3",
+        "flex min-h-14 items-center gap-3 border-b border-border px-4 py-2 last:border-b-0",
         isPending && "opacity-60"
       )}
     >
@@ -43,30 +36,20 @@ export function TaskRow({ task }: { task: Tables<"tasks"> }) {
         disabled={isPending}
         aria-label={task.is_completed ? "Mark as not done" : "Mark as done"}
       />
-      <div className="flex flex-1 flex-col gap-0.5">
-        <span
-          className={`text-body ${
-            task.is_completed ? "text-ink-faint line-through" : "text-ink"
-          }`}
-        >
-          {task.title}
-        </span>
-        {task.due_date && (
-          <span className={`text-caption ${overdue ? "text-pink-ink" : "text-ink-muted"}`}>
-            Due {formatDueDate(task.due_date)}
-          </span>
-        )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-body font-medium text-ink">{task.title}</span>
         {error && <span className="text-caption text-pink-ink">{error}</span>}
       </div>
-      <button
+      <TaskDatePill dueDate={task.due_date} isCompleted={task.is_completed} />
+      <Button
         type="button"
-        onClick={handleDelete}
-        disabled={isPending}
-        aria-label="Delete task"
-        className="rounded-sm text-ink-faint outline-none transition-colors hover:text-pink-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
+        variant="ghost"
+        size="icon-sm"
+        aria-label={`Edit ${task.title}`}
+        onClick={() => onEdit(task)}
       >
-        <Trash2 className="size-4" />
-      </button>
+        <Pencil strokeWidth={1.75} />
+      </Button>
     </div>
   );
 }
