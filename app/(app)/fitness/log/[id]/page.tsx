@@ -4,7 +4,6 @@ import { logError as logLoadError } from "@/lib/errors";
 import { formatClockTime } from "@/lib/dates";
 import { getUserTimezone } from "@/lib/queries/user-settings";
 import { WorkoutLogSession, type ExerciseCardData } from "@/components/fitness/workout-log-session";
-import { LinkGoalForm } from "@/components/fitness/link-goal-form";
 import type { SetData } from "@/components/fitness/set-row";
 
 type WorkoutLogRow = {
@@ -48,7 +47,7 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
   const log = logData as unknown as WorkoutLogRow | null;
   if (!log) notFound();
 
-  const [{ data: workoutExercisesData, error: exercisesError }, { data: setLogsData, error: setLogsError }, { data: goalsData }, { data: linkData }] =
+  const [{ data: workoutExercisesData, error: exercisesError }, { data: setLogsData, error: setLogsError }] =
     await Promise.all([
       log.workout_id
         ? supabase
@@ -60,21 +59,12 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
             .order("sort_order", { ascending: true })
         : Promise.resolve({ data: [] as WorkoutExerciseRow[], error: null }),
       supabase.from("set_logs").select("id, exercise_id, set_number, weight, reps, duration_seconds").eq("workout_log_id", id),
-      supabase.from("goals").select("id, title").order("created_at", { ascending: false }),
-      supabase
-        .from("links")
-        .select("id, target_id")
-        .eq("source_type", "workout_log")
-        .eq("source_id", id)
-        .eq("target_type", "goal")
-        .maybeSingle(),
     ]);
 
   if (exercisesError) logLoadError("Load workout exercises", exercisesError);
   if (setLogsError) logLoadError("Load set logs", setLogsError);
   const workoutExercises = (workoutExercisesData ?? []) as unknown as WorkoutExerciseRow[];
   const setLogs = (setLogsData ?? []) as SetLogRow[];
-  const goals = goalsData ?? [];
 
   // One row per target set (at least one), plus any set logged beyond the target.
   const exerciseCards: ExerciseCardData[] = workoutExercises.map((we) => {
@@ -112,19 +102,6 @@ export default async function WorkoutLogPage({ params }: { params: Promise<{ id:
       startedLabel={`Started ${formatClockTime(log.created_at, timeZone)}`}
       startedAt={log.created_at}
       exerciseCards={exerciseCards}
-    >
-      <LinkGoalForm
-        workoutLogId={log.id}
-        goals={goals.map((goal) => ({ id: goal.id, title: goal.title }))}
-        linkedGoal={
-          linkData
-            ? {
-                linkId: linkData.id,
-                goalTitle: goals.find((goal) => goal.id === linkData.target_id)?.title ?? "Goal",
-              }
-            : null
-        }
-      />
-    </WorkoutLogSession>
+    />
   );
 }

@@ -109,17 +109,24 @@ describe("deleteWorkout", () => {
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it("deletes the workout by id and revalidates /fitness", async () => {
+  it("deletes the workout by id, then the links to it, and revalidates /fitness and /goals", async () => {
     const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+    supabase.from
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)))
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
 
     const result = await deleteWorkout(VALID_ID);
 
-    expect(supabase.from).toHaveBeenCalledWith("workouts");
+    expect(supabase.from.mock.calls.map((call) => call[0])).toEqual(["workouts", "links"]);
     const builder = supabase.from.mock.results[0].value;
     expect(builder.delete).toHaveBeenCalled();
     expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
+    expect(supabase.from.mock.results[1].value.eq.mock.calls).toEqual([
+      ["target_type", "workout"],
+      ["target_id", VALID_ID],
+    ]);
     expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
+    expect(revalidatePath).toHaveBeenCalledWith("/goals", "layout");
     expect(result).toEqual({ success: true });
   });
 
