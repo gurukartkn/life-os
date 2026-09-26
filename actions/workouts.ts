@@ -11,6 +11,8 @@ import {
   type WorkoutUpdateInput,
 } from "@/lib/validations/fitness";
 import { logError } from "@/lib/errors";
+import { revalidateGoals } from "@/lib/goals-revalidate";
+import { deleteLinksTo } from "@/lib/links-cleanup";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createWorkout(input: CreateWorkoutInput): Promise<ActionResult> {
@@ -184,6 +186,8 @@ export async function deleteWorkout(id: string): Promise<ActionResult> {
     return { success: false, error: "Couldn't delete the workout. Try again." };
   }
 
+  await deleteLinksTo(supabase, "workout", parsed.data.id);
   revalidatePath("/fitness", "layout");
+  revalidateGoals();
   return { success: true };
 }

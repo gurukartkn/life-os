@@ -9,6 +9,8 @@ import {
   taskUpdateSchema,
 } from "@/lib/validations/tasks";
 import { logError } from "@/lib/errors";
+import { revalidateGoals } from "@/lib/goals-revalidate";
+import { deleteLinksTo } from "@/lib/links-cleanup";
 import type { ActionResult } from "@/lib/types/action-result";
 
 export async function createTask(
@@ -119,6 +121,8 @@ export async function deleteTask(id: string): Promise<ActionResult> {
     return { success: false, error: "Couldn't delete the task. Try again." };
   }
 
+  await deleteLinksTo(supabase, "task", parsed.data.id);
   revalidatePath("/tasks");
+  revalidateGoals();
   return { success: true };
 }

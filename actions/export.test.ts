@@ -107,6 +107,22 @@ describe("exportUserData", () => {
     expect(supabase.from).not.toHaveBeenCalledWith("todos");
   });
 
+  // v2 Stage 5a: goals carry achieved_on, and goal links (goal as the source) are exported as-is.
+  it("exports each goal's achieved_on and every link row unchanged", async () => {
+    const goal = { id: "g1", title: "Run a 10K", status: "achieved", achieved_on: "2026-09-15" };
+    const link = { id: "l1", source_type: "goal", source_id: "g1", target_type: "exercise", target_id: "e1" };
+    for (const table of TABLE_ORDER) {
+      const rows = table === "goals" ? [goal] : table === "links" ? [link] : [];
+      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(rows, null)));
+    }
+
+    const result = await exportUserData();
+
+    expect(result.data?.goals).toEqual([goal]);
+    expect(result.data?.links).toEqual([link]);
+    expect(supabase.from.mock.results[TABLE_ORDER.indexOf("goals")].value.select).toHaveBeenCalledWith("*");
+  });
+
   it("defaults each table to an empty array when data is null", async () => {
     for (const _table of TABLE_ORDER) {
       supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));

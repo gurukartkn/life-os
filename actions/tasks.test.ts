@@ -182,18 +182,35 @@ describe("deleteTask", () => {
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it("deletes the task by id and revalidates /tasks", async () => {
+  it("deletes the task by id, then the links to it, and revalidates /tasks and /goals", async () => {
     const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+    supabase.from
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)))
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
 
     const result = await deleteTask(VALID_ID);
 
+    expect(supabase.from.mock.calls.map((call) => call[0])).toEqual(["tasks", "links"]);
     const builder = supabase.from.mock.results[0].value;
-    expect(supabase.from).toHaveBeenCalledWith("tasks");
     expect(builder.delete).toHaveBeenCalled();
     expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
+    const links = supabase.from.mock.results[1].value;
+    expect(links.delete).toHaveBeenCalled();
+    expect(links.eq.mock.calls).toEqual([
+      ["target_type", "task"],
+      ["target_id", VALID_ID],
+    ]);
     expect(revalidatePath).toHaveBeenCalledWith("/tasks");
+    expect(revalidatePath).toHaveBeenCalledWith("/goals", "layout");
     expect(result).toEqual({ success: true });
+  });
+
+  it("still reports the task deleted when the link clean-up fails", async () => {
+    supabase.from
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)))
+      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+
+    expect(await deleteTask(VALID_ID)).toEqual({ success: true });
   });
 
   it("maps a Supabase error to a friendly message", async () => {
