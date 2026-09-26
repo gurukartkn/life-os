@@ -38,6 +38,8 @@ const CHAIN_METHODS = [
   "eq",
   "neq",
   "in",
+  "gte",
+  "lte",
   "order",
   "limit",
 ] as const;

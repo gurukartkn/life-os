@@ -270,6 +270,8 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          repeat_every: number | null
+          repeat_rule: string
           routine_id: string
           sort_order: number
           title: string
@@ -279,6 +281,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          repeat_every?: number | null
+          repeat_rule?: string
           routine_id: string
           sort_order?: number
           title: string
@@ -288,6 +292,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          repeat_every?: number | null
+          repeat_rule?: string
           routine_id?: string
           sort_order?: number
           title?: string
@@ -307,23 +313,38 @@ export type Database = {
         Row: {
           cadence: string
           created_at: string
+          frequency: string
           id: string
+          is_active: boolean
+          time_of_day: string
+          times_per_week: number | null
           title: string
           user_id: string
+          weekdays: number[] | null
         }
         Insert: {
-          cadence: string
+          cadence?: string
           created_at?: string
+          frequency?: string
           id?: string
+          is_active?: boolean
+          time_of_day?: string
+          times_per_week?: number | null
           title: string
           user_id: string
+          weekdays?: number[] | null
         }
         Update: {
           cadence?: string
           created_at?: string
+          frequency?: string
           id?: string
+          is_active?: boolean
+          time_of_day?: string
+          times_per_week?: number | null
           title?: string
           user_id?: string
+          weekdays?: number[] | null
         }
         Relationships: []
       }
