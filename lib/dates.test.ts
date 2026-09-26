@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  formatClockTime,
   formatDateTime,
   formatDueDate,
   formatRelativeTime,
+  formatShortDate,
   isOverdue,
-  periodStartFor,
   todayIso,
   workoutLogStamp,
 } from "./dates";
@@ -53,13 +54,15 @@ describe("dates", () => {
     });
   });
 
-  describe("periodStartFor", () => {
-    it("returns today for a daily cadence", () => {
-      expect(periodStartFor("daily")).toBe("2026-09-17");
+  describe("formatShortDate", () => {
+    it("reads as weekday, day and short month", () => {
+      expect(formatShortDate("2026-09-21")).toBe("Mon 21 Sep");
     });
+  });
 
-    it("returns that week's Monday for a weekly cadence", () => {
-      expect(periodStartFor("weekly")).toBe("2026-09-14");
+  describe("formatClockTime", () => {
+    it("gives a lower-case clock time in the given timezone", () => {
+      expect(formatClockTime("2026-09-21T13:12:00.000Z", "Asia/Kolkata")).toBe("6:42 pm");
     });
   });
 

@@ -1,31 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  addRoutineItem,
-  archiveRoutineItem,
-  createRoutine,
-  deleteRoutine,
-  toggleRoutineItem,
-} from "@/actions/routines";
+import { createRoutine, setRoutineActive, toggleRoutineItem, updateRoutine } from "@/actions/routines";
 import { createClient } from "@/lib/supabase/server";
 import { makeQueryBuilder, makeSupabaseMock, queryResult, type SupabaseMock } from "@/lib/test/supabase-mock";
-import type { CreateRoutineInput } from "@/lib/validations/routines";
+import type { RoutineFormInput } from "@/lib/validations/routines";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 const mockedCreateClient = vi.mocked(createClient);
-const VALID_ID = "550e8400-e29b-41d4-a716-446655440000";
 const ROUTINE_ID = "5b6f3d40-4444-4a11-8b11-444444444444";
 const ITEM_ID = "5b6f3d40-5555-4a11-8b11-555555555555";
+const OLD_ITEM = "5b6f3d40-6666-4a11-8b11-666666666666";
 
-const validInput: CreateRoutineInput = {
-  title: "Morning Routine",
-  cadence: "daily",
-  items: [{ title: "Drink water" }],
-};
+function input(overrides: Partial<RoutineFormInput> = {}): RoutineFormInput {
+  return {
+    title: "Skincare",
+    timeOfDay: "evening",
+    frequency: "daily",
+    timesPerWeek: null,
+    weekdays: null,
+    items: [
+      { title: "Cleanser", repeatRule: "every_time", repeatEvery: null, isActive: true },
+      { title: "Exfoliate", repeatRule: "every_nth", repeatEvery: 2, isActive: true },
+    ],
+    ...overrides,
+  };
+}
 
 let supabase: SupabaseMock;
+
+function queue(...results: ReturnType<typeof queryResult>[]) {
+  for (const result of results) supabase.from.mockReturnValueOnce(makeQueryBuilder(result));
+}
+
+const builder = (index: number) => supabase.from.mock.results[index].value;
 
 beforeEach(() => {
   supabase = makeSupabaseMock();
@@ -33,268 +42,181 @@ beforeEach(() => {
 });
 
 describe("createRoutine", () => {
-  it("returns a validation error and never calls Supabase when there are no items", async () => {
-    const result = await createRoutine({ title: "Morning Routine", cadence: "daily", items: [] });
+  it("refuses a routine with no items, without calling Supabase", async () => {
+    const result = await createRoutine(input({ items: [] }));
 
     expect(result).toEqual({ success: false, error: "Add at least one item." });
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
+  it("requires days for a specific-days routine", async () => {
+    const result = await createRoutine(input({ frequency: "specific_days", weekdays: [] }));
+    expect(result).toEqual({ success: false, error: "Pick at least one day." });
+  });
+
   it("requires the user to be logged in", async () => {
     supabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
 
-    const result = await createRoutine(validInput);
-
-    expect(result).toEqual({ success: false, error: "You need to be logged in." });
+    expect(await createRoutine(input())).toEqual({ success: false, error: "You need to be logged in." });
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it("inserts the routine, then its items, and redirects to /routines", async () => {
-    const { revalidatePath } = await import("next/cache");
+  it("inserts the routine with its schedule, then its items in order, and redirects to /routines", async () => {
     const { redirect } = await import("next/navigation");
-    supabase.from
-      .mockReturnValueOnce(makeQueryBuilder(queryResult({ id: ROUTINE_ID }, null)))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+    const { revalidatePath } = await import("next/cache");
+    queue(queryResult({ id: ROUTINE_ID }), queryResult(null));
 
-    await createRoutine(validInput);
+    await createRoutine(input());
 
-    expect(supabase.from).toHaveBeenNthCalledWith(1, "routines");
-    const routineBuilder = supabase.from.mock.results[0].value;
-    expect(routineBuilder.insert).toHaveBeenCalledWith({
+    expect(builder(0).insert).toHaveBeenCalledWith({
       user_id: "user-1",
-      title: "Morning Routine",
-      cadence: "daily",
+      title: "Skincare",
+      time_of_day: "evening",
+      frequency: "daily",
+      times_per_week: null,
+      weekdays: null,
     });
-
-    expect(supabase.from).toHaveBeenNthCalledWith(2, "routine_items");
-    const itemsBuilder = supabase.from.mock.results[1].value;
-    expect(itemsBuilder.insert).toHaveBeenCalledWith([
-      { user_id: "user-1", routine_id: ROUTINE_ID, title: "Drink water", sort_order: 0 },
+    expect(builder(1).insert).toHaveBeenCalledWith([
+      expect.objectContaining({ title: "Cleanser", repeat_rule: "every_time", repeat_every: null, sort_order: 0 }),
+      expect.objectContaining({ title: "Exfoliate", repeat_rule: "every_nth", repeat_every: 2, sort_order: 1 }),
     ]);
-
-    expect(revalidatePath).toHaveBeenCalledWith("/routines");
+    expect(revalidatePath).toHaveBeenCalledWith("/routines", "layout");
     expect(redirect).toHaveBeenCalledWith("/routines");
   });
 
-  it("maps a Supabase error creating the routine to a friendly message", async () => {
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+  it("treats all seven days as Daily", async () => {
+    queue(queryResult({ id: ROUTINE_ID }), queryResult(null));
 
-    const result = await createRoutine(validInput);
+    await createRoutine(input({ frequency: "specific_days", weekdays: [1, 2, 3, 4, 5, 6, 7] }));
 
-    expect(result).toEqual({ success: false, error: "Couldn't create the routine. Try again." });
-    expect(supabase.from).toHaveBeenCalledTimes(1);
+    expect(builder(0).insert).toHaveBeenCalledWith(expect.objectContaining({ frequency: "daily", weekdays: null }));
   });
 
-  it("rolls back the routine when adding items fails", async () => {
-    supabase.from
-      .mockReturnValueOnce(makeQueryBuilder(queryResult({ id: ROUTINE_ID }, null)))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
+  it("keeps N times a week, and sorts specific days", async () => {
+    queue(queryResult({ id: ROUTINE_ID }), queryResult(null));
+    await createRoutine(input({ frequency: "times_per_week", timesPerWeek: 3 }));
+    expect(builder(0).insert).toHaveBeenCalledWith(expect.objectContaining({ frequency: "times_per_week", times_per_week: 3 }));
 
-    const result = await createRoutine(validInput);
+    queue(queryResult({ id: ROUTINE_ID }), queryResult(null));
+    await createRoutine(input({ frequency: "specific_days", weekdays: [7, 3] }));
+    expect(builder(2).insert).toHaveBeenCalledWith(expect.objectContaining({ weekdays: [3, 7], times_per_week: null }));
+  });
+
+  it("removes the routine again when its items can't be saved", async () => {
+    queue(queryResult({ id: ROUTINE_ID }), queryResult(null, { message: "boom" }), queryResult(null));
+
+    const result = await createRoutine(input());
 
     expect(result).toEqual({ success: false, error: "Couldn't add items to the routine. Try again." });
-    expect(supabase.from).toHaveBeenNthCalledWith(3, "routines");
-    const rollbackBuilder = supabase.from.mock.results[2].value;
-    expect(rollbackBuilder.delete).toHaveBeenCalled();
-    expect(rollbackBuilder.eq).toHaveBeenCalledWith("id", ROUTINE_ID);
+    expect(builder(2).delete).toHaveBeenCalled();
   });
 });
 
-describe("deleteRoutine", () => {
-  it("rejects an invalid id without calling Supabase", async () => {
-    const result = await deleteRoutine("not-a-uuid");
-
-    expect(result.success).toBe(false);
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  it("deletes the routine by id and revalidates /routines", async () => {
-    const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    const result = await deleteRoutine(VALID_ID);
-
-    expect(supabase.from).toHaveBeenCalledWith("routines");
-    const builder = supabase.from.mock.results[0].value;
-    expect(builder.delete).toHaveBeenCalled();
-    expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
-    expect(revalidatePath).toHaveBeenCalledWith("/routines");
-    expect(result).toEqual({ success: true });
-  });
-
-  it("maps a Supabase error to a friendly message", async () => {
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
-
-    const result = await deleteRoutine(VALID_ID);
-
-    expect(result).toEqual({ success: false, error: "Couldn't delete the routine. Try again." });
-  });
-});
-
-describe("addRoutineItem", () => {
-  it("returns a validation error and never calls Supabase when the title is empty", async () => {
-    const result = await addRoutineItem({ routine_id: ROUTINE_ID, title: "" });
-
-    expect(result).toEqual({ success: false, error: "Enter a title." });
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  it("requires the user to be logged in", async () => {
-    supabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
-
-    const result = await addRoutineItem({ routine_id: ROUTINE_ID, title: "Stretch" });
-
-    expect(result).toEqual({ success: false, error: "You need to be logged in." });
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  it("appends the item after the current count and revalidates both paths", async () => {
-    const { revalidatePath } = await import("next/cache");
-    supabase.from
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null, 2)))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    const result = await addRoutineItem({ routine_id: ROUTINE_ID, title: "Stretch" });
-
-    expect(supabase.from).toHaveBeenNthCalledWith(1, "routine_items");
-    const countBuilder = supabase.from.mock.results[0].value;
-    expect(countBuilder.eq).toHaveBeenCalledWith("routine_id", ROUTINE_ID);
-
-    expect(supabase.from).toHaveBeenNthCalledWith(2, "routine_items");
-    const insertBuilder = supabase.from.mock.results[1].value;
-    expect(insertBuilder.insert).toHaveBeenCalledWith({
-      user_id: "user-1",
-      routine_id: ROUTINE_ID,
-      title: "Stretch",
-      sort_order: 2,
-    });
-
-    expect(revalidatePath).toHaveBeenCalledWith(`/routines/${ROUTINE_ID}`);
-    expect(revalidatePath).toHaveBeenCalledWith("/routines");
-    expect(result).toEqual({ success: true });
-  });
-
-  it("defaults sort_order to 0 when no count is returned", async () => {
-    supabase.from
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null, null)))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    await addRoutineItem({ routine_id: ROUTINE_ID, title: "Stretch" });
-
-    const insertBuilder = supabase.from.mock.results[1].value;
-    expect(insertBuilder.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ sort_order: 0 })
+describe("updateRoutine", () => {
+  it("updates the routine, keeps and inserts items in order, and removes the ones left out", async () => {
+    queue(
+      queryResult({ id: ROUTINE_ID }), // routine update
+      queryResult([{ id: ITEM_ID }, { id: OLD_ITEM }]), // existing items
+      queryResult(null), // update kept item
+      queryResult(null), // insert new item
+      queryResult(null) // delete removed item
     );
+
+    const result = await updateRoutine(
+      ROUTINE_ID,
+      input({
+        items: [
+          { title: "New item", repeatRule: "weekly", repeatEvery: null, isActive: true },
+          { id: ITEM_ID, title: "Cleanser", repeatRule: "every_time", repeatEvery: null, isActive: false },
+        ],
+      })
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(builder(0).update).toHaveBeenCalledWith(expect.objectContaining({ title: "Skincare", time_of_day: "evening" }));
+    expect(builder(2).insert).toHaveBeenCalledWith(
+      expect.objectContaining({ routine_id: ROUTINE_ID, title: "New item", repeat_rule: "weekly", sort_order: 0 })
+    );
+    expect(builder(3).update).toHaveBeenCalledWith(expect.objectContaining({ title: "Cleanser", is_active: false, sort_order: 1 }));
+    expect(builder(3).eq).toHaveBeenCalledWith("id", ITEM_ID);
+    expect(builder(4).delete).toHaveBeenCalled();
+    expect(builder(4).in).toHaveBeenCalledWith("id", [OLD_ITEM]);
   });
 
-  it("maps a Supabase error to a friendly message", async () => {
-    supabase.from
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, null, 0)))
-      .mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+  it("refuses an item id that isn't part of the routine", async () => {
+    queue(queryResult({ id: ROUTINE_ID }), queryResult([{ id: OLD_ITEM }]));
 
-    const result = await addRoutineItem({ routine_id: ROUTINE_ID, title: "Stretch" });
+    const result = await updateRoutine(
+      ROUTINE_ID,
+      input({ items: [{ id: ITEM_ID, title: "Cleanser", repeatRule: "every_time", repeatEvery: null, isActive: true }] })
+    );
 
-    expect(result).toEqual({ success: false, error: "Couldn't add the item. Try again." });
+    expect(result).toEqual({ success: false, error: "An item doesn't belong to this routine." });
+  });
+
+  it("says so when the routine no longer exists", async () => {
+    queue(queryResult(null));
+    expect(await updateRoutine(ROUTINE_ID, input())).toEqual({ success: false, error: "That routine no longer exists." });
+  });
+
+  it("needs at least one active item", async () => {
+    const result = await updateRoutine(
+      ROUTINE_ID,
+      input({ items: [{ id: ITEM_ID, title: "Cleanser", repeatRule: "every_time", repeatEvery: null, isActive: false }] })
+    );
+    expect(result).toEqual({ success: false, error: "Add at least one item." });
   });
 });
 
-describe("archiveRoutineItem", () => {
-  it("rejects an invalid id without calling Supabase", async () => {
-    const result = await archiveRoutineItem("not-a-uuid", ROUTINE_ID);
+describe("setRoutineActive", () => {
+  it("archives and restores a routine", async () => {
+    queue(queryResult(null), queryResult(null));
 
-    expect(result.success).toBe(false);
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  it("marks the item inactive and revalidates both paths", async () => {
-    const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    const result = await archiveRoutineItem(ITEM_ID, ROUTINE_ID);
-
-    expect(supabase.from).toHaveBeenCalledWith("routine_items");
-    const builder = supabase.from.mock.results[0].value;
-    expect(builder.update).toHaveBeenCalledWith({ is_active: false });
-    expect(builder.eq).toHaveBeenCalledWith("id", ITEM_ID);
-    expect(revalidatePath).toHaveBeenCalledWith(`/routines/${ROUTINE_ID}`);
-    expect(revalidatePath).toHaveBeenCalledWith("/routines");
-    expect(result).toEqual({ success: true });
+    expect(await setRoutineActive(ROUTINE_ID, false)).toEqual({ success: true });
+    expect(builder(0).update).toHaveBeenCalledWith({ is_active: false });
+    expect(await setRoutineActive(ROUTINE_ID, true)).toEqual({ success: true });
+    expect(builder(1).update).toHaveBeenCalledWith({ is_active: true });
   });
 
   it("maps a Supabase error to a friendly message", async () => {
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
-
-    const result = await archiveRoutineItem(ITEM_ID, ROUTINE_ID);
-
-    expect(result).toEqual({ success: false, error: "Couldn't remove the item. Try again." });
+    queue(queryResult(null, { message: "down" }));
+    expect(await setRoutineActive(ROUTINE_ID, false)).toEqual({
+      success: false,
+      error: "Couldn't archive the routine. Try again.",
+    });
   });
 });
 
 describe("toggleRoutineItem", () => {
-  const PERIOD_START = "2026-09-14";
-
-  it("returns a validation error and never calls Supabase for an invalid id", async () => {
-    const result = await toggleRoutineItem("not-a-uuid", PERIOD_START, true, ROUTINE_ID);
-
+  it("rejects a bad date without calling Supabase", async () => {
+    const result = await toggleRoutineItem(ITEM_ID, "23/09/2026", true);
     expect(result.success).toBe(false);
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
-  it("requires the user to be logged in when checking an item", async () => {
-    supabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+  it("records a completion for the day when checking", async () => {
+    queue(queryResult(null));
 
-    const result = await toggleRoutineItem(ITEM_ID, PERIOD_START, true, ROUTINE_ID);
-
-    expect(result).toEqual({ success: false, error: "You need to be logged in." });
-    expect(supabase.from).not.toHaveBeenCalled();
-  });
-
-  it("upserts a completion when checking the item", async () => {
-    const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    const result = await toggleRoutineItem(ITEM_ID, PERIOD_START, true, ROUTINE_ID);
-
-    expect(supabase.from).toHaveBeenCalledWith("routine_completions");
-    const builder = supabase.from.mock.results[0].value;
-    expect(builder.upsert).toHaveBeenCalledWith(
-      { user_id: "user-1", routine_item_id: ITEM_ID, period_start: PERIOD_START },
+    expect(await toggleRoutineItem(ITEM_ID, "2026-09-23", true)).toEqual({ success: true });
+    expect(builder(0).upsert).toHaveBeenCalledWith(
+      { user_id: "user-1", routine_item_id: ITEM_ID, period_start: "2026-09-23" },
       { onConflict: "routine_item_id,period_start" }
     );
-    expect(revalidatePath).toHaveBeenCalledWith(`/routines/${ROUTINE_ID}`);
-    expect(revalidatePath).toHaveBeenCalledWith("/routines");
-    expect(result).toEqual({ success: true });
   });
 
-  it("maps a Supabase error to a friendly message when checking fails", async () => {
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
+  it("removes the day's completion when unchecking", async () => {
+    queue(queryResult(null));
 
-    const result = await toggleRoutineItem(ITEM_ID, PERIOD_START, true, ROUTINE_ID);
-
-    expect(result).toEqual({ success: false, error: "Couldn't update the item. Try again." });
+    expect(await toggleRoutineItem(ITEM_ID, "2026-09-23", false)).toEqual({ success: true });
+    expect(builder(0).delete).toHaveBeenCalled();
+    expect(builder(0).eq).toHaveBeenCalledWith("period_start", "2026-09-23");
   });
 
-  it("deletes the completion when unchecking the item, without an auth check", async () => {
-    const { revalidatePath } = await import("next/cache");
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-
-    const result = await toggleRoutineItem(ITEM_ID, PERIOD_START, false, ROUTINE_ID);
-
-    expect(supabase.from).toHaveBeenCalledWith("routine_completions");
-    const builder = supabase.from.mock.results[0].value;
-    expect(builder.delete).toHaveBeenCalled();
-    expect(builder.eq).toHaveBeenCalledWith("routine_item_id", ITEM_ID);
-    expect(builder.eq).toHaveBeenCalledWith("period_start", PERIOD_START);
-    expect(revalidatePath).toHaveBeenCalledWith(`/routines/${ROUTINE_ID}`);
-    expect(result).toEqual({ success: true });
-  });
-
-  it("maps a Supabase error to a friendly message when unchecking fails", async () => {
-    supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, { message: "db exploded" })));
-
-    const result = await toggleRoutineItem(ITEM_ID, PERIOD_START, false, ROUTINE_ID);
-
-    expect(result).toEqual({ success: false, error: "Couldn't update the item. Try again." });
+  it("maps a Supabase error to a friendly message", async () => {
+    queue(queryResult(null, { message: "down" }));
+    expect(await toggleRoutineItem(ITEM_ID, "2026-09-23", true)).toEqual({
+      success: false,
+      error: "Couldn't update the item. Try again.",
+    });
   });
 });

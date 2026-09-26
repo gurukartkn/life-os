@@ -6,6 +6,8 @@ Companion to the PRD and Build Workflow. MVP domains: **Tasks, Fitness, Routines
 
 > **v2 Stage 2 (2026-09-21):** the `todos` table was renamed to `tasks` (primary key and foreign key renamed with it, RLS policy unchanged) and the `links` type value `todo` became `task`. Applied to life-os-dev and life-os-prod by `supabase/migrations/20260921193344_rename_todos_to_tasks.sql`; the inverse is `supabase/rollbacks/20260921193344_rename_todos_to_tasks.down.sql`.
 
+> **v2 Routines (2026-09-26):** `routines` gains `time_of_day` (morning / afternoon / evening / anytime), `frequency` (daily / times_per_week / specific_days) with `times_per_week` (1–6) and `weekdays` (ISO 1–7, 1–6 of them), and `is_active` (archive). `routine_items` gains `repeat_rule` (every_time / every_nth / weekly) and `repeat_every` (2–30, for every_nth). Check constraints keep each shape consistent. `cadence` stays, defaulted to `daily`, until a contract migration drops it; weekly routines became "1 time a week". `routine_completions.period_start` is now always the day an item was done (in the user's timezone). Applied to life-os-dev and life-os-prod by `supabase/migrations/20260926120000_routines_scheduling.sql`; the inverse is `supabase/rollbacks/20260926120000_routines_scheduling.down.sql`.
+
 ## Entities
 
 13 tables total, plus Supabase's own `auth.users`:

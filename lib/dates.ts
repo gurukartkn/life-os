@@ -3,7 +3,6 @@ import {
   isToday,
   isTomorrow,
   parseISO,
-  startOfWeek,
 } from "date-fns";
 
 // Tasks store due_date as a plain "YYYY-MM-DD" date column, parsed as local midnight.
@@ -27,15 +26,6 @@ export function workoutLogStamp(
   now: Date = new Date()
 ): { performed_at: string; performed_on: string } {
   return { performed_at: now.toISOString(), performed_on: todayIso(timeZone, now) };
-}
-
-// Routine completions are period-stamped: the day itself for a daily routine,
-// or that week's Monday for a weekly one — the "period_start" row a completion attaches to.
-export function periodStartFor(cadence: string): string {
-  if (cadence === "weekly") {
-    return format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
-  }
-  return todayIso();
 }
 
 // A friendly "Sep 21, 2026 at 8:00 AM" rendering of an instant (workout_logs.performed_at)

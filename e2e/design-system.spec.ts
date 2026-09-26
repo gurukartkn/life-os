@@ -60,7 +60,7 @@ test("every text input on the login page shares one style", async ({ browser }) 
   await context.close();
 });
 
-test("Add task, New workout and New routine buttons share one shape (tone differs)", async ({ page }) => {
+test("Add task, New workout and New routine are one primary button", async ({ page }) => {
   await forceTheme(page, "light");
 
   await page.goto("/tasks");
@@ -82,9 +82,9 @@ test("Add task, New workout and New routine buttons share one shape (tone differ
   expect(addTask.height).toBe("40px");
   expect(addTask.radius).toBe("10px");
 
-  // Header actions: violet for Tasks and Fitness (the hi-fi mockups), blue (-fill) for Routines until its PR.
+  // Every header action is the same violet primary (the hi-fi mockups).
   expect(addTask.background).toBe("rgb(108, 76, 245)");
   // New workout is the same violet primary as Add task (Workouts board).
   expect(newWorkout.background).toBe("rgb(108, 76, 245)");
-  expect(newRoutine.background).toBe("rgb(57, 121, 179)");
+  expect(newRoutine.background).toBe("rgb(108, 76, 245)");
 });
