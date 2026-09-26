@@ -1,74 +1,102 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { PastLogView } from "./past-log-view";
-import type { PastWorkoutLog } from "@/lib/queries/fitness";
+import type { PastLogExercise, PastWorkoutLog } from "@/lib/queries/fitness";
 
-const LOG: PastWorkoutLog = {
-  id: "log-1",
-  workoutId: "w-1",
-  workoutName: "Push Day (renamed)",
-  performedOn: "2026-09-20",
-  performedAt: "2026-09-20T08:00:00.000Z",
-  notes: null,
-  exercises: [
-    {
-      workoutExerciseId: "we-1",
-      exerciseId: "ex-fly",
-      exerciseName: "Cable fly",
-      exerciseType: "weight_training",
-      targetSets: 3,
-      targetReps: "10-12",
-      sets: [],
-      removedFromWorkout: false,
-    },
-    {
-      workoutExerciseId: "we-2",
-      exerciseId: "ex-bench",
-      exerciseName: "Bench press",
-      exerciseType: "weight_training",
-      targetSets: 3,
-      targetReps: "8",
-      sets: [
-        { id: "s1", setNumber: 1, weight: 100, reps: 8, durationSeconds: null },
-        { id: "s2", setNumber: 2, weight: 105, reps: 6, durationSeconds: null },
-      ],
-      removedFromWorkout: false,
-    },
-    {
-      workoutExerciseId: null,
-      exerciseId: "ex-row",
-      exerciseName: "Barbell row",
-      exerciseType: "weight_training",
-      targetSets: null,
-      targetReps: null,
-      sets: [{ id: "s3", setNumber: 1, weight: 60, reps: 10, durationSeconds: null }],
-      removedFromWorkout: true,
-    },
-  ],
-};
+function exercise(overrides: Partial<PastLogExercise>): PastLogExercise {
+  return {
+    workoutExerciseId: "we-1",
+    exerciseId: "ex-1",
+    exerciseName: "Bench press",
+    exerciseType: "weight_training",
+    targetSets: 3,
+    targetReps: "8",
+    muscleGroups: ["Chest", "Triceps"],
+    sets: [],
+    removedFromWorkout: false,
+    addedAfterSession: false,
+    ...overrides,
+  };
+}
+
+function log(exercises: PastLogExercise[], overrides: Partial<PastWorkoutLog> = {}): PastWorkoutLog {
+  return {
+    id: "log-1",
+    workoutId: "w-1",
+    workoutName: "Upper body A",
+    performedOn: "2026-09-12",
+    performedAt: "2026-09-12T09:48:00.000Z",
+    startedAt: "2026-09-12T09:00:00.000Z",
+    notes: null,
+    setCount: 3,
+    exercises,
+    ...overrides,
+  };
+}
+
+const set = (setNumber: number, weight: number, reps: number) => ({
+  id: `s${setNumber}`,
+  setNumber,
+  weight,
+  reps,
+  durationSeconds: null,
+});
 
 describe("PastLogView", () => {
-  it("renders the workout name, exercises and their sets", () => {
-    render(<PastLogView log={LOG} timeZone="UTC" />);
+  it("shows the header, when it finished, how long it took and the sets per exercise", () => {
+    render(<PastLogView log={log([exercise({ sets: [set(1, 60, 8), set(2, 62.5, 6)] })])} />);
 
-    expect(screen.getByText("Push Day (renamed)")).toBeInTheDocument();
-    expect(screen.getByText("Cable fly")).toBeInTheDocument();
-    expect(screen.getByText("No sets logged.")).toBeInTheDocument();
-    expect(screen.getByText("Set 1: 100 × 8")).toBeInTheDocument();
-    expect(screen.getByText("Set 2: 105 × 6")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Upper body A" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Edit workout" })).toHaveAttribute("href", "/fitness/workouts/w-1/edit");
+    expect(screen.getByText(/^Finished .* · Sat 12 Sep$/)).toBeInTheDocument();
+    expect(screen.getByText("48 min · 3 sets logged")).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "Bench press" });
+    expect(within(card).getByText("Weight training · Chest, Triceps")).toBeInTheDocument();
+    expect(within(card).getByText("62.5 lb")).toBeInTheDocument();
+    expect(within(card).getByText("6")).toBeInTheDocument();
   });
 
-  it("flags a removed exercise but still shows its sets", () => {
-    render(<PastLogView log={LOG} timeZone="UTC" />);
+  it("flags an exercise added since the session, with no sets", () => {
+    render(<PastLogView log={log([exercise({ addedAfterSession: true })])} />);
 
-    expect(screen.getByText("Barbell row")).toBeInTheDocument();
-    expect(screen.getByText("Removed from workout")).toBeInTheDocument();
-    expect(screen.getByText("Set 1: 60 × 10")).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "Bench press" });
+    expect(within(card).getByText("Added after this session")).toBeInTheDocument();
+    expect(within(card).getByText("No sets logged")).toBeInTheDocument();
   });
 
-  it("falls back to 'Ad-hoc workout' when the log has no workout", () => {
-    render(<PastLogView log={{ ...LOG, workoutName: null }} timeZone="UTC" />);
+  it("flags an exercise removed from the workout, keeping its sets", () => {
+    render(
+      <PastLogView
+        log={log([exercise({ workoutExerciseId: null, exerciseName: "Lateral raise", removedFromWorkout: true, sets: [set(1, 8, 12)] })])}
+      />
+    );
 
-    expect(screen.getByText("Ad-hoc workout")).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "Lateral raise" });
+    expect(within(card).getByText("removed from workout")).toBeInTheDocument();
+    expect(within(card).getByText("8 lb")).toBeInTheDocument();
+  });
+
+  it("shows a cardio set as its duration", () => {
+    render(
+      <PastLogView
+        log={log([
+          exercise({
+            exerciseName: "Treadmill run",
+            exerciseType: "cardio",
+            sets: [{ id: "c1", setNumber: 1, weight: null, reps: null, durationSeconds: 1500 }],
+          }),
+        ])}
+      />
+    );
+
+    expect(screen.getByText("Duration")).toBeInTheDocument();
+    expect(screen.getByText("25:00 min")).toBeInTheDocument();
+  });
+
+  it("offers no Edit workout for an ad hoc log", () => {
+    render(<PastLogView log={log([], { workoutId: null, workoutName: null })} />);
+
+    expect(screen.getByRole("heading", { name: "Ad-hoc workout" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Edit workout" })).not.toBeInTheDocument();
   });
 });

@@ -149,7 +149,7 @@ describe("updateWorkout", () => {
     expect(deleteCall.delete).toHaveBeenCalled();
     expect(deleteCall.eq).toHaveBeenCalledWith("workout_id", WORKOUT_ID);
     expect(deleteCall.in).toHaveBeenCalledWith("id", [ROW_1]);
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
   });
 
   it("never deletes the workout and never touches sets or logs", async () => {

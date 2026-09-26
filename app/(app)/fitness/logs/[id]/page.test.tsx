@@ -27,19 +27,17 @@ beforeEach(() => {
 
 describe("PastWorkoutLogPage", () => {
   it("renders the past log for a real log id", async () => {
-    // Call order: getPastWorkoutLog and getUserTimezone run together (Promise.all in the
-    // page), and getPastWorkoutLog's own workout_logs read starts before its set_logs read
-    // (which waits on workout_id) — so workout_logs, then user_settings, then set_logs.
+    // An ad hoc log has no workout, so only workout_logs and then set_logs are read.
     queue(
       queryResult({
         id: LOG_ID,
         workout_id: null,
         performed_on: "2026-09-20",
-        performed_at: "2026-09-20T08:00:00.000Z",
+        performed_at: "2026-09-20T08:48:00.000Z",
+        created_at: "2026-09-20T08:00:00.000Z",
         notes: null,
         workouts: null,
       }),
-      queryResult({ timezone: "UTC" }),
       queryResult([
         {
           id: "s1",
@@ -49,25 +47,23 @@ describe("PastWorkoutLogPage", () => {
           reps: 8,
           duration_seconds: null,
           created_at: "2026-09-20T08:01:00.000Z",
-          exercises: { name: "Bench press", exercise_type: "weight_training" },
+          exercises: { name: "Bench press", exercise_type: "weight_training", exercise_muscle_groups: [] },
         },
       ])
     );
 
-    const jsx = await PastWorkoutLogPage({ params: Promise.resolve({ id: LOG_ID }) });
-    render(jsx);
+    render(await PastWorkoutLogPage({ params: Promise.resolve({ id: LOG_ID }) }));
 
-    expect(screen.getByText("Ad-hoc workout")).toBeInTheDocument();
-    expect(screen.getByText("Bench press")).toBeInTheDocument();
-    expect(screen.getByText("Set 1: 100 × 8")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ad-hoc workout" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bench press" })).toBeInTheDocument();
+    expect(screen.getByText("48 min · 1 set logged")).toBeInTheDocument();
+    expect(screen.getByText("100 lb")).toBeInTheDocument();
+    expect(screen.getByText("8")).toBeInTheDocument();
   });
 
   it("calls notFound for a log id that doesn't exist (or isn't the caller's)", async () => {
-    // getUserTimezone still fires alongside the log read, so it needs a queued result too.
-    queue(queryResult(null), queryResult({ timezone: "UTC" }));
+    queue(queryResult(null));
 
-    await expect(PastWorkoutLogPage({ params: Promise.resolve({ id: LOG_ID }) })).rejects.toThrow(
-      "NEXT_NOT_FOUND"
-    );
+    await expect(PastWorkoutLogPage({ params: Promise.resolve({ id: LOG_ID }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

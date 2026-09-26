@@ -72,7 +72,7 @@ export async function createExerciseWithTags(
     return { success: false, error: "Couldn't add the exercise. Try again." };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true, data: { id: exercise.id } };
 }
 
@@ -146,7 +146,7 @@ export async function updateExercise(input: ExerciseUpdateInput): Promise<Action
     return { success: false, error: "Couldn't update the exercise's tags. Try again." };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true };
 }
 
@@ -168,6 +168,6 @@ export async function archiveExercise(id: string): Promise<ActionResult> {
     return { success: false, error: "Couldn't archive the exercise. Try again." };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true };
 }

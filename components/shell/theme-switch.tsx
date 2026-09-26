@@ -4,9 +4,10 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/use-ui-store";
 
-// Light / Dark segmented control (sidebar footer, Settings › Appearance). Which
-// segment looks pressed follows the `dark:` variant — keyed to <html data-theme> —
-// so it is right on first paint; the store supplies aria-pressed once synced.
+// Light / Dark segmented control (sidebar footer, Settings › Appearance). Same look
+// as SegmentedControl, but which segment looks pressed follows the `dark:` variant —
+// keyed to <html data-theme> — so it is right on first paint; the store supplies
+// aria-pressed once synced.
 const SEGMENT =
   "inline-flex flex-1 items-center justify-center gap-1.5 rounded-sm border px-3 text-[13px] whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-3.5 [&_svg]:shrink-0";
 const PRESSED = "border-border-strong bg-surface-100 font-semibold text-ink";

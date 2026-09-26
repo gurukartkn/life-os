@@ -1,74 +1,61 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WorkoutLogExercise } from "./workout-log-exercise";
-import { saveSetLog } from "@/actions/workout-logs";
-import type { SetData } from "@/components/fitness/set-row";
+import type { SetData } from "./set-row";
 
-vi.mock("@/actions/workout-logs", () => ({
-  saveSetLog: vi.fn(),
-  deleteSetLog: vi.fn(),
-}));
+vi.mock("@/actions/workout-logs", () => ({ saveSetLog: vi.fn(), deleteSetLog: vi.fn() }));
 
-const mockedSave = vi.mocked(saveSetLog);
+const empty = (setNumber: number): SetData => ({ id: null, setNumber, weight: null, reps: null, durationSeconds: null });
 
-const UNSAVED_SET: SetData = { id: null, setNumber: 1, weight: null, reps: null, durationSeconds: null };
-
-function completionDot() {
-  return document.querySelector('span[aria-hidden="true"]');
+function renderExercise(props: Partial<React.ComponentProps<typeof WorkoutLogExercise>> = {}) {
+  render(
+    <WorkoutLogExercise
+      workoutLogId="log-1"
+      exerciseId="ex-1"
+      exerciseName="Bench press"
+      exerciseType="weight_training"
+      muscleGroups={["Chest", "Triceps"]}
+      targetSets={3}
+      targetReps="8"
+      initialSets={[empty(1), empty(2)]}
+      {...props}
+    />
+  );
 }
 
 describe("WorkoutLogExercise", () => {
-  beforeEach(() => {
-    mockedSave.mockReset();
+  it("shows the name, type and muscle groups, the target and weight/reps columns", () => {
+    renderExercise();
+
+    expect(screen.getByRole("heading", { name: "Bench press" })).toBeInTheDocument();
+    expect(screen.getByText("Weight training · Chest, Triceps")).toBeInTheDocument();
+    expect(screen.getByText("Target 3 × 8")).toBeInTheDocument();
+    expect(screen.getByLabelText("Set 2 reps")).toBeInTheDocument();
   });
 
-  it("appends a new set row when '+ Add set' is clicked", async () => {
-    const user = userEvent.setup();
-    render(
-      <WorkoutLogExercise
-        workoutLogId="log-1"
-        exerciseId="ex-1"
-        exerciseName="Bench Press"
-        exerciseType="weight_training"
-        muscleGroups={[]}
-        targetSets={3}
-        initialSets={[UNSAVED_SET]}
-      />
-    );
+  it("reads a target with no reps as a number of sets", () => {
+    renderExercise({ targetReps: null, targetSets: 2 });
+    expect(screen.getByText("Target 2 sets")).toBeInTheDocument();
+  });
 
+  it("adds a set after the last one, and removes one", async () => {
+    const user = userEvent.setup();
+    renderExercise();
+
+    await user.click(screen.getByRole("button", { name: "Add set" }));
+    expect(screen.getByLabelText("Set 3 weight")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove set 2" }));
     expect(screen.queryByLabelText("Set 2 weight")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "+ Add set" }));
-
-    expect(screen.getByLabelText("Set 2 weight")).toBeInTheDocument();
+    expect(screen.getByLabelText("Set 3 weight")).toBeInTheDocument();
   });
 
-  it("shows the completion checkmark once savedCount reaches targetSets, and fires onCompleteChange", async () => {
-    mockedSave.mockResolvedValue({ success: true });
-    const onCompleteChange = vi.fn();
-    const user = userEvent.setup();
-    render(
-      <WorkoutLogExercise
-        workoutLogId="log-1"
-        exerciseId="ex-1"
-        exerciseName="Bench Press"
-        exerciseType="weight_training"
-        muscleGroups={[]}
-        targetSets={1}
-        initialSets={[UNSAVED_SET]}
-        onCompleteChange={onCompleteChange}
-      />
-    );
+  it("uses a single duration column for cardio", () => {
+    renderExercise({ exerciseType: "cardio" });
 
-    await waitFor(() => expect(onCompleteChange).toHaveBeenCalledWith(false));
-    expect(completionDot()?.className).not.toContain("bg-teal");
-
-    await user.type(screen.getByLabelText("Set 1 weight"), "135");
-    await user.type(screen.getByLabelText("Set 1 reps"), "10");
-    await user.click(screen.getByRole("button", { name: "Save set 1" }));
-
-    await waitFor(() => expect(onCompleteChange).toHaveBeenLastCalledWith(true));
-    expect(completionDot()?.className).toContain("bg-teal");
+    expect(screen.getByText("Duration")).toBeInTheDocument();
+    expect(screen.queryByText("Weight")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Set 1 duration in seconds")).toBeInTheDocument();
   });
 });

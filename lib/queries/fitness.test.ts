@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getCatalogItems, getExercisesWithTags, getPastWorkoutLog } from "@/lib/queries/fitness";
+import {
+  getCatalogItems,
+  getCatalogUsage,
+  getExercisesWithTags,
+  getPastWorkoutLog,
+  getRecentSessions,
+  getWorkoutSummaries,
+  loadExercisesWithTags,
+} from "@/lib/queries/fitness";
 import { makeQueryBuilder, makeSupabaseMock, queryResult } from "@/lib/test/supabase-mock";
 import type { Database } from "@/lib/types/database";
 
@@ -23,16 +31,18 @@ const logRow = (workoutId: string | null, workoutName: string | null) =>
     workout_id: workoutId,
     performed_on: "2026-09-20",
     performed_at: "2026-09-20T08:00:00+00:00",
+    created_at: "2026-09-20T07:10:00+00:00",
     notes: null,
     workouts: workoutName ? { name: workoutName } : null,
   });
 
-const workoutExercise = (id: string, exerciseId: string, name: string) => ({
+const workoutExercise = (id: string, exerciseId: string, name: string, createdAt = "2026-09-01T00:00:00Z") => ({
   id,
   exercise_id: exerciseId,
   target_sets: 3,
   target_reps: "8-10",
-  exercises: { name, exercise_type: "weight_training" },
+  created_at: createdAt,
+  exercises: { name, exercise_type: "weight_training", exercise_muscle_groups: [{ muscle_groups: { name: "Chest" } }] },
 });
 
 const setRow = (
@@ -58,8 +68,12 @@ describe("getPastWorkoutLog", () => {
   it("returns the live workout name, current exercises in order with this log's sets, then removed exercises flagged", async () => {
     const { client } = clientWith(
       logRow(WORKOUT_ID, "Push Day (renamed)"),
-      // The workout now: Fly first, Bench second. Squat was dropped, Row was dropped earlier than Squat's sets.
-      queryResult([workoutExercise("w1", FLY, "Cable fly"), workoutExercise("w2", BENCH, "Bench press")]),
+      // The workout now: Fly first (added after this session), Bench second. Squat was
+      // dropped, Row was dropped earlier than Squat's sets.
+      queryResult([
+        workoutExercise("w1", FLY, "Cable fly", "2026-09-21T10:00:00Z"),
+        workoutExercise("w2", BENCH, "Bench press"),
+      ]),
       queryResult([
         setRow("s1", BENCH, "Bench press", 2, "2026-09-20T08:10:00Z", 105, 6),
         setRow("s2", BENCH, "Bench press", 1, "2026-09-20T08:05:00Z", 100, 8),
@@ -76,7 +90,16 @@ describe("getPastWorkoutLog", () => {
       workoutName: "Push Day (renamed)",
       performedOn: "2026-09-20",
       performedAt: "2026-09-20T08:00:00+00:00",
+      startedAt: "2026-09-20T07:10:00+00:00",
+      setCount: 4,
     });
+    expect(log?.exercises.map((e) => [e.exerciseName, e.addedAfterSession])).toEqual([
+      ["Cable fly", true],
+      ["Bench press", false],
+      ["Barbell row", false],
+      ["Squat", false],
+    ]);
+    expect(log?.exercises[1].muscleGroups).toEqual(["Chest"]);
     expect(log?.exercises.map((e) => [e.exerciseName, e.removedFromWorkout, e.workoutExerciseId])).toEqual([
       ["Cable fly", false, "w1"], // added since: no sets logged
       ["Bench press", false, "w2"],
@@ -204,5 +227,94 @@ describe("getCatalogItems", () => {
 
     expect(supabase.from.mock.results[0].value.eq).not.toHaveBeenCalled();
     expect(items).toEqual([{ id: "e1", name: "Barbell", isActive: false }]);
+  });
+});
+
+describe("getCatalogUsage", () => {
+  it("counts how many exercises link to each item", async () => {
+    const { supabase, client } = clientWith(queryResult([{ item_id: "a" }, { item_id: "b" }, { item_id: "a" }]));
+
+    expect(await getCatalogUsage(client, "muscle_groups")).toEqual({ a: 2, b: 1 });
+    expect(supabase.from).toHaveBeenCalledWith("exercise_muscle_groups");
+  });
+
+  it("reads the equipment join table for equipment, and gives up quietly on an error", async () => {
+    const { supabase, client } = clientWith(queryResult(null, { message: "down" }));
+
+    expect(await getCatalogUsage(client, "equipment")).toEqual({});
+    expect(supabase.from).toHaveBeenCalledWith("exercise_equipment");
+  });
+});
+
+describe("getWorkoutSummaries", () => {
+  it("gives each workout its size, first three muscle groups in order, and latest session", async () => {
+    const group = (name: string) => ({ muscle_groups: { name } });
+    const { client } = clientWith(
+      queryResult([
+        {
+          id: "w1",
+          name: "Upper body A",
+          workout_exercises: [
+            { sort_order: 2, exercises: { exercise_muscle_groups: [group("Back"), group("Biceps")] } },
+            { sort_order: 0, exercises: { exercise_muscle_groups: [group("Chest"), group("Triceps")] } },
+            { sort_order: 1, exercises: { exercise_muscle_groups: [group("Chest")] } },
+          ],
+          workout_logs: [{ performed_at: "2026-09-10T08:00:00Z" }, { performed_at: "2026-09-12T08:00:00Z" }],
+        },
+      ])
+    );
+
+    expect(await getWorkoutSummaries(client)).toEqual({
+      workouts: [
+        {
+          id: "w1",
+          name: "Upper body A",
+          exerciseCount: 3,
+          muscleGroups: ["Chest", "Triceps", "Back"],
+          lastDone: "2026-09-12T08:00:00Z",
+        },
+      ],
+      error: false,
+    });
+  });
+
+  it("reports a failed read", async () => {
+    const { client } = clientWith(queryResult(null, { message: "down" }));
+    expect(await getWorkoutSummaries(client)).toEqual({ workouts: [], error: true });
+  });
+});
+
+describe("getRecentSessions", () => {
+  it("gives each session its length and set count; a session under a minute has no length", async () => {
+    const { client } = clientWith(
+      queryResult([
+        {
+          id: "l1",
+          performed_at: "2026-09-20T09:00:00Z",
+          created_at: "2026-09-20T08:05:00Z",
+          workouts: { name: "Legs" },
+          set_logs: [{ count: 16 }],
+        },
+        {
+          id: "l2",
+          performed_at: "2026-09-19T09:00:00Z",
+          created_at: "2026-09-19T09:00:00Z",
+          workouts: null,
+          set_logs: [],
+        },
+      ])
+    );
+
+    expect(await getRecentSessions(client)).toEqual([
+      { id: "l1", workoutName: "Legs", performedAt: "2026-09-20T09:00:00Z", minutes: 55, setCount: 16 },
+      { id: "l2", workoutName: "Ad-hoc workout", performedAt: "2026-09-19T09:00:00Z", minutes: null, setCount: 0 },
+    ]);
+  });
+});
+
+describe("loadExercisesWithTags", () => {
+  it("reports a failed read instead of looking empty", async () => {
+    const { client } = clientWith(queryResult(null, { message: "down" }));
+    expect(await loadExercisesWithTags(client)).toEqual({ exercises: [], error: true });
   });
 });

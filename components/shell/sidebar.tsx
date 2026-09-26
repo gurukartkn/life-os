@@ -6,7 +6,7 @@ import { ChevronDown, ChevronRight, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitch } from "@/components/shell/theme-switch";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
-import { NAV_ITEMS, isCurrent, type NavItem } from "@/components/shell/nav-items";
+import { NAV_ITEMS, isChildCurrent, isCurrent, type NavItem } from "@/components/shell/nav-items";
 import {
   SIDEBAR_CHILD_ACTIVE,
   SIDEBAR_CHILD_INACTIVE,
@@ -38,7 +38,7 @@ function LogoMark() {
 function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
   const { href, label, icon: Icon, children } = item;
   const active = isCurrent(pathname, href);
-  const childActive = children?.some((child) => isCurrent(pathname, child.href)) ?? false;
+  const childActive = children?.some((child) => isChildCurrent(pathname, child)) ?? false;
   const Chevron = active ? ChevronDown : ChevronRight;
 
   return (
@@ -61,10 +61,10 @@ function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
             <Link
               key={child.href}
               href={child.href}
-              aria-current={isCurrent(pathname, child.href) ? "page" : undefined}
+              aria-current={isChildCurrent(pathname, child) ? "page" : undefined}
               className={cn(
                 "ml-[18px]",
-                isCurrent(pathname, child.href) ? SIDEBAR_CHILD_ACTIVE : SIDEBAR_CHILD_INACTIVE
+                isChildCurrent(pathname, child) ? SIDEBAR_CHILD_ACTIVE : SIDEBAR_CHILD_INACTIVE
               )}
             >
               <span aria-hidden="true" className="w-[18px] shrink-0" />
@@ -83,7 +83,7 @@ function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
                 key={child.href}
                 href={child.href}
                 tabIndex={-1}
-                className={isCurrent(pathname, child.href) ? SIDEBAR_CHILD_ACTIVE : SIDEBAR_CHILD_INACTIVE}
+                className={isChildCurrent(pathname, child) ? SIDEBAR_CHILD_ACTIVE : SIDEBAR_CHILD_INACTIVE}
               >
                 <span aria-hidden="true" className="w-[18px] shrink-0" />
                 {child.label}

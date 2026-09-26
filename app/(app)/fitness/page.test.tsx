@@ -1,51 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import FitnessPage from "./page";
-import { createClient } from "@/lib/supabase/server";
-import {
-  makePendingQueryBuilder,
-  makeSupabaseMock,
-  type SupabaseMock,
-} from "@/lib/test/supabase-mock";
 
-vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
-vi.mock("@/actions/workouts", () => ({ deleteWorkout: vi.fn() }));
-vi.mock("@/actions/workout-logs", () => ({ startWorkoutLog: vi.fn() }));
-vi.mock("@/actions/exercises", () => ({ archiveExercise: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-
-const mockedCreateClient = vi.mocked(createClient);
-let supabase: SupabaseMock;
-
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-beforeEach(() => {
-  supabase = makeSupabaseMock();
-  mockedCreateClient.mockResolvedValue(supabase as never);
-  supabase.from.mockImplementation(() => makePendingQueryBuilder());
-});
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((path: string) => {
+    throw new Error(`NEXT_REDIRECT:${path}`);
+  }),
+}));
 
 describe("FitnessPage", () => {
-  // Regression for backlog #6: the workouts and recent-logs reads used to run in sequence.
-  it("on the Workouts tab, issues the workouts and recent-logs reads together", async () => {
-    void FitnessPage({ searchParams: Promise.resolve({}) });
-    await flush();
-
-    expect(supabase.from.mock.calls.map((call) => call[0]).sort()).toEqual([
-      "workout_logs",
-      "workouts",
-    ]);
+  it("lands on Workouts", async () => {
+    await expect(FitnessPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT:/fitness/workouts");
   });
 
-  it("on the Exercises tab, reads exercises and both catalogs (active and archive-included)", async () => {
-    void FitnessPage({ searchParams: Promise.resolve({ tab: "exercises" }) });
-    await flush();
-
-    expect(supabase.from.mock.calls.map((call) => call[0])).toEqual([
-      "exercises",
-      "muscle_groups",
-      "equipment",
-      "muscle_groups",
-      "equipment",
-    ]);
+  it("sends the old ?tab=exercises link to Exercises", async () => {
+    await expect(FitnessPage({ searchParams: Promise.resolve({ tab: "exercises" }) })).rejects.toThrow(
+      "NEXT_REDIRECT:/fitness/exercises"
+    );
   });
 });

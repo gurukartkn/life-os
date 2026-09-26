@@ -64,7 +64,7 @@ test("New task, New workout and New routine buttons share one shape (tone differ
 
   await page.goto("/tasks");
   const addTask = await style(page.getByRole("button", { name: "New task" }));
-  await page.goto("/fitness");
+  await page.goto("/fitness/workouts");
   const newWorkout = await style(page.getByRole("link", { name: "New workout" }));
   await page.goto("/routines");
   const newRoutine = await style(page.getByRole("link", { name: "New routine" }));
@@ -81,8 +81,9 @@ test("New task, New workout and New routine buttons share one shape (tone differ
   expect(addTask.height).toBe("40px");
   expect(addTask.radius).toBe("10px");
 
-  // Domain identity: violet (Task), teal (Fitness), blue (Routines) — the -fill variants of teal and blue.
+  // Header actions: violet for Tasks and Fitness (the hi-fi mockups), blue (-fill) for Routines until its PR.
   expect(addTask.background).toBe("rgb(108, 76, 245)");
-  expect(newWorkout.background).toBe("rgb(49, 129, 114)");
+  // New workout is the same violet primary as Add task (Workouts board).
+  expect(newWorkout.background).toBe("rgb(108, 76, 245)");
   expect(newRoutine.background).toBe("rgb(57, 121, 179)");
 });
