@@ -70,7 +70,7 @@ export function WorkoutLogSession({
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col items-end gap-1.5">
-            <span className="text-body-sm text-ink-faint">
+            <span className="text-body-sm text-ink-faint tabular-nums">
               {doneCount} of {totalCount} exercise{totalCount === 1 ? "" : "s"} done
             </span>
             <div className="h-1.5 w-32 overflow-hidden rounded-full bg-surface-200">

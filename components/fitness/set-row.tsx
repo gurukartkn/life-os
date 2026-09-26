@@ -79,7 +79,7 @@ export function SetRow({
       {isCardio ? (
         <input
           aria-label={`Set ${set.setNumber} duration in seconds`}
-          className="w-24 rounded-lg border border-input bg-transparent px-2 py-1 text-center text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="w-24 rounded-lg border border-input bg-transparent px-2 py-1 text-center text-amount outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
           placeholder="Seconds"
@@ -89,7 +89,7 @@ export function SetRow({
         <>
           <input
             aria-label={`Set ${set.setNumber} weight`}
-            className="w-[68px] rounded-lg border border-input bg-transparent px-2 py-1 text-center text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="w-[68px] rounded-lg border border-input bg-transparent px-2 py-1 text-center text-amount outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             placeholder="lb"
@@ -98,7 +98,7 @@ export function SetRow({
           <span className="text-caption text-ink-faint">×</span>
           <input
             aria-label={`Set ${set.setNumber} reps`}
-            className="w-[68px] rounded-lg border border-input bg-transparent px-2 py-1 text-center text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="w-[68px] rounded-lg border border-input bg-transparent px-2 py-1 text-center text-amount outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             placeholder="reps"

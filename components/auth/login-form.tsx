@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { login } from "@/actions/auth";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/auth/password-input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+  const { errors } = form.formState;
 
   function onSubmit(values: LoginInput) {
     const formData = new FormData();
@@ -29,25 +31,28 @@ export function LoginForm() {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-1.5">
+      <Field>
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" {...form.register("email")} />
-        {form.formState.errors.email && (
-          <p className="text-caption text-pink-ink">{form.formState.errors.email.message}</p>
-        )}
-      </div>
-      <div className="flex flex-col gap-1.5">
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          aria-invalid={errors.email ? true : undefined}
+          {...form.register("email")}
+        />
+        <FieldError>{errors.email?.message}</FieldError>
+      </Field>
+      <Field>
         <Label htmlFor="password">Password</Label>
         <PasswordInput
           id="password"
           autoComplete="current-password"
+          aria-invalid={errors.password ? true : undefined}
           {...form.register("password")}
         />
-        {form.formState.errors.password && (
-          <p className="text-caption text-pink-ink">{form.formState.errors.password.message}</p>
-        )}
-      </div>
-      {state.error && <p className="text-caption text-pink-ink">{state.error}</p>}
+        <FieldError>{errors.password?.message}</FieldError>
+      </Field>
+      <FieldError>{state.error}</FieldError>
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Logging in…" : "Log in"}
       </Button>

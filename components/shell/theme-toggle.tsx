@@ -4,16 +4,11 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/use-ui-store";
 
-// Icon and label swap with the `dark:` variant (keyed to <html data-theme>), so
-// they are right on first paint; the store only supplies the accessible name.
-export function ThemeToggle({
-  labelClassName,
-  className,
-}: {
-  // When set, a text label is shown next to the icon with these classes.
-  labelClassName?: string;
-  className?: string;
-}) {
+// One-icon theme toggle: the collapsed sidebar's footer, and top-right on the
+// screens without a sidebar (log in, sign up). A 40px bordered icon button showing
+// the theme it switches to. The icon swaps with the `dark:` variant (keyed to <html
+// data-theme>), so it is right on first paint; the store supplies the accessible name.
+export function ThemeToggle({ className }: { className?: string }) {
   const theme = useUIStore((state) => state.theme);
   const toggleTheme = useUIStore((state) => state.toggleTheme);
 
@@ -24,18 +19,12 @@ export function ThemeToggle({
       aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       className={cn(
-        "flex items-center gap-2 rounded-md px-2.5 py-2 text-body text-ink-muted outline-none transition-colors hover:bg-surface-200 hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        "flex size-10 shrink-0 items-center justify-center rounded-md border border-border-strong bg-surface-100 text-ink outline-none transition-colors hover:bg-surface-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         className
       )}
     >
-      <Moon className="size-5 shrink-0 dark:hidden" />
-      <Sun className="hidden size-5 shrink-0 dark:block" />
-      {labelClassName !== undefined && (
-        <span className={labelClassName}>
-          <span className="dark:hidden">Dark theme</span>
-          <span className="hidden dark:inline">Light theme</span>
-        </span>
-      )}
+      <Moon className="size-4 dark:hidden" strokeWidth={1.75} />
+      <Sun className="hidden size-4 dark:block" strokeWidth={1.75} />
     </button>
   );
 }

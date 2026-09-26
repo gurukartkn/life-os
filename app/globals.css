@@ -50,7 +50,9 @@
   --color-surface-050: var(--surface-050);
   --color-surface-100: var(--surface-100);
   --color-surface-200: var(--surface-200);
+  --color-surface-overlay: var(--surface-overlay);
   --color-border-strong: var(--border-strong);
+  --color-skeleton: var(--skeleton);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-faint: var(--ink-faint);
@@ -89,9 +91,15 @@
   --surface-050: #f9fbfc;
   --surface-100: #ffffff;
   --surface-200: #f4f5f7;
-  --border-strong: #e0e0e0;
+  /* Scrim behind a modal or sheet. */
+  --surface-overlay: rgba(20, 20, 30, 0.4);
+  --border-strong: #d5d8dd;
+  /* Loading placeholders and the avatar disc — one step darker than surface-200 so a
+     skeleton reads against a card. */
+  --skeleton: #e6e8ec;
   --ink: #141414;
-  --ink-muted: #555555;
+  --ink-muted: #6b6b6b;
+  /* Kept darker than the mockups' #767676, which is under 4.5:1 on surface-050. */
   --ink-faint: #6f6f6f;
   --accent-hover: #5b3ee0;
   --accent-text: #5b3ee0;
@@ -132,7 +140,7 @@
   --accent-foreground: var(--accent-ink);
   --destructive: var(--pink);
   --destructive-foreground: #ffffff;
-  --border: #efefef;
+  --border: #e3e5e8;
   --input: var(--border-strong);
   --ring: #6c4cf5;
   --chart-1: var(--primary);
@@ -158,7 +166,9 @@
   --surface-050: #0f1014;
   --surface-100: #17181d;
   --surface-200: #1f2127;
+  --surface-overlay: rgba(0, 0, 0, 0.6);
   --border-strong: #363944;
+  --skeleton: #262932;
   --ink: #f2f2f4;
   --ink-muted: #a3a5ad;
   --ink-faint: #868992;
@@ -198,9 +208,20 @@
 @layer components {
   .text-stat-xl {
     font: 700 34px/40px var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Money, set weights, reps and other counts that change in place — tabular figures
+     so digits don't shift. */
+  .text-amount {
+    font: 600 14px/20px var(--font-sans);
+    font-variant-numeric: tabular-nums;
   }
   .text-heading {
     font: 600 16px/22px var(--font-sans);
+  }
+  /* Modal and sheet titles. */
+  .text-dialog-title {
+    font: 600 18px/24px var(--font-sans);
   }
   .text-page-title {
     font: 600 22px/28px var(--font-sans);

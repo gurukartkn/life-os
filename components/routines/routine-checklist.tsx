@@ -22,7 +22,7 @@ export function RoutineChecklist({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <span className="text-body-sm text-ink-faint">
+        <span className="text-body-sm text-ink-faint tabular-nums">
           {totalCount === 0 ? "No items yet" : `${doneCount} of ${totalCount} done`}
         </span>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-200">

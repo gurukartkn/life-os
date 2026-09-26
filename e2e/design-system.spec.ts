@@ -22,17 +22,17 @@ async function forceTheme(page: Page, theme: "light" | "dark") {
   await page.addInitScript((value) => window.localStorage.setItem("life-os-theme", value), theme);
 }
 
-test("input: 38px, 10px radius, white fill, 1px strong border (light)", async ({ page }) => {
+test("input: 40px, 10px radius, white fill, 1px strong border (light)", async ({ page }) => {
   await forceTheme(page, "light");
   await page.goto("/tasks");
 
   const input = await style(page.getByLabel("Task title"));
 
-  expect(input.height).toBe("38px");
+  expect(input.height).toBe("40px");
   expect(input.radius).toBe("10px");
   expect(input.background).toBe("rgb(255, 255, 255)");
   expect(input.borderWidth).toBe("1px");
-  expect(input.borderColor).toBe("rgb(224, 224, 224)");
+  expect(input.borderColor).toBe("rgb(213, 216, 221)");
 });
 
 test("input: dark fill is the dark card surface, same shape", async ({ page }) => {
@@ -41,7 +41,7 @@ test("input: dark fill is the dark card surface, same shape", async ({ page }) =
 
   const input = await style(page.getByLabel("Task title"));
 
-  expect(input.height).toBe("38px");
+  expect(input.height).toBe("40px");
   expect(input.radius).toBe("10px");
   expect(input.background).toBe("rgb(23, 24, 29)");
 });
@@ -78,7 +78,7 @@ test("New task, New workout and New routine buttons share one shape (tone differ
   });
   expect(shape(newWorkout)).toEqual(shape(addTask));
   expect(shape(newRoutine)).toEqual(shape(addTask));
-  expect(addTask.height).toBe("38px");
+  expect(addTask.height).toBe("40px");
   expect(addTask.radius).toBe("10px");
 
   // Domain identity: violet (Task), teal (Fitness), blue (Routines) — the -fill variants of teal and blue.

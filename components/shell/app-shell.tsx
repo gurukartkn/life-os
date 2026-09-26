@@ -2,17 +2,16 @@ import { Sidebar } from "@/components/shell/sidebar";
 
 export function AppShell({
   userEmail,
-  hasExportableData,
   children,
 }: {
   userEmail: string;
-  hasExportableData: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex min-h-svh flex-col md:flex-row">
-      <Sidebar userEmail={userEmail} hasExportableData={hasExportableData} />
-      <main className="flex-1 bg-surface-050 p-4 md:p-8">{children}</main>
+      <Sidebar userEmail={userEmail} />
+      {/* Content region: 24px top/bottom, 32px sides (shell mockup). */}
+      <main className="min-w-0 flex-1 bg-surface-050 p-4 md:px-8 md:py-6">{children}</main>
     </div>
   );
 }

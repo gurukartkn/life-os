@@ -199,3 +199,21 @@ Checked with axe on every screen in both themes, plus overdue and completed todo
 | `accent-hover` (dark) | `#7d61f7` (4.3:1 with white) | inherits `#5b3ee0` | Hover must not lighten the fill under white text |
 
 `teal` and `blue` keep their identity meaning for bars, dots, icons and charts (3:1 is enough there). Only solid button fills use the `-fill` tokens; button hover is a darker token, not an opacity change, because opacity lightens the fill under white text. Any future colour pair used for text must be checked against 4.5:1 (3:1 for large text and graphics) before it is added.
+
+## I. Hi-fi mockup alignment (v2)
+
+The v2 hi-fi mockups (Life OS v2 – Hi-fi mockups canvas) are the visual reference for every shipped screen. Light-theme values move to the mockups', except `ink-faint`, which stays at the §H value because the mockups' `#767676` is under 4.5:1 on `surface-050`. Dark values are unchanged (the mockups draw the shipped dark palette).
+
+| Token | Was | Now |
+|---|---|---|
+| `ink-muted` (light) | `#555555` | `#6b6b6b` (5.1:1 on `surface-050`) |
+| `border` (light) | `#efefef` | `#e3e5e8` |
+| `border-strong` (light) | `#e0e0e0` | `#d5d8dd` |
+| `skeleton` (new) | — | light `#e6e8ec`, dark `#262932` — loading bars and the avatar disc |
+| `surface-overlay` (new) | — | light `rgba(20,20,30,.40)`, dark `rgba(0,0,0,.60)` — modal scrim |
+| `text-amount` (new type style) | — | 600 14px/20px, tabular figures |
+| `text-dialog-title` (new type style) | — | 600 18px/24px |
+
+Component changes: buttons and inputs are 40px (small buttons 32px); ghost buttons use `ink`; the input focus state is an accent border with a 3px accent halo; cards use a 1px `border`; tags are 22px `radius-sm` pills with a status tone; tabs are 44px underline tabs with tabular count pills; empty and load-failed states are cards with a 56px icon disc, title, one sentence and one action; forms open as modals (480px panel, `surface-overlay` scrim). The sidebar is 216px (64px collapsed) with the logo mark, a Light/Dark switch and the account initials in the footer; export and sign out moved to a new Settings page.
+
+With `ink-muted` back at `#6b6b6b`, it and `ink-faint` (`#6f6f6f`) are close in value; the tiers are told apart by use (secondary copy vs. placeholder/disabled), not by colour alone.

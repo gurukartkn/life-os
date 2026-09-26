@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useUIStore } from "@/stores/use-ui-store";
 import { ThemeToggle } from "./theme-toggle";
+import { ThemeSwitch } from "./theme-switch";
 
 describe("ThemeToggle", () => {
   beforeEach(() => {
@@ -29,11 +30,33 @@ describe("ThemeToggle", () => {
 
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
   });
+});
 
-  it("renders both label variants (CSS shows the right one) when a label class is given", () => {
-    render(<ThemeToggle labelClassName="hidden md:inline" />);
+describe("ThemeSwitch", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    document.documentElement.setAttribute("data-theme", "light");
+    useUIStore.setState({ theme: "light" });
+  });
 
-    expect(screen.getByText("Dark theme")).toBeInTheDocument();
-    expect(screen.getByText("Light theme")).toBeInTheDocument();
+  it("marks the active theme as pressed", () => {
+    render(<ThemeSwitch />);
+
+    expect(screen.getByRole("button", { name: "Light" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Dark" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("applies and stores the chosen theme", async () => {
+    render(<ThemeSwitch />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Dark" }));
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(window.localStorage.getItem("life-os-theme")).toBe("dark");
+    expect(screen.getByRole("button", { name: "Dark" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "Light" }));
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
   });
 });
