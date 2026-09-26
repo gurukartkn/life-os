@@ -9,8 +9,10 @@ import { addTask, openAddTask, taskRow } from "./task-helpers";
 
 const APP_SCREENS = [
   "/tasks",
-  "/fitness",
-  "/fitness?tab=exercises",
+  "/fitness/workouts",
+  "/fitness/exercises",
+  "/fitness/muscle-groups",
+  "/fitness/equipment",
   "/fitness/workouts/new",
   "/routines",
   "/routines/new",

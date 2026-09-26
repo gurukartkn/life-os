@@ -49,7 +49,7 @@ describe("createMuscleGroup", () => {
 
     expect(supabase.from).toHaveBeenCalledWith("muscle_groups");
     expect(builderAt(0).insert).toHaveBeenCalledWith({ user_id: "user-1", name: "Chest", is_active: true });
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
     expect(result).toEqual({ success: true, data: { id: ID, name: "Chest", isActive: true } });
   });
 
@@ -151,7 +151,7 @@ describe("deleteMuscleGroup", () => {
     expect(supabase.from).toHaveBeenNthCalledWith(2, "muscle_groups");
     expect(builderAt(1).delete).toHaveBeenCalled();
     expect(builderAt(1).eq).toHaveBeenCalledWith("id", ID);
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
     expect(result).toEqual({ success: true });
   });
 

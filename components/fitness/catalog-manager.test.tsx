@@ -1,122 +1,137 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { CatalogManager } from "./catalog-manager";
+import { CatalogManager, type CatalogActions } from "./catalog-manager";
+import type { CatalogItem } from "@/lib/fitness/catalog";
 
-const ID_A = "5b6f3d40-1111-4a11-8b11-111111111111";
-const ID_B = "5b6f3d40-2222-4a11-8b11-222222222222";
-const NEW_ID = "5b6f3d40-3333-4a11-8b11-333333333333";
+const COPY = { title: "Muscle Groups", singular: "muscle group", emptyDescription: "Add muscle groups to tag your exercises." };
 
-const ITEMS = [
-  { id: ID_A, name: "Chest", isActive: true },
-  { id: ID_B, name: "Old one", isActive: false },
-];
+const CHEST: CatalogItem = { id: "mg-chest", name: "Chest", isActive: true };
+const GLUTES: CatalogItem = { id: "mg-glutes", name: "Glutes", isActive: true };
+const CALVES: CatalogItem = { id: "mg-calves", name: "Calves", isActive: false };
 
-function makeActions(overrides: Partial<Record<string, ReturnType<typeof vi.fn>>> = {}) {
-  return {
-    create: vi.fn(),
-    rename: vi.fn(),
-    archive: vi.fn(),
-    restore: vi.fn(),
-    remove: vi.fn(),
-    ...overrides,
-  };
+let actions: { [K in keyof CatalogActions]: ReturnType<typeof vi.fn> };
+
+function renderManager(items: CatalogItem[] = [CHEST, GLUTES, CALVES], usage: Record<string, number> = { "mg-chest": 4 }) {
+  return render(<CatalogManager copy={COPY} items={items} usage={usage} actions={actions as unknown as CatalogActions} />);
 }
 
+function row(name: string) {
+  return screen.getByText(name).closest('[data-slot="catalog-row"]') as HTMLElement;
+}
+
+beforeEach(() => {
+  actions = { create: vi.fn(), rename: vi.fn(), archive: vi.fn(), restore: vi.fn(), remove: vi.fn() };
+});
+
 describe("CatalogManager", () => {
-  it("shows every item, an Archived tag for inactive ones, and adds a new one", async () => {
-    const actions = makeActions({
-      create: vi.fn().mockResolvedValue({ success: true, data: { id: NEW_ID, name: "Legs", isActive: true } }),
-    });
+  it("lists active items with how many exercises use them, archived ones folded away", async () => {
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager();
 
-    expect(screen.getByText("Chest")).toBeInTheDocument();
-    expect(screen.getByText("Old one")).toBeInTheDocument();
-    expect(screen.getByText("Archived")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Muscle Groups" })).toBeInTheDocument();
+    expect(within(row("Chest")).getByText("4 exercises")).toBeInTheDocument();
+    expect(within(row("Glutes")).getByText("Not used")).toBeInTheDocument();
+    expect(screen.queryByText("Calves")).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("New muscle groups"), "Legs");
-    await user.click(screen.getByLabelText("Add muscle groups"));
-
-    await waitFor(() => expect(actions.create).toHaveBeenCalledWith({ name: "Legs" }));
-    expect(await screen.findByText("Legs")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Archived \(1\)/ }));
+    expect(screen.getByText("Calves")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Restore Calves" })).toBeInTheDocument();
   });
 
-  it("renames an item inline", async () => {
-    const actions = makeActions({
-      rename: vi.fn().mockResolvedValue({ success: true, data: { id: ID_A, name: "Upper chest", isActive: true } }),
-    });
+  it("adds a new item from the add row", async () => {
+    actions.create.mockResolvedValue({ success: true, data: { id: "mg-lats", name: "Lats", isActive: true } });
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager();
 
-    await user.click(screen.getByLabelText("Rename Chest"));
-    const input = screen.getByLabelText("Rename Chest");
+    await user.click(screen.getByRole("button", { name: "Add muscle group" }));
+    await user.type(screen.getByLabelText("New muscle group"), "Lats");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+
+    await waitFor(() => expect(actions.create).toHaveBeenCalledWith({ name: "Lats" }));
+    expect(await screen.findByText("Lats")).toBeInTheDocument();
+  });
+
+  it("refuses a name that already exists, ignoring case, without calling the server", async () => {
+    const user = userEvent.setup();
+    renderManager();
+
+    await user.click(screen.getByRole("button", { name: "Add muscle group" }));
+    await user.type(screen.getByLabelText("New muscle group"), "chest");
+
+    expect(screen.getByText("“chest” already exists. Names are unique, ignoring case.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add" })).toBeDisabled();
+    expect(actions.create).not.toHaveBeenCalled();
+  });
+
+  it("renames an item in place", async () => {
+    actions.rename.mockResolvedValue({ success: true, data: { ...GLUTES, name: "Glute med" } });
+    const user = userEvent.setup();
+    renderManager();
+
+    await user.click(screen.getByRole("button", { name: "Rename Glutes" }));
+    const input = screen.getByRole("textbox", { name: "Rename Glutes" });
     await user.clear(input);
-    await user.type(input, "Upper chest");
-    await user.keyboard("{Enter}");
+    await user.type(input, "Glute med");
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(actions.rename).toHaveBeenCalledWith(ID_A, "Upper chest"));
-    expect(await screen.findByText("Upper chest")).toBeInTheDocument();
+    await waitFor(() => expect(actions.rename).toHaveBeenCalledWith("mg-glutes", "Glute med"));
+    expect(await screen.findByText("Glute med")).toBeInTheDocument();
   });
 
-  it("re-sorts the list after a rename moves an item's alphabetical place", async () => {
-    const actions = makeActions({
-      // "Chest" -> "Zzz" belongs after "Old one" once renamed.
-      rename: vi.fn().mockResolvedValue({ success: true, data: { id: ID_A, name: "Zzz", isActive: true } }),
-    });
+  it("blocks deleting an item exercises use, and offers Archive instead", async () => {
+    actions.archive.mockResolvedValue({ success: true, data: { ...CHEST, isActive: false } });
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager();
 
-    await user.click(screen.getByLabelText("Rename Chest"));
-    await user.keyboard("{Enter}"); // Enter with the same text still runs the handler.
+    await user.click(screen.getByRole("button", { name: "Delete Chest" }));
 
-    await waitFor(() => expect(actions.rename).toHaveBeenCalled());
-    const names = (await screen.findAllByText(/^(Zzz|Old one)$/)).map((el) => el.textContent);
-    expect(names).toEqual(["Old one", "Zzz"]);
+    expect(actions.remove).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Can’t delete Chest: 4 exercises use it. Archive it to hide it from pickers instead."
+    );
+    await user.click(screen.getByRole("button", { name: "Archive instead" }));
+    await waitFor(() => expect(actions.archive).toHaveBeenCalledWith("mg-chest"));
+    expect(await screen.findByRole("button", { name: /Archived \(2\)/ })).toBeInTheDocument();
   });
 
-  it("archives an active item and restores an archived one", async () => {
-    const actions = makeActions({
-      archive: vi.fn().mockResolvedValue({ success: true, data: { id: ID_A, name: "Chest", isActive: false } }),
-      restore: vi.fn().mockResolvedValue({ success: true, data: { id: ID_B, name: "Old one", isActive: true } }),
-    });
+  it("deletes an unused item", async () => {
+    actions.remove.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager();
 
-    await user.click(screen.getByLabelText("Archive Chest"));
-    await waitFor(() => expect(actions.archive).toHaveBeenCalledWith(ID_A));
+    await user.click(screen.getByRole("button", { name: "Delete Glutes" }));
 
-    await user.click(screen.getByLabelText("Restore Old one"));
-    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith(ID_B));
+    await waitFor(() => expect(actions.remove).toHaveBeenCalledWith("mg-glutes"));
+    await waitFor(() => expect(screen.queryByText("Glutes")).not.toBeInTheDocument());
   });
 
-  it("deletes an item once nothing links to it", async () => {
-    const actions = makeActions({ remove: vi.fn().mockResolvedValue({ success: true }) });
+  it("shows the blocked message when the server says the item is in use", async () => {
+    actions.remove.mockResolvedValue({ success: false, code: "in_use", error: "In use" });
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager([GLUTES], {});
 
-    await user.click(screen.getByLabelText("Delete Chest"));
+    await user.click(screen.getByRole("button", { name: "Delete Glutes" }));
 
-    await waitFor(() => expect(actions.remove).toHaveBeenCalledWith(ID_A));
-    await waitFor(() => expect(screen.queryByText("Chest")).not.toBeInTheDocument());
+    expect(await screen.findByRole("alert")).toHaveTextContent("Can’t delete Glutes");
   });
 
-  it("shows the typed error and keeps the row when delete is blocked", async () => {
-    const actions = makeActions({
-      remove: vi.fn().mockResolvedValue({
-        success: false,
-        error: "Some exercises still use this muscle group. Archive it instead.",
-        code: "in_use",
-      }),
-    });
+  it("restores an archived item", async () => {
+    actions.restore.mockResolvedValue({ success: true, data: { ...CALVES, isActive: true } });
     const user = userEvent.setup();
-    render(<CatalogManager title="Muscle groups" items={ITEMS} actions={actions} />);
+    renderManager();
 
-    await user.click(screen.getByLabelText("Delete Chest"));
+    await user.click(screen.getByRole("button", { name: /Archived \(1\)/ }));
+    await user.click(screen.getByRole("button", { name: "Restore Calves" }));
 
-    expect(
-      await screen.findByText("Some exercises still use this muscle group. Archive it instead.")
-    ).toBeInTheDocument();
-    expect(screen.getByText("Chest")).toBeInTheDocument();
+    await waitFor(() => expect(actions.restore).toHaveBeenCalledWith("mg-calves"));
+    expect(await screen.findByRole("button", { name: "Rename Calves" })).toBeInTheDocument();
+  });
+
+  it("shows the empty state with its own Add button when there is nothing yet", () => {
+    renderManager([], {});
+
+    expect(screen.getByText("No muscle groups yet")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Add muscle group" })).toHaveLength(2);
   });
 });

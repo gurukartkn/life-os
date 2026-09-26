@@ -50,6 +50,13 @@ export function formatDateTime(date: Date | string, timeZone: string): string {
   return `${day} at ${time}`;
 }
 
+// "6:42 pm" — a clock time in the user's timezone (a session's start).
+export function formatClockTime(date: Date | string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" })
+    .format(new Date(date))
+    .toLowerCase();
+}
+
 // A plain "YYYY-MM-DD" date sorts lexically, so "before today" is a string comparison
 // against the one todayIso() — the page's overdue count uses the same rule.
 export function isOverdue(dueDate: string): boolean {

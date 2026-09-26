@@ -57,8 +57,8 @@ export async function createWorkout(input: CreateWorkoutInput): Promise<ActionRe
     return { success: false, error: "Couldn't add exercises to the workout. Try again." };
   }
 
-  revalidatePath("/fitness");
-  redirect("/fitness");
+  revalidatePath("/fitness", "layout");
+  redirect("/fitness/workouts");
 }
 
 // Edits a workout in place. The workouts row is only ever updated, never deleted or
@@ -165,7 +165,7 @@ export async function updateWorkout(input: WorkoutUpdateInput): Promise<ActionRe
     }
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true };
 }
 
@@ -184,6 +184,6 @@ export async function deleteWorkout(id: string): Promise<ActionResult> {
     return { success: false, error: "Couldn't delete the workout. Try again." };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true };
 }

@@ -116,7 +116,7 @@ export async function createCatalogItem(
     return { success: false, error: `Couldn't add the ${KINDS[kind].label}. Try again.` };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true, data: toItem(data) };
 }
 
@@ -168,7 +168,7 @@ export async function renameCatalogItem(
     return { success: false, error: `That ${KINDS[kind].label} no longer exists.`, code: "not_found" };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true, data: toItem(data) };
 }
 
@@ -199,7 +199,7 @@ export async function setCatalogItemActive(
     return { success: false, error: `That ${KINDS[kind].label} no longer exists.`, code: "not_found" };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true, data: toItem(data) };
 }
 
@@ -242,7 +242,7 @@ export async function deleteCatalogItem(kind: CatalogKind, id: string): Promise<
     return { success: false, error: `That ${KINDS[kind].label} no longer exists.`, code: "not_found" };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   return { success: true };
 }
 

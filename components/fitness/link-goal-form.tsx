@@ -64,7 +64,7 @@ export function LinkGoalForm({
         <div className="flex items-center gap-2">
           <select
             aria-label="Link to a goal"
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-body-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-10 rounded-md border border-border-strong bg-surface-100 px-3 text-body-sm text-ink outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/30"
             value={goalId}
             onChange={(e) => setGoalId(e.target.value)}
           >
@@ -77,7 +77,6 @@ export function LinkGoalForm({
           </select>
           <Button
             type="button"
-            size="sm"
             variant="outline"
             onClick={handleLink}
             disabled={isPending || !goalId}

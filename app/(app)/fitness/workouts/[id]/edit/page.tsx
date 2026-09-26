@@ -1,18 +1,14 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { WorkoutEditor, type EditorItem } from "@/components/fitness/workout-editor";
+import { getWorkoutEditorData } from "@/lib/fitness/editor-data";
 import { logError } from "@/lib/errors";
-import { WorkoutEditForm, type EditableExercise } from "@/components/fitness/workout-edit-form";
-import type { WorkoutUpdateInput } from "@/lib/validations/fitness";
-
-type WorkoutRow = { id: string; name: string; notes: string | null };
+import { createClient } from "@/lib/supabase/server";
 
 type WorkoutExerciseRow = {
   id: string;
   exercise_id: string;
   target_sets: number | null;
   target_reps: string | null;
-  sort_order: number;
-  exercises: { id: string; name: string; is_active: boolean } | null;
 };
 
 export default async function EditWorkoutPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,54 +17,36 @@ export default async function EditWorkoutPage({ params }: { params: Promise<{ id
 
   // RLS scopes every one of these to the caller, so a missing row means "not found",
   // not "not yours".
-  const [{ data: workoutData, error: workoutError }, { data: rowsData, error: rowsError }, { data: activeData, error: activeError }] =
+  const [{ data: workout, error: workoutError }, { data: rowsData, error: rowsError }, editorData] =
     await Promise.all([
       supabase.from("workouts").select("id, name, notes").eq("id", id).maybeSingle(),
       supabase
         .from("workout_exercises")
-        .select("id, exercise_id, target_sets, target_reps, sort_order, exercises(id, name, is_active)")
+        .select("id, exercise_id, target_sets, target_reps")
         .eq("workout_id", id)
         .order("sort_order", { ascending: true }),
-      supabase.from("exercises").select("id, name").eq("is_active", true).order("name", { ascending: true }),
+      getWorkoutEditorData(supabase),
     ]);
 
   if (workoutError) logError("Load workout to edit", workoutError);
-  const workout = workoutData as WorkoutRow | null;
   if (!workout) notFound();
-
   if (rowsError) logError("Load workout exercises to edit", rowsError);
-  if (activeError) logError("Load active exercises", activeError);
 
-  const rows = (rowsData ?? []) as unknown as WorkoutExerciseRow[];
-
-  // The picker offers every active exercise, plus any exercise this workout already
-  // uses even if it has since been archived — editing shouldn't lose an existing pick.
-  const exercises: EditableExercise[] = [...(activeData ?? [])];
-  const known = new Set(exercises.map((e) => e.id));
-  for (const row of rows) {
-    if (row.exercises && !known.has(row.exercises.id)) {
-      known.add(row.exercises.id);
-      exercises.push({ id: row.exercises.id, name: row.exercises.name });
-    }
-  }
-  exercises.sort((a, b) => a.name.localeCompare(b.name));
-
-  const initialValues: WorkoutUpdateInput = {
-    id: workout.id,
-    name: workout.name,
-    notes: workout.notes ?? undefined,
-    items: rows.map((row) => ({
-      id: row.id,
-      exerciseId: row.exercise_id,
-      targetSets: row.target_sets ?? undefined,
-      targetReps: row.target_reps ?? undefined,
-    })),
-  };
+  const initialItems: EditorItem[] = ((rowsData ?? []) as WorkoutExerciseRow[]).map((row) => ({
+    key: row.id,
+    id: row.id,
+    exerciseId: row.exercise_id,
+    targetSets: String(row.target_sets ?? 3),
+    targetReps: row.target_reps ?? "",
+  }));
 
   return (
-    <div className="flex max-w-xl flex-col gap-6">
-      <h1 className="text-page-title text-ink">Edit workout</h1>
-      <WorkoutEditForm workout={initialValues} exercises={exercises} />
-    </div>
+    <WorkoutEditor
+      workout={workout}
+      initialItems={initialItems}
+      exercises={editorData.exercises}
+      muscleGroups={editorData.muscleGroups}
+      equipment={editorData.equipment}
+    />
   );
 }

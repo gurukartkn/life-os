@@ -21,7 +21,7 @@ export async function startWorkoutLog(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/fitness");
+    redirect("/fitness/workouts");
   }
 
   const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function startWorkoutLog(formData: FormData) {
 
   if (error || !data) {
     logError("startWorkoutLog", error);
-    redirect("/fitness");
+    redirect("/fitness/workouts");
   }
 
   redirect(`/fitness/log/${data.id}`);
@@ -91,7 +91,7 @@ export async function finishWorkoutLog(id: string): Promise<ActionResult> {
     return { success: false, error: "That workout log no longer exists." };
   }
 
-  revalidatePath("/fitness");
+  revalidatePath("/fitness", "layout");
   revalidatePath(`/fitness/log/${parsed.data.id}`);
   return { success: true };
 }

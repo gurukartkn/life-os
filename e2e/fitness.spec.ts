@@ -1,48 +1,52 @@
 import { test, expect } from "@playwright/test";
+import { addExercise, createWorkout, workoutRow } from "./fitness-helpers";
 
-// Stage 3 checkpoint: the full "log a workout" flow — add an exercise,
-// build a workout from it, start a log, save a set, finish
-// (docs/08-implementation-plan.md).
+// Stage 3 checkpoint: the full "log a workout" flow — add an exercise, build a workout
+// from it, start a session, log a set, finish (docs/08-implementation-plan.md).
 test("create a workout and log a full set", async ({ page }) => {
   const exerciseName = `Bench Press ${Date.now()}`;
   const workoutName = `Push Day ${Date.now()}`;
 
-  await page.goto("/fitness?tab=exercises");
-  await page.getByLabel("Exercise name").fill(exerciseName);
-  await page.getByRole("button", { name: "Add exercise" }).click();
-  await expect(page.getByText(exerciseName, { exact: true })).toBeVisible();
+  await addExercise(page, exerciseName);
+  await createWorkout(page, workoutName, [exerciseName]);
 
-  await page.goto("/fitness/workouts/new");
-  await page.getByLabel("Name").fill(workoutName);
-  await page.getByLabel("Exercise 1", { exact: true }).selectOption({ label: exerciseName });
-  await page.getByRole("button", { name: "Create workout" }).click();
+  await workoutRow(page, workoutName).getByRole("button", { name: `Start ${workoutName}` }).click();
 
-  await expect(page).toHaveURL("/fitness");
-  const workoutCard = page
-    .getByText(workoutName, { exact: true })
-    .locator("xpath=ancestor::div[contains(@class, 'rounded-2xl')][1]");
-  await workoutCard.getByRole("button", { name: "Start workout" }).click();
-
-  await expect(page).toHaveURL(/\/fitness\/log\/.+/);
+  await expect(page).toHaveURL(/\/fitness\/log\/.+/, { timeout: 20_000 });
+  await expect(page.getByText("In progress")).toBeVisible();
   await page.getByLabel("Set 1 weight").fill("135");
   await page.getByLabel("Set 1 reps").fill("8");
-  await page.getByRole("button", { name: "Save set 1" }).click();
-  await expect(page.getByRole("button", { name: "Save set 1" })).toHaveClass(/bg-teal/);
-
+  // A set saves itself when focus leaves its row.
+  await page.getByRole("heading", { name: exerciseName }).click();
   await page.getByRole("button", { name: "Finish workout" }).click();
 
-  // Finishing lands on the read-only past-log view (v2 Stage 3), not back on /fitness.
-  // A generous timeout: dev mode compiles this route on its first hit.
+  // Finishing lands on the read-only past log.
   await expect(page).toHaveURL(/\/fitness\/logs\/.+/, { timeout: 20_000 });
-  // The heading specifically: Next.js's route announcer also echoes the page title as
-  // plain text after a client-side navigation, so a bare getByText matches both.
+  // The heading specifically: Next.js's route announcer also echoes the page title.
   await expect(page.getByRole("heading", { name: workoutName, exact: true })).toBeVisible();
-  await expect(page.getByText("Set 1: 135 × 8")).toBeVisible();
+  const card = page.getByRole("region", { name: exerciseName });
+  await expect(card.getByText("135 lb")).toBeVisible();
+  await expect(card.getByRole("cell", { name: "8", exact: true })).toBeVisible();
 
-  await page.getByRole("link", { name: "Back to Fitness" }).click();
-  await expect(page).toHaveURL("/fitness");
-  const loggedCard = page
-    .getByText(workoutName, { exact: true })
-    .locator("xpath=ancestor::div[contains(@class, 'rounded-2xl')][1]");
-  await expect(loggedCard.getByText(/Last logged/)).toBeVisible();
+  await page.getByRole("link", { name: "Workouts" }).first().click();
+  await expect(page).toHaveURL("/fitness/workouts");
+  await expect(workoutRow(page, workoutName).getByText(/Last done/)).toBeVisible();
+});
+
+test("the Fitness section opens on Workouts, with its screens in the sidebar", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/fitness");
+
+  await expect(page).toHaveURL("/fitness/workouts");
+  const nav = page.getByRole("navigation", { name: "Main" });
+  await expect(nav.getByRole("link", { name: "Workouts" })).toHaveAttribute("aria-current", "page");
+  for (const [label, path] of [
+    ["Exercises", "/fitness/exercises"],
+    ["Muscle Groups", "/fitness/muscle-groups"],
+    ["Equipment", "/fitness/equipment"],
+  ]) {
+    await nav.getByRole("link", { name: label, exact: true }).first().click();
+    await expect(page).toHaveURL(path);
+    await expect(page.getByRole("heading", { name: label, level: 1 })).toBeVisible();
+  }
 });

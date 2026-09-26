@@ -41,7 +41,7 @@ describe("startWorkoutLog", () => {
     await expect(startWorkoutLog(fd)).rejects.toThrow();
 
     const { redirect } = await import("next/navigation");
-    expect(redirect).toHaveBeenCalledWith("/fitness");
+    expect(redirect).toHaveBeenCalledWith("/fitness/workouts");
   });
 
   it("redirects to /login when the user is not authenticated", async () => {
@@ -62,7 +62,7 @@ describe("startWorkoutLog", () => {
     await expect(startWorkoutLog(fd)).rejects.toThrow();
 
     const { redirect } = await import("next/navigation");
-    expect(redirect).toHaveBeenCalledWith("/fitness");
+    expect(redirect).toHaveBeenCalledWith("/fitness/workouts");
   });
 
   it("inserts a workout log and redirects to the new log's page", async () => {

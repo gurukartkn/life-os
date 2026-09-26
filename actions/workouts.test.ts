@@ -72,8 +72,8 @@ describe("createWorkout", () => {
       },
     ]);
 
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
-    expect(redirect).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
+    expect(redirect).toHaveBeenCalledWith("/fitness/workouts");
   });
 
   it("maps a Supabase error creating the workout to a friendly message", async () => {
@@ -119,7 +119,7 @@ describe("deleteWorkout", () => {
     const builder = supabase.from.mock.results[0].value;
     expect(builder.delete).toHaveBeenCalled();
     expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
     expect(result).toEqual({ success: true });
   });
 

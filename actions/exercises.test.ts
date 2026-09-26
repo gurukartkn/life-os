@@ -75,7 +75,7 @@ describe("updateExercise", () => {
     const eqLinks = calls("exercise_equipment");
     expect(eqLinks[0].insert).not.toHaveBeenCalled();
     expect(eqLinks[1].in).toHaveBeenCalledWith("equipment_id", [EQ_1]);
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
   });
 
   it("changes nothing on the links when the sets are already equal", async () => {
@@ -222,7 +222,7 @@ describe("archiveExercise", () => {
     const builder = supabase.from.mock.results[0].value;
     expect(builder.update).toHaveBeenCalledWith({ is_active: false });
     expect(builder.eq).toHaveBeenCalledWith("id", VALID_ID);
-    expect(revalidatePath).toHaveBeenCalledWith("/fitness");
+    expect(revalidatePath).toHaveBeenCalledWith("/fitness", "layout");
     expect(result).toEqual({ success: true });
   });
 
