@@ -1,46 +1,14 @@
-import { Target } from "lucide-react";
-import { AddGoalForm } from "@/components/goals/add-goal-form";
-import { Card, CardContent } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { GoalsView } from "@/components/goals/goals-view";
+import { todayIso } from "@/lib/dates";
+import { sortGoals } from "@/lib/goals";
+import { listGoals } from "@/lib/queries/goals";
+import { getUserTimezone } from "@/lib/queries/user-settings";
 import { createClient } from "@/lib/supabase/server";
-import { logError } from "@/lib/errors";
-import { formatDueDate } from "@/lib/dates";
 
 export default async function GoalsPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("goals")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ goals, error }, timeZone] = await Promise.all([listGoals(supabase), getUserTimezone(supabase)]);
 
-  if (error) {
-    logError("Load goals", error);
-  }
-
-  const goals = data ?? [];
-
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-page-title text-ink">Goals</h1>
-      <AddGoalForm />
-      {goals.length === 0 ? (
-        <EmptyState icon={Target} title="No goals yet." />
-      ) : (
-        <div className="flex flex-col gap-2">
-          {goals.map((goal) => (
-            <Card key={goal.id}>
-              <CardContent className="flex items-center justify-between">
-                <span className="text-body text-ink">{goal.title}</span>
-                {goal.target_date && (
-                  <span className="text-caption text-ink-muted">
-                    Target {formatDueDate(goal.target_date)}
-                  </span>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  // "Today" is the user's calendar day, not the server's (UTC on Vercel).
+  return <GoalsView goals={sortGoals(goals)} today={todayIso(timeZone)} loadError={error} />;
 }

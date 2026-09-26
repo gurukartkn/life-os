@@ -52,6 +52,20 @@ export function isGoalOverdue(goal: DatedGoal, today: string): boolean {
   return goal.status === "active" && goal.targetDate !== null && goal.targetDate < today;
 }
 
+// The line under a linked task (detail rows) or beside it (the picker): "Undated", "Due
+// today" ("Today" in the picker), "Overdue", its date as "Fri 2 Oct", or "Done".
+export function linkedTaskLabel(
+  task: { dueDate: string | null; isCompleted: boolean },
+  today: string,
+  place: "row" | "picker" = "row"
+): string {
+  if (task.isCompleted) return "Done";
+  if (!task.dueDate) return "Undated";
+  if (task.dueDate === today) return place === "row" ? "Due today" : "Today";
+  if (task.dueDate < today) return "Overdue";
+  return format(parseISO(task.dueDate), "EEE d MMM");
+}
+
 const STATUS_ORDER: Record<GoalStatus, number> = { active: 0, achieved: 1, dropped: 2 };
 
 // Plain "YYYY-MM-DD" dates and ISO timestamps both sort as strings; missing values go last.
