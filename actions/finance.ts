@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/errors";
 import { flagDuplicates } from "@/lib/finance/duplicates";
-import { anchorDayOf, nextOccurrence, type FinanceKind } from "@/lib/finance/money";
+import { anchorDayOf, isRealDate, nextOccurrence, type FinanceKind } from "@/lib/finance/money";
 import type { Database } from "@/lib/types/database";
 import type { ActionResult } from "@/lib/types/action-result";
 import {
@@ -628,6 +628,57 @@ export async function skipRecurring(id: string): Promise<ActionResult> {
 
 export type ImportSummary = { inserted: number; duplicatesLeftOut: number; unreadable: number };
 
+type ExistingKey = { occurred_on: string; kind: string; amount_paise: number };
+
+// Every transaction in one account between two dates, as the keys duplicate matching
+// uses. Pages past PostgREST's 1,000-row cap.
+async function readAccountKeys(
+  supabase: Client,
+  accountId: string,
+  from: string,
+  to: string
+): Promise<{ keys: ExistingKey[]; error: unknown }> {
+  const keys: ExistingKey[] = [];
+  for (let start = 0; ; start += 1000) {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("occurred_on, kind, amount_paise")
+      .eq("account_id", accountId)
+      .gte("occurred_on", from)
+      .lte("occurred_on", to)
+      .order("id")
+      .range(start, start + 999);
+    if (error) return { keys: [], error };
+    keys.push(...(data ?? []));
+    if ((data ?? []).length < 1000) return { keys, error: null };
+  }
+}
+
+const rangeSchema = z.object({ accountId: z.uuid(), from: z.string().refine(isRealDate), to: z.string().refine(isRealDate) });
+
+// For the import preview: the account's existing transactions over the file's dates,
+// so the browser can flag possible duplicates before anything is sent. Only dates,
+// kinds and amounts come back.
+export async function importMatches(
+  accountId: string,
+  from: string,
+  to: string
+): Promise<ActionResult<{ occurredOn: string; kind: FinanceKind; amountPaise: number }[]>> {
+  const parsed = rangeSchema.safeParse({ accountId, from, to });
+  if (!parsed.success) return { success: false, error: "Pick an account." };
+
+  const supabase = await createClient();
+  const { keys, error } = await readAccountKeys(supabase, parsed.data.accountId, parsed.data.from, parsed.data.to);
+  if (error) {
+    logError("importMatches", error);
+    return { success: false, error: "Couldn't check for duplicates. Try again." };
+  }
+  return {
+    success: true,
+    data: keys.map((row) => ({ occurredOn: row.occurred_on, kind: toKind(row.kind), amountPaise: row.amount_paise })),
+  };
+}
+
 const importSchema = z.object({
   accountId: z.uuid("Pick an account."),
   rows: z.array(z.unknown()).min(1, "There are no rows to import.").max(CSV_MAX_ROWS, "That's more than 5,000 rows."),
@@ -676,22 +727,15 @@ export async function importCsv(accountId: string, rows: CsvImportRow[], ticked:
   if (valid.length === 0) return { success: true, data: { inserted: 0, duplicatesLeftOut: 0, unreadable } };
 
   const dates = valid.map(({ row }) => row.occurredOn).sort();
-  const existing: { occurred_on: string; kind: string; amount_paise: number }[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("transactions")
-      .select("occurred_on, kind, amount_paise")
-      .eq("account_id", account.id)
-      .gte("occurred_on", dates[0])
-      .lte("occurred_on", dates[dates.length - 1])
-      .order("id")
-      .range(from, from + 999);
-    if (error) {
-      logError("importCsv (existing)", error);
-      return failed;
-    }
-    existing.push(...(data ?? []));
-    if ((data ?? []).length < 1000) break;
+  const { keys: existing, error: existingError } = await readAccountKeys(
+    supabase,
+    account.id,
+    dates[0],
+    dates[dates.length - 1]
+  );
+  if (existingError) {
+    logError("importCsv (existing)", existingError);
+    return failed;
   }
 
   const flags = flagDuplicates(

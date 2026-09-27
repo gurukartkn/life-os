@@ -48,6 +48,7 @@ describe("Sidebar", () => {
     expect(screen.getByRole("link", { name: "Fitness" })).toHaveAttribute("href", "/fitness");
     expect(screen.getByRole("link", { name: "Routines" })).toHaveAttribute("href", "/routines");
     expect(screen.getByRole("link", { name: "Goals" })).toHaveAttribute("href", "/goals");
+    expect(screen.getByRole("link", { name: "Finance" })).toHaveAttribute("href", "/finance");
     expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
   });
 
