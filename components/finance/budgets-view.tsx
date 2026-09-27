@@ -14,7 +14,8 @@ import { Field, FieldError } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { RetryButton } from "@/components/ui/retry-button";
-import { formatInr, paiseToInput, toPaise } from "@/lib/finance/money";
+import { formatInr, paiseToInput } from "@/lib/finance/money";
+import { budgetInputSchema } from "@/lib/validations/finance";
 import type { BudgetLine, BudgetsView as Budgets } from "@/lib/queries/finance";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,8 @@ function BudgetAmount({
   const [isPending, startTransition] = useTransition();
 
   function save() {
+    // Enter then blur would otherwise save twice.
+    if (isPending) return;
     if (value.trim() === saved) {
       onDone?.();
       return;
@@ -192,8 +195,9 @@ function AddBudgetDialog({
     event.preventDefault();
     const chosen = categoryId || categories[0]?.categoryId;
     if (!chosen) return;
-    if (toPaise(amount) === null || toPaise(amount) === 0) {
-      setError(amount.trim() ? "Enter an amount like 5000 or 5000.50." : "Enter an amount.");
+    const parsed = budgetInputSchema.safeParse({ categoryId: chosen, amount });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Enter an amount.");
       return;
     }
     startTransition(async () => {

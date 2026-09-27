@@ -178,7 +178,13 @@ export function CsvImportWizard({ accounts }: { accounts: Account[] }) {
     startTransition(async () => {
       const result = await importCsv(
         accountId,
-        mapped.valid.map(({ occurredOn, kind, amountPaise, note }) => ({ occurredOn, kind, amountPaise, note })),
+        // Unticked rows only count towards "duplicates left out", so their notes stay here.
+        mapped.valid.map(({ occurredOn, kind, amountPaise, note }, i) => ({
+          occurredOn,
+          kind,
+          amountPaise,
+          note: ticked[i] ? note : null,
+        })),
         ticked
       );
       if (!result.success || !result.data) {

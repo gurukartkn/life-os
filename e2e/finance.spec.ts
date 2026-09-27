@@ -361,6 +361,38 @@ test("CSV import: Debit and Credit file, then Import another file", async ({ pag
   await expect(page.getByText("Drop a CSV file here")).toBeVisible();
 });
 
+test("CSV import: a 5,000-row file goes in whole (the mapped rows pass 1 MB)", async ({ page }) => {
+  test.setTimeout(120_000);
+  const account = `Bulk import ${stamp}`;
+  await makeAccount(seed, account);
+  // Distinct amounts so nothing is a possible duplicate; long narrations like real statements.
+  const lines = ["Date,Narration,Amount"];
+  for (let i = 1; i <= 5000; i++) {
+    lines.push(`15/08/2026,UPI-${String(i).padStart(5, "0")}-${"MERCHANT PAYMENT REFERENCE ".repeat(6)},-${i}.25`);
+  }
+
+  await page.goto("/finance/import");
+  await page.waitForLoadState("networkidle");
+  await page.getByLabel("CSV file").setInputFiles({
+    name: "bulk.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(lines.join("\n"), "utf8"),
+  });
+  await expect(page.locator('[data-slot="csv-file"]')).toContainText("5,000 rows", SLOW);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByLabel("Import into account").selectOption({ label: account });
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Import 5,000 transactions" }).click();
+  await expect(page.getByText("5,000 transactions imported")).toBeVisible({ timeout: 60_000 });
+
+  const { data: accountRow } = await seed.supabase.from("finance_accounts").select("id").eq("name", account).single();
+  const { count } = await seed.supabase
+    .from("transactions")
+    .select("id", { count: "exact", head: true })
+    .eq("account_id", accountRow!.id);
+  expect(count).toBe(5000);
+});
+
 test("the Today Spending card shows budgeted spend and links to Finance", async ({ page }) => {
   const today = await accountToday(seed);
   const accountId = await makeAccount(seed, `Today card ${stamp}`);
