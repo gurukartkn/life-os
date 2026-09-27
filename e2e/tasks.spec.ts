@@ -1,8 +1,11 @@
+import { format } from "date-fns";
 import { test, expect } from "@playwright/test";
 import { addTask, openAddTask, taskRow } from "./task-helpers";
 
+// "Fri 25 Sep", formatted as the app does (lib/dates.ts formatShortDate). The en-GB locale
+// spells September "Sept", so it can't stand in for it.
 function shortDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }).replace(",", "");
+  return format(date, "EEE d MMM");
 }
 
 function ordinal(day: number): string {
@@ -74,7 +77,8 @@ test("a task dated yesterday saves, shows overdue, and stops being overdue once 
 
   await row.getByRole("checkbox", { name: "Mark as done" }).click();
   await expect(row.getByRole("checkbox", { name: "Mark as not done" })).toBeVisible({ timeout: 20_000 });
-  await expect(row.getByText(/Overdue/)).toHaveCount(0);
+  // The status text, not the title (which starts with "Overdue" too).
+  await expect(row.getByText(/^Overdue · /)).toHaveCount(0);
   await expect(row.getByText(shortDate(yesterday), { exact: true })).toBeVisible();
 });
 

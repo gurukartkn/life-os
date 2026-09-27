@@ -60,11 +60,11 @@ export type GoalRow = Pick<Tables<"goals">, "id" | "title" | "target_date" | "st
 
 export const GOAL_COLUMNS = "id, title, target_date, status, achieved_on, updated_at";
 
-// Rows written before the expand migration may still say completed / abandoned / null.
-export function toGoalStatus(value: string | null): GoalStatus {
-  if (value === "achieved" || value === "completed") return "achieved";
-  if (value === "dropped" || value === "abandoned") return "dropped";
-  return "active";
+// goals_status_check (the contract migration) only allows the three v2 values; the
+// column is plain text to the client, so it is narrowed here.
+export function toGoalStatus(value: string): GoalStatus {
+  const parsed = goalStatusSchema.safeParse(value);
+  return parsed.success ? parsed.data : "active";
 }
 
 export function goalFromRow(row: GoalRow): Goal {

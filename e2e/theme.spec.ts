@@ -21,12 +21,13 @@ test.describe("signed in", () => {
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
 
-      // The sidebar's Light / Dark switch.
-      await page.getByRole("button", { name: "Dark", exact: true }).click();
+      // The sidebar's Light / Dark switch (Settings has a second one in the page).
+      const sidebar = page.locator("#app-sidebar");
+      await sidebar.getByRole("button", { name: "Dark", exact: true }).click();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
       expect(await pageBackground(page)).toBe(DARK_PAGE_BG);
 
-      await page.getByRole("button", { name: "Light", exact: true }).click();
+      await sidebar.getByRole("button", { name: "Light", exact: true }).click();
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
     });
