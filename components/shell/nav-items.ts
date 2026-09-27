@@ -1,4 +1,4 @@
-import { Dumbbell, Repeat, SlidersHorizontal, SquareCheck, Target, type LucideIcon } from "lucide-react";
+import { Dumbbell, Repeat, SlidersHorizontal, SquareCheck, Target, Wallet, type LucideIcon } from "lucide-react";
 
 // `match` lists extra path prefixes that belong to a child screen (a workout's log
 // pages sit under Workouts without living beneath /fitness/workouts).
@@ -23,6 +23,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { href: "/routines", label: "Routines", icon: Repeat },
   { href: "/goals", label: "Goals", icon: Target },
+  // One item: Finance's sections are tabs inside the page (5b · Finance).
+  { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/settings", label: "Settings", icon: SlidersHorizontal },
 ];
 

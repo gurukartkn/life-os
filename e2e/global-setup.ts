@@ -70,7 +70,21 @@ async function provisionAndClear(url: string, anonKey: string, email: string, pa
 
   // muscle_groups and equipment go right after exercises: their join rows cascade away with
   // the exercises, and the join tables' `on delete restrict` would refuse them any earlier.
-  const remainingTables = ["exercises", "muscle_groups", "equipment", "tasks", "goals", "links"] as const;
+  // Finance children go before the accounts and categories their composite foreign keys
+  // point at (budgets would cascade, but transactions and recurring items restrict).
+  const remainingTables = [
+    "exercises",
+    "muscle_groups",
+    "equipment",
+    "tasks",
+    "goals",
+    "links",
+    "transactions",
+    "recurring_items",
+    "budgets",
+    "finance_categories",
+    "finance_accounts",
+  ] as const;
   for (const table of remainingTables) {
     const { error } = await supabase.from(table).delete().eq("user_id", userId);
     if (error) throw new Error(`e2e/global-setup.ts: failed to clear ${table}: ${error.message}`);

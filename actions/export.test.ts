@@ -25,6 +25,11 @@ const TABLE_ORDER = [
   "equipment",
   "exercise_muscle_groups",
   "exercise_equipment",
+  "finance_accounts",
+  "finance_categories",
+  "transactions",
+  "budgets",
+  "recurring_items",
 ] as const;
 
 let supabase: SupabaseMock;
@@ -92,6 +97,11 @@ describe("exportUserData", () => {
       equipment: [{ table: "equipment" }],
       exercise_muscle_groups: [{ table: "exercise_muscle_groups" }],
       exercise_equipment: [{ table: "exercise_equipment" }],
+      finance_accounts: [{ table: "finance_accounts" }],
+      finance_categories: [{ table: "finance_categories" }],
+      transactions: [{ table: "transactions" }],
+      budgets: [{ table: "budgets" }],
+      recurring_items: [{ table: "recurring_items" }],
     });
     expect(typeof result.data?.exported_at).toBe("string");
   });
