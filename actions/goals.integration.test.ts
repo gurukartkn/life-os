@@ -236,6 +236,33 @@ describe.skipIf(!configured)("goals data layer against life-os-dev", { timeout: 
     expect((await listGoals(me)).goals.find((goal) => goal.id === goalId)?.linkedCount).toBe(0);
   });
 
+  // The contract migration (20260926203000_goals_contract): v2 statuses only, and
+  // achieved_on exactly when achieved.
+  it("refuses a v1 status, a null status, and an achieved_on that doesn't match the status", async () => {
+    const row = (status: string | null, achieved_on: string | null) => ({
+      user_id: myId,
+      title: `${RUN} Contract`,
+      status: status as string,
+      achieved_on,
+    });
+
+    for (const [status, achievedOn, constraint] of [
+      ["completed", null, "goals_status_check"],
+      ["achieved", null, "goals_achieved_on_check"],
+      ["active", "2026-09-01", "goals_achieved_on_check"],
+    ] as const) {
+      const { error } = await me.from("goals").insert(row(status, achievedOn));
+      expect(error?.code).toBe(CHECK_VIOLATION);
+      expect(error?.message).toContain(constraint);
+    }
+
+    const nullStatus = await me.from("goals").insert(row(null, null));
+    expect(nullStatus.error?.code).toBe("23502");
+
+    const { data } = await me.from("goals").select("id").eq("title", `${RUN} Contract`);
+    expect(data).toEqual([]);
+  });
+
   it("stamps achieved_on when a goal is achieved and clears it when it is reopened", async () => {
     const goalId = await makeGoal("Status");
     asMe();
