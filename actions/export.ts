@@ -26,6 +26,11 @@ export type ExportData = {
   equipment: Tables<"equipment">[];
   exercise_muscle_groups: Tables<"exercise_muscle_groups">[];
   exercise_equipment: Tables<"exercise_equipment">[];
+  finance_accounts: Tables<"finance_accounts">[];
+  finance_categories: Tables<"finance_categories">[];
+  transactions: Tables<"transactions">[];
+  budgets: Tables<"budgets">[];
+  recurring_items: Tables<"recurring_items">[];
 };
 
 export async function exportUserData(): Promise<ActionResult<ExportData>> {
@@ -55,6 +60,11 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     equipment,
     exerciseMuscleGroups,
     exerciseEquipment,
+    financeAccounts,
+    financeCategories,
+    transactions,
+    budgets,
+    recurringItems,
   ] = await Promise.all([
     supabase.from("user_settings").select("*"),
     supabase.from("tasks").select("*"),
@@ -72,6 +82,11 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     supabase.from("equipment").select("*"),
     supabase.from("exercise_muscle_groups").select("*"),
     supabase.from("exercise_equipment").select("*"),
+    supabase.from("finance_accounts").select("*"),
+    supabase.from("finance_categories").select("*"),
+    supabase.from("transactions").select("*"),
+    supabase.from("budgets").select("*"),
+    supabase.from("recurring_items").select("*"),
   ]);
 
   const results = {
@@ -91,6 +106,11 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
     equipment,
     exerciseMuscleGroups,
     exerciseEquipment,
+    financeAccounts,
+    financeCategories,
+    transactions,
+    budgets,
+    recurringItems,
   };
 
   for (const [key, result] of Object.entries(results)) {
@@ -120,6 +140,11 @@ export async function exportUserData(): Promise<ActionResult<ExportData>> {
       equipment: equipment.data ?? [],
       exercise_muscle_groups: exerciseMuscleGroups.data ?? [],
       exercise_equipment: exerciseEquipment.data ?? [],
+      finance_accounts: financeAccounts.data ?? [],
+      finance_categories: financeCategories.data ?? [],
+      transactions: transactions.data ?? [],
+      budgets: budgets.data ?? [],
+      recurring_items: recurringItems.data ?? [],
     },
   };
 }

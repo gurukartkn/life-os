@@ -4,8 +4,9 @@ import type { Database } from "@/lib/types/database";
 
 // The tables a user creates rows in directly. Child tables (workout_exercises,
 // set_logs, routine_items, …) can't exist without one of these parents, and
-// `links` needs a goal/task/routine/workout log, so they add nothing. `user_settings`
-// is left out on purpose: it is created at signup, so every account has one.
+// `links` needs a goal/task/routine/workout log, so they add nothing. Every Finance row
+// hangs off an account or a category. `user_settings` is left out on purpose: it is
+// created at signup, so every account has one.
 const USER_CONTENT_TABLES = [
   "tasks",
   "goals",
@@ -13,6 +14,8 @@ const USER_CONTENT_TABLES = [
   "exercises",
   "workouts",
   "workout_logs",
+  "finance_accounts",
+  "finance_categories",
 ] as const;
 
 // Whether there is anything worth exporting. The probes run in parallel (one
