@@ -138,7 +138,7 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
         <div className="flex items-center gap-2 md:px-1.5 md:py-1 md:sidebar-collapsed:p-0" title={userEmail}>
           <span
             aria-hidden="true"
-            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-skeleton text-[11px] leading-[14px] font-semibold text-ink-muted"
+            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-skeleton text-[11px] leading-[14px] font-semibold text-ink"
           >
             {initialsFor(userEmail)}
           </span>

@@ -72,12 +72,12 @@ describe("linkTargetSchema", () => {
 });
 
 describe("snake_case mapping", () => {
-  it("maps a row to a goal, reading the v1 status values as their v2 names", () => {
+  it("maps a row to a goal, narrowing its status to the three values", () => {
     const row = {
       id: ID,
       title: "Run a 10K",
       target_date: "2026-11-08",
-      status: "completed",
+      status: "achieved",
       achieved_on: "2026-09-15",
       updated_at: "2026-09-15T10:00:00.000Z",
     };
@@ -89,8 +89,9 @@ describe("snake_case mapping", () => {
       achievedOn: "2026-09-15",
       updatedAt: "2026-09-15T10:00:00.000Z",
     });
-    expect(toGoalStatus("abandoned")).toBe("dropped");
-    expect(toGoalStatus(null)).toBe("active");
+    expect(toGoalStatus("dropped")).toBe("dropped");
+    // The database refuses anything else; were one to slip through, it reads as active.
+    expect(toGoalStatus("completed")).toBe("active");
   });
 
   it("maps form values to the columns it writes", () => {

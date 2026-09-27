@@ -128,8 +128,8 @@ describe("updateGoal", () => {
     );
   });
 
-  it("clears the reached date when a goal leaves achieved, reading a v1 status as its v2 name", async () => {
-    queueUpdate({ status: "completed", achieved_on: "2026-09-15" });
+  it("clears the reached date when a goal leaves achieved", async () => {
+    queueUpdate({ status: "achieved", achieved_on: "2026-09-15" });
 
     await updateGoal({ success: false }, fields("dropped"));
 

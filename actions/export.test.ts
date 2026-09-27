@@ -124,9 +124,7 @@ describe("exportUserData", () => {
   });
 
   it("defaults each table to an empty array when data is null", async () => {
-    for (const _table of TABLE_ORDER) {
-      supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null)));
-    }
+    TABLE_ORDER.forEach(() => supabase.from.mockReturnValueOnce(makeQueryBuilder(queryResult(null, null))));
 
     const result = await exportUserData();
 

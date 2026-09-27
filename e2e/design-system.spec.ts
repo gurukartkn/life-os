@@ -27,7 +27,12 @@ test("input: 40px, 10px radius, white fill, 1px strong border (light)", async ({
   await forceTheme(page, "light");
   await page.goto("/tasks");
 
-  const input = await style((await openAddTask(page)).getByLabel("Title"));
+  // The Title field autofocuses; measure its resting border, not the focus ring.
+  const title = (await openAddTask(page)).getByLabel("Title");
+  await title.blur();
+  // Wait out the border's colour transition from the focus ring.
+  await expect(title).toHaveCSS("border-top-color", "rgb(213, 216, 221)");
+  const input = await style(title);
 
   expect(input.height).toBe("40px");
   expect(input.radius).toBe("10px");
@@ -64,11 +69,12 @@ test("Add task, New workout and New routine are one primary button", async ({ pa
   await forceTheme(page, "light");
 
   await page.goto("/tasks");
-  const addTask = await style(page.getByRole("button", { name: "Add task" }));
+  // The header's action each time: an empty list repeats it in its empty state.
+  const addTask = await style(page.getByRole("button", { name: "Add task" }).first());
   await page.goto("/fitness/workouts");
-  const newWorkout = await style(page.getByRole("link", { name: "New workout" }));
+  const newWorkout = await style(page.getByRole("link", { name: "New workout" }).first());
   await page.goto("/routines");
-  const newRoutine = await style(page.getByRole("link", { name: "New routine" }));
+  const newRoutine = await style(page.getByRole("link", { name: "New routine" }).first());
 
   const shape = ({ height, radius, fontSize, fontWeight, paddingLeft }: Awaited<ReturnType<typeof style>>) => ({
     height,

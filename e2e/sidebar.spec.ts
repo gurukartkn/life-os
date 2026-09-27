@@ -16,14 +16,19 @@ async function openExpanded(page: Page) {
 }
 
 test("collapses to an icon rail and expands again", async ({ page }) => {
+  // The Fitness link's own label (the collapsed rail's flyout has a "Fitness" heading too).
+  const fitnessLabel = page.locator("#app-sidebar").getByRole("link", { name: "Fitness" }).getByText("Fitness", {
+    exact: true,
+  });
+
   await openExpanded(page);
   await expect.poll(() => sidebarWidth(page)).toBe(216);
-  await expect(page.locator("#app-sidebar").getByText("Fitness", { exact: true })).toBeVisible();
+  await expect(fitnessLabel).toBeVisible();
 
   await page.getByRole("button", { name: "Collapse sidebar" }).click();
 
   await expect.poll(() => sidebarWidth(page)).toBe(64);
-  await expect(page.locator("#app-sidebar").getByText("Fitness", { exact: true })).toBeHidden();
+  await expect(fitnessLabel).toBeHidden();
   // Items stay reachable by name.
   await expect(page.getByRole("link", { name: "Fitness" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Expand sidebar" })).toHaveAttribute("aria-expanded", "false");
