@@ -148,7 +148,7 @@ export type Database = {
           achieved_on: string | null
           created_at: string
           id: string
-          status: string | null
+          status: string
           target_date: string | null
           title: string
           updated_at: string
@@ -158,7 +158,7 @@ export type Database = {
           achieved_on?: string | null
           created_at?: string
           id?: string
-          status?: string | null
+          status?: string
           target_date?: string | null
           title: string
           updated_at?: string
@@ -168,7 +168,7 @@ export type Database = {
           achieved_on?: string | null
           created_at?: string
           id?: string
-          status?: string | null
+          status?: string
           target_date?: string | null
           title?: string
           updated_at?: string
