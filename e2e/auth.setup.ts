@@ -18,6 +18,6 @@ setup("authenticate", async ({ page }) => {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 
-  await expect(page).toHaveURL("/tasks");
+  await expect(page).toHaveURL("/today");
   await page.context().storageState({ path: authFile });
 });

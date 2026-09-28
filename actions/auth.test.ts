@@ -49,7 +49,7 @@ describe("login", () => {
       email: "user@example.com",
       password: "secretpw",
     });
-    expect(redirect).toHaveBeenCalledWith("/tasks");
+    expect(redirect).toHaveBeenCalledWith("/today");
   });
 
   it("maps a Supabase auth error to a friendly message", async () => {
@@ -76,7 +76,7 @@ describe("signup", () => {
     await signup({ success: false }, formData({ email: "user@example.com", password: "secretpw" }));
 
     expect(supabase.auth.signUp).toHaveBeenCalledWith({ email: "user@example.com", password: "secretpw" });
-    expect(redirect).toHaveBeenCalledWith("/tasks");
+    expect(redirect).toHaveBeenCalledWith("/today");
   });
 
   it("returns a confirmation message when signup has no immediate session", async () => {
