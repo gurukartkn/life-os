@@ -27,7 +27,7 @@ describe("createTask", () => {
   it("returns a validation error and never calls Supabase when the title is empty", async () => {
     const result = await createTask({ success: false }, formData({ title: "" }));
 
-    expect(result).toEqual({ success: false, error: "Enter a title." });
+    expect(result).toEqual({ success: false, error: "Enter a title.", fieldErrors: { title: "Enter a title." } });
     expect(supabase.from).not.toHaveBeenCalled();
   });
 
@@ -90,7 +90,7 @@ describe("updateTask", () => {
   it("returns a validation error and never calls Supabase when the title is empty", async () => {
     const result = await updateTask({ success: false }, formData({ id: VALID_ID, title: "" }));
 
-    expect(result).toEqual({ success: false, error: "Enter a title." });
+    expect(result).toEqual({ success: false, error: "Enter a title.", fieldErrors: { title: "Enter a title." } });
     expect(supabase.from).not.toHaveBeenCalled();
   });
 

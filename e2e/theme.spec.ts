@@ -14,43 +14,36 @@ async function forceLight(page: Page) {
 }
 
 test.describe("signed in", () => {
-  for (const path of ["/tasks", "/fitness", "/routines", "/goals", "/settings"]) {
-    test(`${path}: switch to dark and back`, async ({ page }) => {
-      await forceLight(page);
-      await page.goto(path);
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-      expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
+  // Phase 8.2a: the switch lives on Preferences (it left the sidebar); the chosen
+  // theme applies on every screen.
+  test("switch to dark and back on Preferences, and every screen follows", async ({ page }) => {
+    // Set once, not with an init script, which would reset the choice on every load.
+    await page.goto("/preferences");
+    await page.evaluate(() => window.localStorage.setItem("life-os-theme", "light"));
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
 
-      // The sidebar's Light / Dark switch (Settings has a second one in the page).
-      const sidebar = page.locator("#app-sidebar");
-      await sidebar.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(await pageBackground(page)).toBe(DARK_PAGE_BG);
+
+    for (const path of ["/tasks", "/fitness", "/routines", "/goals", "/profile"]) {
+      await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
       expect(await pageBackground(page)).toBe(DARK_PAGE_BG);
+    }
 
-      await sidebar.getByRole("button", { name: "Light", exact: true }).click();
-      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-      expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
-    });
-  }
-
-  test("the collapsed rail offers a one-icon toggle instead of the switch", async ({ page }) => {
-    await forceLight(page);
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("/tasks");
-    await page.getByRole("button", { name: "Collapse sidebar" }).click();
-
-    await expect(page.getByRole("button", { name: "Dark", exact: true })).toBeHidden();
-    await page.getByRole("button", { name: "Switch to dark theme" }).click();
-    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-
-    await page.getByRole("button", { name: "Expand sidebar" }).click();
-    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await page.goto("/preferences");
+    await page.getByRole("button", { name: "Light", exact: true }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    expect(await pageBackground(page)).toBe(LIGHT_PAGE_BG);
   });
 
   test("the choice survives a reload and applies before first paint", async ({ page }) => {
     // Start from an explicit light choice (set once — an init script would also
     // overwrite the stored choice on the reload below).
-    await page.goto("/tasks");
+    await page.goto("/preferences");
     await page.evaluate(() => window.localStorage.setItem("life-os-theme", "light"));
     await page.reload();
     await page.getByRole("button", { name: "Dark", exact: true }).click();

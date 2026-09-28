@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/use-ui-store";
 
-// Light / Dark segmented control (sidebar footer, Settings › Appearance). Same look
+// Light / Dark segmented control (Preferences › Appearance). Same look
 // as SegmentedControl, but which segment looks pressed follows the `dark:` variant —
 // keyed to <html data-theme> — so it is right on first paint; the store supplies
 // aria-pressed once synced.

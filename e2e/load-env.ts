@@ -13,6 +13,14 @@ export function emptyAccountEmail(): string {
   return `${local}+empty@${domain}`;
 }
 
+// A third account only the Log out test signs in to. Supabase's signOut() ends every
+// session of the account (scope "global"), so logging out the shared accounts would
+// sign every parallel spec out with it.
+export function logoutAccountEmail(): string {
+  const [local, domain] = (process.env.E2E_EMAIL ?? "").split("@");
+  return `${local}+logout@${domain}`;
+}
+
 export function loadEnvLocal(): void {
   const envPath = path.join(process.cwd(), ".env.local");
   if (!fs.existsSync(envPath)) return;

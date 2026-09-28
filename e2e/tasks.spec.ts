@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { test, expect } from "@playwright/test";
-import { addTask, openAddTask, taskRow } from "./task-helpers";
+import { addTask, openAddTask, openTaskDrawer, taskRow } from "./task-helpers";
 
 // "Fri 25 Sep", formatted as the app does (lib/dates.ts formatShortDate). The en-GB locale
 // spells September "Sept", so it can't stand in for it.
@@ -44,7 +44,7 @@ test("pick a due date in the calendar and see it on the task", async ({ page }) 
   await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
   await expect(dialog.getByRole("button", { name: /^Due date, \w{3} 15 \w{3} \d{4}$/ })).toBeVisible();
   await expect(dialog.getByText("Overdue", { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "Add task" }).click();
+  await dialog.getByRole("button", { name: "Create" }).click();
 
   await expect(taskRow(page, title)).toContainText(`Overdue · ${shortDate(past)}`, { timeout: 20_000 });
 });
@@ -68,7 +68,7 @@ test("a task dated yesterday saves, shows overdue, and stops being overdue once 
   await page
     .getByRole("button", { name: new RegExp(`${monthLong} ${day}${ordinal(day)}, ${yesterday.getFullYear()}`) })
     .click();
-  await dialog.getByRole("button", { name: "Add task" }).click();
+  await dialog.getByRole("button", { name: "Create" }).click();
 
   const row = taskRow(page, title);
   const overdue = row.getByText(`Overdue · ${shortDate(yesterday)}`);
@@ -82,24 +82,120 @@ test("a task dated yesterday saves, shows overdue, and stops being overdue once 
   await expect(row.getByText(shortDate(yesterday), { exact: true })).toBeVisible();
 });
 
-test("edit a task's title and delete it from the modal", async ({ page }) => {
+// Phase 8.2a — create in the dialog, then view / edit / delete in the drawer, with toasts.
+test("create → open the drawer → edit → delete with confirmation", async ({ page }) => {
   const title = `Edit me ${Date.now()}`;
   const renamed = `${title} (renamed)`;
 
   await page.goto("/tasks");
   await addTask(page, title);
+  await expect(page.getByText("Task created")).toBeVisible();
 
-  await taskRow(page, title).getByRole("button", { name: `Edit ${title}` }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog.getByRole("heading", { name: "Edit task" })).toBeVisible();
-  await dialog.getByLabel("Title").fill(renamed);
-  await dialog.getByRole("button", { name: "Save changes" }).click();
-  await expect(dialog).toBeHidden();
-  await expect(page.getByText(renamed, { exact: true })).toBeVisible({ timeout: 20_000 });
+  // Read mode first: details, Edit and Delete, no form.
+  let drawer = await openTaskDrawer(page, title);
+  await expect(drawer.getByText("Status")).toBeVisible();
+  await expect(drawer.getByLabel("Title")).toHaveCount(0);
 
-  await taskRow(page, renamed).getByRole("button", { name: `Edit ${renamed}` }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Delete task" }).click();
+  // Edit swaps in the form; Save returns to read mode with the new title.
+  await drawer.getByRole("button", { name: "Edit" }).click();
+  await expect(drawer.getByRole("heading", { name: "Edit task" })).toBeVisible();
+  await drawer.getByLabel("Title").fill(renamed);
+  await drawer.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Task saved")).toBeVisible();
+  await expect(drawer.getByRole("heading", { name: renamed })).toBeVisible({ timeout: 20_000 });
+  await expect(drawer.getByLabel("Title")).toHaveCount(0);
+
+  // Delete asks first; Cancel leaves everything as it was.
+  await drawer.getByRole("button", { name: "Delete" }).click();
+  let confirm = page.getByRole("alertdialog", { name: "Delete permanently?" });
+  await expect(confirm).toContainText("This can't be undone.");
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toBeHidden();
+  await expect(drawer.getByRole("heading", { name: renamed })).toBeVisible();
+
+  await drawer.getByRole("button", { name: "Delete" }).click();
+  confirm = page.getByRole("alertdialog", { name: "Delete permanently?" });
+  await confirm.getByRole("button", { name: "Delete" }).click();
+  await expect(page.getByText("Task deleted")).toBeVisible();
   await expect(page.getByText(renamed, { exact: true })).toHaveCount(0, { timeout: 20_000 });
+  await expect(page).not.toHaveURL(/view=/);
+
+  drawer = page.locator('[data-slot="entity-drawer"]');
+  await expect(drawer).toHaveCount(0);
+});
+
+test("a ?view=task:<id> link opens the drawer directly, and Back / Close shut it", async ({ page }) => {
+  const title = `Deep drawer ${Date.now()}`;
+  await page.goto("/tasks");
+  await addTask(page, title);
+  await openTaskDrawer(page, title);
+  const drawerUrl = page.url();
+
+  // Back closes a drawer opened from the list.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/tasks$/);
+  await expect(page.locator('[data-slot="entity-drawer"]')).toHaveCount(0);
+
+  // A fresh load of the drawer URL renders it open, read-only.
+  await page.goto(drawerUrl);
+  const drawer = page.locator('[data-slot="entity-drawer"]');
+  await expect(drawer.getByRole("heading", { name: title })).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Edit" })).toBeVisible();
+
+  await drawer.getByRole("button", { name: "Close" }).click();
+  await expect(drawer).toHaveCount(0);
+  await expect(page).toHaveURL(/\/tasks$/);
+});
+
+test("unsaved edits in the drawer are guarded on Cancel, Esc and Back", async ({ page }) => {
+  const title = `Guarded ${Date.now()}`;
+  await page.goto("/tasks");
+  await addTask(page, title);
+  const drawer = await openTaskDrawer(page, title);
+
+  await drawer.getByRole("button", { name: "Edit" }).click();
+  await drawer.getByLabel("Title").fill(`${title} changed`);
+
+  const discard = page.getByRole("alertdialog", { name: "Discard changes?" });
+  for (const [how, leave] of [
+    ["Cancel", () => drawer.getByRole("button", { name: "Cancel" }).click()],
+    ["Esc", () => page.keyboard.press("Escape")],
+    ["Back", () => page.goBack()],
+  ] as const) {
+    await leave();
+    await expect(discard, `${how} asks before discarding`).toBeVisible();
+    await discard.getByRole("button", { name: "Keep editing" }).click();
+    await expect(discard).toBeHidden();
+    await expect(drawer.getByLabel("Title")).toHaveValue(`${title} changed`);
+    await expect(page).toHaveURL(/view=task:/);
+  }
+
+  await page.keyboard.press("Escape");
+  await discard.getByRole("button", { name: "Discard" }).click();
+  await expect(page.locator('[data-slot="entity-drawer"]')).toHaveCount(0);
+  await expect(page).not.toHaveURL(/view=/);
+  await expect(page.getByText(`${title} changed`, { exact: true })).toHaveCount(0);
+});
+
+test("Today's task links open that task's drawer", async ({ page }) => {
+  const title = `Due today ${Date.now()}`;
+  await page.goto("/tasks");
+  const dialog = await openAddTask(page);
+  await dialog.getByLabel("Title").fill(title);
+  await dialog.getByRole("button", { name: "Due date" }).click();
+  const now = new Date();
+  const monthLong = now.toLocaleString("en-US", { month: "long" });
+  await page
+    .getByRole("button", { name: new RegExp(`${monthLong} ${now.getDate()}${ordinal(now.getDate())}, ${now.getFullYear()}`) })
+    .click();
+  await dialog.getByRole("button", { name: "Create" }).click();
+  await expect(taskRow(page, title)).toBeVisible({ timeout: 20_000 });
+
+  await page.goto("/today");
+  await page.getByRole("region", { name: "Tasks" }).getByRole("link", { name: new RegExp(title) }).click();
+
+  await expect(page).toHaveURL(/\/tasks\?view=task:[0-9a-f-]{36}$/);
+  await expect(page.locator('[data-slot="entity-drawer"]').getByRole("heading", { name: title })).toBeVisible();
 });
 
 // Backlog #7 — the filter tabs re-filter the list the page already has; they

@@ -96,20 +96,42 @@ describe("TaskView", () => {
     expect(screen.queryByText("No tasks yet")).not.toBeInTheDocument();
   });
 
-  it("opens the add modal from the header, and the edit modal from a row", async () => {
+  it("opens the create dialog from the header", async () => {
     const user = userEvent.setup();
     render(<TaskView tasks={tasks} />);
 
     await user.click(screen.getByRole("button", { name: "Add task" }));
     const addDialog = await screen.findByRole("dialog");
-    expect(within(addDialog).getByRole("heading", { name: "Add task" })).toBeInTheDocument();
+    expect(within(addDialog).getByRole("heading", { name: "New task" })).toBeInTheDocument();
     expect(within(addDialog).getByLabelText("Title")).toHaveValue("");
+    expect(within(addDialog).getByRole("button", { name: "Create" })).toBeInTheDocument();
+  });
 
-    await user.click(within(addDialog).getByRole("button", { name: "Cancel" }));
-    await user.click(await screen.findByRole("button", { name: "Edit Open two" }));
+  it("opens a row's drawer by adding ?view=task:<id> to the URL", async () => {
+    const pushState = vi.spyOn(window.history, "pushState");
+    const user = userEvent.setup();
+    render(<TaskView tasks={tasks} />);
 
-    const editDialog = await screen.findByRole("dialog");
-    expect(within(editDialog).getByRole("heading", { name: "Edit task" })).toBeInTheDocument();
-    expect(within(editDialog).getByLabelText("Title")).toHaveValue("Open two");
+    await user.click(screen.getByRole("button", { name: "Open two" }));
+
+    expect(String(pushState.mock.calls[0][2])).toContain("view=task:3");
+    pushState.mockRestore();
+  });
+
+  it("renders the drawer read-only for a ?view=task:<id> deep link", async () => {
+    mockSearch = "view=task:3";
+    render(<TaskView tasks={tasks} />);
+
+    const drawer = await screen.findByRole("dialog");
+    expect(within(drawer).getByRole("heading", { name: "Open two" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(within(drawer).queryByLabelText("Title")).not.toBeInTheDocument();
+  });
+
+  it("opens no drawer for an id that isn't in the list", () => {
+    mockSearch = "view=task:nope";
+    render(<TaskView tasks={tasks} />);
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

@@ -2,10 +2,18 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
+  // The dev-only Next.js badge covers the sidebar's account menu (bottom-left) or the
+  // entity drawer's Save / Edit button (bottom-right). Errors still open the overlay.
+  devIndicators: false,
   experimental: {
     // A CSV import (Stage 5b) sends up to 5,000 mapped rows to importCsv in one Server
     // Action; with notes that can pass the 1 MB default. The file itself is 2 MB at most.
     serverActions: { bodySizeLimit: "4mb" },
+  },
+  // Settings was split into Profile and Preferences (Phase 8.2a); old links and
+  // bookmarks land on Preferences.
+  async redirects() {
+    return [{ source: "/settings", destination: "/preferences", permanent: true }];
   },
 };
 

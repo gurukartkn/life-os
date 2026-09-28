@@ -35,7 +35,7 @@ describe("TaskRow", () => {
   it("calls toggleTask when the checkbox is checked", async () => {
     mockedToggle.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<TaskRow task={makeTask()} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask()} onOpen={vi.fn()} />);
 
     await user.click(screen.getByRole("checkbox", { name: "Mark as done" }));
 
@@ -44,20 +44,20 @@ describe("TaskRow", () => {
     );
   });
 
-  it("opens the edit modal for this task", async () => {
-    const onEdit = vi.fn();
+  it("opens this task's drawer from its title", async () => {
+    const onOpen = vi.fn();
     const user = userEvent.setup();
     const task = makeTask();
-    render(<TaskRow task={task} onEdit={onEdit} />);
+    render(<TaskRow task={task} onOpen={onOpen} />);
 
-    await user.click(screen.getByRole("button", { name: "Edit Buy groceries" }));
+    await user.click(screen.getByRole("button", { name: "Buy groceries" }));
 
-    expect(onEdit).toHaveBeenCalledWith(task);
+    expect(onOpen).toHaveBeenCalledWith(task);
   });
 
   it("shows an open task due yesterday as an Overdue pill with its date", () => {
     const yesterday = subDays(new Date(), 1);
-    render(<TaskRow task={makeTask({ due_date: iso(yesterday) })} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask({ due_date: iso(yesterday) })} onOpen={vi.fn()} />);
 
     const pill = screen.getByText(`Overdue · ${format(yesterday, "EEE d MMM")}`);
     expect(pill).toHaveClass("text-pink-ink");
@@ -65,33 +65,33 @@ describe("TaskRow", () => {
 
   it("does not show a completed task due yesterday as overdue", () => {
     const yesterday = subDays(new Date(), 1);
-    render(<TaskRow task={makeTask({ due_date: iso(yesterday), is_completed: true })} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask({ due_date: iso(yesterday), is_completed: true })} onOpen={vi.fn()} />);
 
     expect(screen.queryByText(/Overdue/)).not.toBeInTheDocument();
     expect(screen.getByText(format(yesterday, "EEE d MMM"))).not.toHaveClass("text-pink-ink");
   });
 
   it("shows a task due today as a blue Today pill", () => {
-    render(<TaskRow task={makeTask({ due_date: iso(new Date()) })} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask({ due_date: iso(new Date()) })} onOpen={vi.fn()} />);
 
     expect(screen.getByText("Today")).toHaveClass("text-blue-ink");
   });
 
   it("shows a later date as a neutral pill", () => {
     const later = addDays(new Date(), 5);
-    render(<TaskRow task={makeTask({ due_date: iso(later) })} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask({ due_date: iso(later) })} onOpen={vi.fn()} />);
 
     expect(screen.getByText(format(later, "EEE d MMM"))).toHaveClass("text-ink-muted");
   });
 
   it("shows no pill for an undated task", () => {
-    const { container } = render(<TaskRow task={makeTask()} onEdit={vi.fn()} />);
+    const { container } = render(<TaskRow task={makeTask()} onOpen={vi.fn()} />);
 
     expect(container.querySelector('[data-slot="tag"]')).toBeNull();
   });
 
   it("offers Mark as not done on a completed task", () => {
-    render(<TaskRow task={makeTask({ is_completed: true })} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask({ is_completed: true })} onOpen={vi.fn()} />);
 
     expect(screen.getByRole("checkbox", { name: "Mark as not done" })).toBeChecked();
   });
@@ -99,7 +99,7 @@ describe("TaskRow", () => {
   it("surfaces a toggle failure on the row", async () => {
     mockedToggle.mockResolvedValue({ success: false, error: "Couldn't update the task. Try again." });
     const user = userEvent.setup();
-    render(<TaskRow task={makeTask()} onEdit={vi.fn()} />);
+    render(<TaskRow task={makeTask()} onOpen={vi.fn()} />);
 
     await user.click(screen.getByRole("checkbox"));
 

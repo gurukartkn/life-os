@@ -4,8 +4,8 @@ import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/use-ui-store";
 
-// One-icon theme toggle: the collapsed sidebar's footer, and top-right on the
-// screens without a sidebar (log in, sign up). A 40px bordered icon button showing
+// One-icon theme toggle, top-right on the screens without a sidebar (log in, sign
+// up); signed in, the theme is set on Preferences. A 40px bordered icon button showing
 // the theme it switches to. The icon swaps with the `dark:` variant (keyed to <html
 // data-theme>), so it is right on first paint; the store supplies the accessible name.
 export function ThemeToggle({ className }: { className?: string }) {

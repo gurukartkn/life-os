@@ -1,37 +1,41 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { CalendarCheck, CircleAlert, Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { createTask } from "@/actions/tasks";
+import { EntityCreateDialog } from "@/components/entity/entity-create-dialog";
+import { useEntityDrawer } from "@/components/entity/use-entity-drawer";
+import { TaskDrawer } from "@/components/tasks/task-drawer";
+import { TaskFields, taskFormData } from "@/components/tasks/task-fields";
 import { TaskFilters } from "@/components/tasks/task-filters";
-import { TaskFormDialog } from "@/components/tasks/task-form-dialog";
 import { TaskList } from "@/components/tasks/task-list";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { RetryButton } from "@/components/ui/retry-button";
 import { emptyStateCopy, filterCounts, filterTasks, parseStatusFilter } from "@/lib/task-filters";
+import { taskFormSchema } from "@/lib/validations/tasks";
 import type { Tables } from "@/lib/types/database";
 
 // The Tasks screen (Tasks board): header with Add task, filter tabs with counts, and
 // the filtered list — or the empty / load-failed card. The server sends every task
-// as props; the active filter comes from the URL (?status=…), so deep links and
-// reloads render filtered on the first paint, and tab clicks re-filter in memory
-// (task-filters.tsx). Add and Edit open the same modal.
+// as props; the active filter (?status=…) and the open drawer (?view=task:<id>) come
+// from the URL, so deep links and reloads render them on the first paint, and tab or
+// row clicks only change the URL (task-filters.tsx, use-entity-drawer.ts).
 export function TaskView({ tasks, loadError = false }: { tasks: Tables<"tasks">[]; loadError?: boolean }) {
   const filter = parseStatusFilter(useSearchParams().get("status"));
   const visibleTasks = filterTasks(tasks, filter);
-  const [dialog, setDialog] = useState<{ open: boolean; task: Tables<"tasks"> | null }>({
-    open: false,
-    task: null,
-  });
+  const [creating, setCreating] = useState(false);
+  const drawer = useEntityDrawer("task");
+  const viewedTask = drawer.view ? tasks.find((task) => task.id === drawer.view?.id) : undefined;
 
-  const openNew = useCallback(() => setDialog({ open: true, task: null }), []);
-  const openEdit = useCallback((task: Tables<"tasks">) => setDialog({ open: true, task }), []);
-  const setOpen = useCallback((open: boolean) => setDialog((current) => ({ ...current, open })), []);
+  // The drawer keeps showing the last task while it animates closed.
+  const [shownTask, setShownTask] = useState(viewedTask);
+  if (viewedTask && viewedTask !== shownTask) setShownTask(viewedTask);
 
   const addButton = (
-    <Button type="button" onClick={openNew}>
+    <Button type="button" onClick={() => setCreating(true)}>
       <Plus strokeWidth={1.75} />
       Add task
     </Button>
@@ -59,7 +63,7 @@ export function TaskView({ tasks, loadError = false }: { tasks: Tables<"tasks">[
       />
     );
   } else {
-    content = <TaskList tasks={visibleTasks} onEdit={openEdit} />;
+    content = <TaskList tasks={visibleTasks} onOpen={(task) => drawer.open("task", task.id)} />;
   }
 
   return (
@@ -69,7 +73,19 @@ export function TaskView({ tasks, loadError = false }: { tasks: Tables<"tasks">[
         <TaskFilters active={filter} counts={filterCounts(tasks)} />
         {content}
       </div>
-      <TaskFormDialog open={dialog.open} task={dialog.task} onOpenChange={setOpen} />
+      <EntityCreateDialog
+        open={creating}
+        onOpenChange={setCreating}
+        title="New task"
+        entityLabel="Task"
+        schema={taskFormSchema}
+        defaultValues={{ title: "", due_date: "" }}
+        action={createTask}
+        toFormData={(values) => taskFormData(values)}
+      >
+        {(form) => <TaskFields form={form} />}
+      </EntityCreateDialog>
+      {shownTask && <TaskDrawer task={shownTask} open={Boolean(viewedTask)} onClose={drawer.close} />}
     </div>
   );
 }

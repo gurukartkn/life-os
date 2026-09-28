@@ -18,6 +18,9 @@ export const taskUpdateSchema = z.object({
   due_date: dateStringSchema,
 });
 
+// The fields the create dialog and the drawer's edit form collect.
+export const taskFormSchema = taskInsertSchema.pick({ title: true, due_date: true });
+
 export const taskToggleSchema = z.object({
   id: z.string().uuid(),
   is_completed: z.boolean(),
@@ -28,4 +31,5 @@ export const taskDeleteSchema = z.object({
 });
 
 export type TaskInsertInput = z.infer<typeof taskInsertSchema>;
+export type TaskFormInput = z.infer<typeof taskFormSchema>;
 export type TaskToggleInput = z.infer<typeof taskToggleSchema>;

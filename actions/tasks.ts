@@ -9,6 +9,7 @@ import {
   taskUpdateSchema,
 } from "@/lib/validations/tasks";
 import { logError } from "@/lib/errors";
+import { validationFailure } from "@/lib/validations/field-errors";
 import { revalidateGoals } from "@/lib/goals-revalidate";
 import { deleteLinksTo } from "@/lib/links-cleanup";
 import type { ActionResult } from "@/lib/types/action-result";
@@ -24,7 +25,7 @@ export async function createTask(
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message };
+    return validationFailure(parsed.error);
   }
 
   const supabase = await createClient();
@@ -63,7 +64,7 @@ export async function updateTask(
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message };
+    return validationFailure(parsed.error);
   }
 
   const supabase = await createClient();
