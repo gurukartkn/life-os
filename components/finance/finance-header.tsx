@@ -33,7 +33,7 @@ export function FinanceHeader({
     <div className="mb-5 flex flex-col gap-4">
       {/* A fixed row height, so the tabs don't shift between a month switcher and a button. */}
       <PageHeader title="Finance" actions={actions} className="mb-0 min-h-10 flex-wrap" />
-      <TabBar aria-label="Finance sections" className="overflow-x-auto">
+      <TabBar aria-label="Finance sections">
         {TABS.map((item) => {
           const href = `/finance/${item.tab}${item.monthly && month ? `?month=${month}` : ""}`;
           const active = item.tab === tab;
@@ -42,7 +42,7 @@ export function FinanceHeader({
               key={item.tab}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={tabClassName(active, "min-w-[72px] shrink-0")}
+              className={tabClassName(active, "min-w-[72px]")}
             >
               {item.label}
             </Link>
