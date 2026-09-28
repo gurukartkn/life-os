@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ThemeSwitch } from "@/components/shell/theme-switch";
-import { ThemeToggle } from "@/components/shell/theme-toggle";
+import { NavUser } from "@/components/shell/nav-user";
 import { NAV_ITEMS, isChildCurrent, isCurrent, type NavItem } from "@/components/shell/nav-items";
 import {
   SIDEBAR_CHILD_ACTIVE,
@@ -14,15 +13,8 @@ import {
   SIDEBAR_ITEM_INACTIVE,
   SIDEBAR_LABEL,
 } from "@/components/shell/sidebar-styles";
+import type { UserIdentity } from "@/lib/user-display";
 import { useUIStore } from "@/stores/use-ui-store";
-
-// Initials for the avatar disc, from the part of the email before the @.
-function initialsFor(email: string): string {
-  const local = email.split("@")[0] ?? "";
-  const parts = local.split(/[._-]+/).filter(Boolean);
-  const letters = parts.length > 1 ? parts[0][0] + parts[1][0] : local.slice(0, 2);
-  return letters.toUpperCase() || "?";
-}
 
 function LogoMark() {
   return (
@@ -96,7 +88,7 @@ function NavSection({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar({ userEmail }: { userEmail: string }) {
+export function Sidebar({ user }: { user: UserIdentity }) {
   const pathname = usePathname();
   const collapsed = useUIStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
@@ -134,20 +126,8 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
         ))}
       </nav>
       <div className="hidden flex-1 md:block" />
-      <div className="flex items-center gap-2 md:flex-col md:items-stretch md:gap-3 md:sidebar-collapsed:items-center">
-        <ThemeSwitch className="hidden md:flex md:sidebar-collapsed:hidden" />
-        <ThemeToggle className="md:hidden md:sidebar-collapsed:flex" />
-        <div className="flex items-center gap-2 md:px-1.5 md:py-1 md:sidebar-collapsed:p-0" title={userEmail}>
-          <span
-            aria-hidden="true"
-            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-skeleton text-[11px] leading-[14px] font-semibold text-ink"
-          >
-            {initialsFor(userEmail)}
-          </span>
-          <span className={cn(SIDEBAR_LABEL, "truncate text-[13px] leading-[18px] font-medium text-ink")}>
-            {userEmail}
-          </span>
-        </div>
+      <div className="flex shrink-0 items-center md:flex-col md:items-stretch md:sidebar-collapsed:items-center">
+        <NavUser user={user} />
       </div>
     </aside>
   );

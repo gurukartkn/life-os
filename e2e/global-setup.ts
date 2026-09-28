@@ -1,12 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
-import { emptyAccountEmail, loadEnvLocal } from "./load-env";
+import { emptyAccountEmail, loadEnvLocal, logoutAccountEmail } from "./load-env";
 
 // Runs once before the Playwright suite. Ensures the dedicated e2e test
 // accounts exist against the dev Supabase project (email confirmations are
 // disabled there, so signUp grants a session immediately — no service-role
 // admin API needed) and that each starts with no leftover data from a
-// previous run. There are two: the main account, and a second one that specs
-// use to check the "no data yet" state (see emptyAccountEmail()).
+// previous run. There are three: the main account, a second one that specs
+// use to check the "no data yet" state (see emptyAccountEmail()), and one the
+// Log out test alone signs in to (see logoutAccountEmail()).
 //
 // Cleanup deletes only "parent" rows per user — workout_logs, workouts,
 // routines — since every child table's FK is `on delete cascade`
@@ -29,7 +30,7 @@ export default async function globalSetup() {
     );
   }
 
-  for (const accountEmail of [email, emptyAccountEmail()]) {
+  for (const accountEmail of [email, emptyAccountEmail(), logoutAccountEmail()]) {
     await provisionAndClear(url, anonKey, accountEmail, password);
   }
 }

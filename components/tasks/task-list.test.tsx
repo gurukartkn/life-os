@@ -28,14 +28,14 @@ describe("TaskList", () => {
       makeTask({ id: "550e8400-e29b-41d4-a716-446655440003", title: "Read a book" }),
     ];
 
-    render(<TaskList tasks={tasks} onEdit={vi.fn()} />);
+    render(<TaskList tasks={tasks} onOpen={vi.fn()} />);
 
     expect(screen.getAllByRole("checkbox")).toHaveLength(3);
     expect(screen.getByText("Walk the dog")).toBeInTheDocument();
   });
 
   it("renders nothing when there are no tasks", () => {
-    const { container } = render(<TaskList tasks={[]} onEdit={vi.fn()} />);
+    const { container } = render(<TaskList tasks={[]} onOpen={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
   });
 });

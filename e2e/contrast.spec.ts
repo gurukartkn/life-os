@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { addTask, openAddTask, taskRow } from "./task-helpers";
+import { addTask, openAddTask, openTaskDrawer, taskRow } from "./task-helpers";
 
 // v2 Stage 1: "the user can switch between light and dark on every screen" — so
 // every screen, and the states that change text colour (overdue and completed
@@ -18,7 +18,9 @@ const APP_SCREENS = [
   "/routines/new",
   "/goals",
   "/today",
-  "/settings",
+  "/profile",
+  "/preferences",
+  "/recycle-bin",
 ];
 const AUTH_SCREENS = ["/login", "/signup"];
 
@@ -61,7 +63,7 @@ for (const theme of ["light", "dark"] as const) {
       await dialog.getByRole("button", { name: "Due date" }).click();
       await page.getByRole("button", { name: /previous month/i }).click();
       await page.getByRole("button", { name: /\b15th, \d{4}/ }).click();
-      await dialog.getByRole("button", { name: "Add task" }).click();
+      await dialog.getByRole("button", { name: "Create" }).click();
       await expect(taskRow(page, `Overdue sample ${stamp}`)).toContainText("Overdue", { timeout: 20_000 });
 
       await addTask(page, `Done sample ${stamp}`);
@@ -73,7 +75,7 @@ for (const theme of ["light", "dark"] as const) {
 
       // The modal over the scrim, with a validation error.
       dialog = await openAddTask(page);
-      await dialog.getByRole("button", { name: "Add task" }).click();
+      await dialog.getByRole("button", { name: "Create" }).click();
       await expect(dialog.getByText("Enter a title.")).toBeVisible();
       expect(await contrastViolations(page)).toEqual([]);
 
@@ -82,6 +84,34 @@ for (const theme of ["light", "dark"] as const) {
       await expect(page.getByRole("grid")).toBeVisible();
       // The popover fades in; measure once it is fully opaque, not mid-animation.
       await expect(page.locator('[data-slot="popover-content"]')).toHaveCSS("opacity", "1");
+      expect(await contrastViolations(page)).toEqual([]);
+    });
+
+    // Phase 8.2a surfaces: the drawer (read and edit), its delete confirmation, a toast
+    // and the account menu.
+    test("the task drawer, the delete confirmation, a toast and the account menu", async ({ page }) => {
+      const title = `Drawer sample ${Date.now()}`;
+      await useTheme(page, theme);
+      await page.goto("/tasks");
+      await addTask(page, title);
+      await expect(page.getByText("Task created")).toBeVisible();
+      expect(await contrastViolations(page)).toEqual([]);
+
+      const drawer = await openTaskDrawer(page, title);
+      expect(await contrastViolations(page)).toEqual([]);
+      await drawer.getByRole("button", { name: "Edit" }).click();
+      await expect(drawer.getByLabel("Title")).toBeVisible();
+      expect(await contrastViolations(page)).toEqual([]);
+      await drawer.getByRole("button", { name: "Cancel" }).click();
+
+      await drawer.getByRole("button", { name: "Delete" }).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      expect(await contrastViolations(page)).toEqual([]);
+      await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
+      await drawer.getByRole("button", { name: "Close" }).click();
+
+      await page.getByRole("button", { name: "Account menu" }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
       expect(await contrastViolations(page)).toEqual([]);
     });
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { TodayCard, TodayCardNote, todayRowClassName } from "@/components/today/today-card";
 import { Tag } from "@/components/ui/tag";
 import { formatShortDate } from "@/lib/dates";
+import { viewHref } from "@/lib/entity-view";
 import type { TodayTask } from "@/lib/queries/tasks";
 
 // Today's Tasks card: open tasks due today or overdue (overdue first, tagged pink),
@@ -30,7 +31,7 @@ export function TodayTasksCard({
               const overdue = task.dueDate < today;
               return (
                 <li key={task.id} className="border-t border-border">
-                  <Link href="/tasks" className={todayRowClassName}>
+                  <Link href={viewHref("/tasks", "task", task.id)} className={todayRowClassName}>
                     <span className="min-w-0 flex-1 truncate text-body font-medium text-ink">{task.title}</span>
                     <Tag tone={overdue ? "pink" : "blue"}>
                       {overdue ? `Overdue · ${formatShortDate(task.dueDate)}` : "Today"}
