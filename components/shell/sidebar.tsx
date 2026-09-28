@@ -125,7 +125,9 @@ export function Sidebar({ userEmail }: { userEmail: string }) {
       </div>
       <nav
         aria-label="Main"
-        className="flex flex-1 items-center gap-1 md:flex-none md:flex-col md:items-stretch md:gap-0.5 md:sidebar-collapsed:items-center md:sidebar-collapsed:gap-1"
+        // Narrower than the seven tiles fit, the mobile bar scrolls sideways rather than the
+        // page; the 4px padding (cancelled by the margin) keeps focus rings inside the clip.
+        className="flex min-w-0 flex-1 items-center gap-0.5 max-md:-m-1 max-md:overflow-x-auto max-md:p-1 max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden md:flex-none md:flex-col md:items-stretch md:gap-0.5 md:sidebar-collapsed:items-center md:sidebar-collapsed:gap-1"
       >
         {NAV_ITEMS.map((item) => (
           <NavSection key={item.href} item={item} pathname={pathname} />

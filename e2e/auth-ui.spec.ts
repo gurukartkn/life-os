@@ -12,11 +12,11 @@ for (const path of ["/tasks", "/fitness", "/routines", "/goals"]) {
   });
 }
 
-test("a signed-in user visiting /login is sent to /tasks", async ({ browser }) => {
+test("a signed-in user visiting /login is sent to /today", async ({ browser }) => {
   const context = await browser.newContext({ storageState: "e2e/.auth/user.json" });
   const page = await context.newPage();
   await page.goto("/login");
-  await expect(page).toHaveURL(/\/tasks$/);
+  await expect(page).toHaveURL(/\/today$/);
   await context.close();
 });
 

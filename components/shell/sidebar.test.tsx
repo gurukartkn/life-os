@@ -44,6 +44,10 @@ describe("Sidebar", () => {
   it("lists every section, reachable by name when collapsed (labels are CSS-hidden)", () => {
     render(<Sidebar userEmail="me@example.com" />);
 
+    const links = screen.getAllByRole("link");
+    expect(links[0]).toHaveAccessibleName("Today");
+    expect(links[0]).toHaveAttribute("href", "/today");
+    expect(links[0]).toHaveAttribute("title", "Today");
     expect(screen.getByRole("link", { name: "Tasks" })).toHaveAttribute("href", "/tasks");
     expect(screen.getByRole("link", { name: "Fitness" })).toHaveAttribute("href", "/fitness");
     expect(screen.getByRole("link", { name: "Routines" })).toHaveAttribute("href", "/routines");

@@ -198,6 +198,26 @@
   html {
     @apply font-sans;
   }
+  /* Tailwind v4's Preflight leaves buttons on the default arrow. Everything clickable
+     that isn't a link shows the pointer here, once, rather than per component: buttons,
+     role-based controls (Base UI checkboxes and tabs are spans/divs with a role), and a
+     label that wraps a checkbox. Disabled ones show not-allowed. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"], [data-disabled]),
+  [role="tab"]:not([aria-disabled="true"], [data-disabled]),
+  [role="switch"]:not([aria-disabled="true"], [data-disabled]),
+  label:has([role="checkbox"], input[type="checkbox"]) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  [role="checkbox"]:is([aria-disabled="true"], [data-disabled]),
+  [role="tab"]:is([aria-disabled="true"], [data-disabled]),
+  [role="switch"]:is([aria-disabled="true"], [data-disabled]),
+  label:has([role="checkbox"][data-disabled], input[type="checkbox"]:disabled) {
+    cursor: not-allowed;
+  }
 }
 
 /*

@@ -1,4 +1,4 @@
-import { Dumbbell, Repeat, SlidersHorizontal, SquareCheck, Target, Wallet, type LucideIcon } from "lucide-react";
+import { Dumbbell, House, Repeat, SlidersHorizontal, SquareCheck, Target, Wallet, type LucideIcon } from "lucide-react";
 
 // `match` lists extra path prefixes that belong to a child screen (a workout's log
 // pages sit under Workouts without living beneath /fitness/workouts).
@@ -7,8 +7,9 @@ export type NavItem = { href: string; label: string; icon: LucideIcon; children?
 
 // The sidebar's sections, in the shell mockup's order. A section with children
 // (Fitness) shows them indented while it is the current section, and as a flyout
-// from the collapsed icon rail.
+// from the collapsed icon rail. Today comes first: it is also where "/" lands.
 export const NAV_ITEMS: NavItem[] = [
+  { href: "/today", label: "Today", icon: House },
   { href: "/tasks", label: "Tasks", icon: SquareCheck },
   {
     href: "/fitness",

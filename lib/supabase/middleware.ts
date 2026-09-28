@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isSignedIn && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/tasks";
+    url.pathname = "/today";
     return NextResponse.redirect(url);
   }
 

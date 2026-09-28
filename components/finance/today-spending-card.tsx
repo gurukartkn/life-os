@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 
 // Today's Spending card (Today dashboard board): this month's spend in budgeted
 // categories against the total budget, the most over-budget category, and a link to
-// Finance. The page leaves it out when there are no budgets and no transactions yet.
+// Finance. With no budgets and no transactions yet it says so rather than disappearing.
 export function TodaySpendingCard({ spending, loadError = false }: { spending: TodaySpending | null; loadError?: boolean }) {
-  let body: React.ReactNode = null;
+  let body: React.ReactNode = (
+    <p className="border-t border-border py-3 text-body-sm text-ink-muted">No spending tracked yet.</p>
+  );
   if (loadError) {
     body = (
       <p role="alert" className="border-t border-border py-3 text-body-sm text-pink-ink">
