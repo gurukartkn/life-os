@@ -420,10 +420,11 @@ test("the Today Spending card shows budgeted spend and links to Finance", async 
 test.describe("an account with no Finance data", () => {
   test.use({ storageState: path.join(__dirname, ".auth/empty-user.json") });
 
-  test("has no Spending card on Today, and empty states on every tab", async ({ page }) => {
+  test("has an empty Spending card on Today, and empty states on every tab", async ({ page }) => {
     await page.goto("/today");
-    await expect(page.getByRole("region", { name: "Goals" })).toBeVisible(SLOW);
-    await expect(page.getByRole("region", { name: "Spending this month" })).toHaveCount(0);
+    const card = page.getByRole("region", { name: "Spending this month" });
+    await expect(card).toBeVisible(SLOW);
+    await expect(card).toContainText("No spending tracked yet.");
 
     for (const [tab, title] of [
       ["transactions", "No transactions here"],

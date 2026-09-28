@@ -1,33 +1,33 @@
 import { format, parseISO } from "date-fns";
-import { TodaySpendingCard } from "@/components/finance/today-spending-card";
-import { TodayGoalsCard } from "@/components/goals/today-goals-card";
+import { TodayBoard } from "@/components/today/today-board";
 import { PageHeader } from "@/components/ui/page-header";
 import { todayIso } from "@/lib/dates";
 import { getTodaySpending } from "@/lib/queries/finance";
+import { getTodayWorkouts } from "@/lib/queries/fitness";
 import { getTodayGoals } from "@/lib/queries/goals";
+import { getRoutinesToday } from "@/lib/queries/routines";
+import { getTodayTasks } from "@/lib/queries/tasks";
 import { getUserTimezone } from "@/lib/queries/user-settings";
 import { createClient } from "@/lib/supabase/server";
 
-// The Today dashboard (Today dashboard board). Stages 5a and 5b ship its Goals and
-// Spending cards; the stat row and the Tasks and Routines cards come with the
-// dashboard's own stage, so this route is not in the sidebar yet and "/" still opens Tasks.
+// The Today dashboard (Today dashboard board): one card per module, laid out by
+// TodayBoard from its TODAY_SECTIONS list. The stat row comes with the dashboard's own stage.
 export default async function TodayPage() {
   const supabase = await createClient();
   const timeZone = await getUserTimezone(supabase);
   const today = todayIso(timeZone);
-  const [{ goals, error }, spending] = await Promise.all([getTodayGoals(supabase), getTodaySpending(supabase, today)]);
+  const [tasks, routines, fitness, goals, spending] = await Promise.all([
+    getTodayTasks(supabase, today),
+    getRoutinesToday(supabase, today, timeZone),
+    getTodayWorkouts(supabase, today),
+    getTodayGoals(supabase),
+    getTodaySpending(supabase, today),
+  ]);
 
   return (
     <div className="flex flex-col">
       <PageHeader title="Today" description={format(parseISO(today), "EEEE, d MMMM")} />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <div className="flex flex-col gap-4 lg:col-start-2">
-          <TodayGoalsCard goals={goals} loadError={error} />
-          {(spending.error || spending.spending) && (
-            <TodaySpendingCard spending={spending.spending} loadError={spending.error} />
-          )}
-        </div>
-      </div>
+      <TodayBoard data={{ today, timeZone, tasks, routines, fitness, goals, spending }} />
     </div>
   );
 }

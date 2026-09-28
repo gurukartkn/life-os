@@ -196,13 +196,37 @@ export async function getRecentSessions(supabase: Client, limit = 5): Promise<Re
     return [];
   }
 
-  return ((data ?? []) as unknown as RecentSessionRow[]).map((log) => ({
+  return ((data ?? []) as unknown as RecentSessionRow[]).map(toRecentSession);
+}
+
+function toRecentSession(log: RecentSessionRow): RecentSession {
+  return {
     id: log.id,
     workoutName: log.workouts?.name ?? "Ad-hoc workout",
     performedAt: log.performed_at,
     minutes: sessionMinutes(log.created_at, log.performed_at),
     setCount: log.set_logs[0]?.count ?? 0,
-  }));
+  };
+}
+
+// Today's Fitness card: the sessions logged on `today` (performed_on, the user's
+// calendar date), latest first. `error` when the read failed.
+export async function getTodayWorkouts(
+  supabase: Client,
+  today: string
+): Promise<{ sessions: RecentSession[]; error: boolean }> {
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("id, performed_at, created_at, workouts(name), set_logs(count)")
+    .eq("performed_on", today)
+    .order("performed_at", { ascending: false });
+
+  if (error) {
+    logError("Load today workouts", error);
+    return { sessions: [], error: true };
+  }
+
+  return { sessions: ((data ?? []) as unknown as RecentSessionRow[]).map(toRecentSession), error: false };
 }
 
 export type PastLogSet = {
